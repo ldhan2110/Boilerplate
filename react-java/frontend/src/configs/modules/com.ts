@@ -15,4 +15,12 @@ export const COM_ENDPOINTS = {
 		SAVE_SUB_CODE: '/com/code/saveSubCode',
 		INVALIDATE_COMMON_CODE: '/com/code/invalidateSubCodeCache',
 	},
+	REPORT: {
+		GET_REPORT_LIST: '/com/reports/list',
+		GET_REPORT: '/com/reports',
+		INSERT_REPORT: '/com/reports/insert',
+		UPDATE_REPORT: '/com/reports/update',
+		DELETE_REPORT: '/com/reports/delete',
+		GET_REPORT_FILE_PDF: '/com/reports',
+	},
 };
