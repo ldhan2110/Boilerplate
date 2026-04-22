@@ -1,0 +1,37 @@
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { SuccessDto } from '@infra/common/dtos';
+import { RoleDto, RoleListDto, SearchRoleDto } from './dto';
+import { RolesService } from './roles.service';
+
+@Controller('api/adm/role')
+export class RolesController {
+  constructor(private readonly rolesService: RolesService) {}
+
+  // POST /api/adm/role/getRoleList
+  @Post('getRoleList')
+  @HttpCode(HttpStatus.OK)
+  getRoleList(@Body() dto: SearchRoleDto): Promise<RoleListDto> {
+    return this.rolesService.getRoleList(dto);
+  }
+
+  // POST /api/adm/role/getRole
+  @Post('getRole')
+  @HttpCode(HttpStatus.OK)
+  getRole(@Body() dto: SearchRoleDto): Promise<RoleDto> {
+    return this.rolesService.getRole(dto);
+  }
+
+  // POST /api/adm/role/insertRole
+  @Post('insertRole')
+  @HttpCode(HttpStatus.OK)
+  insertRole(@Body() dto: RoleDto): Promise<SuccessDto> {
+    return this.rolesService.insertRole(dto);
+  }
+
+  // POST /api/adm/role/updateRole
+  @Post('updateRole')
+  @HttpCode(HttpStatus.OK)
+  updateRole(@Body() dto: RoleDto): Promise<SuccessDto> {
+    return this.rolesService.updateRole(dto);
+  }
+}
