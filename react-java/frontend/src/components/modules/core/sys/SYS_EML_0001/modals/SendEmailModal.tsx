@@ -57,7 +57,7 @@ export const SendEmailModal: React.FC<SendEmailModalProps> = ({ open, onClose })
 			open={open}
 			onCancel={handleClose}
 			width={800}
-			destroyOnClose
+			destroyOnHidden
 			footer={[
 				<Button key="cancel" onClick={handleClose}>
 					{t('Cancel')}
