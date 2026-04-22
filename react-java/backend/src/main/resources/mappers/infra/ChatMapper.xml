@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.infra.ai.mappers.ChatMapper">
+
+    <select id="getConversations" parameterType="map" resultType="com.clt.hrm.infra.ai.dtos.ConversationDto">
+        SELECT 
+            CONVERSATION_ID,
+            CONVERSATION_TITLE,
+            CRE_DT,
+            UPD_DT,
+            CRE_USR_ID,
+            UPD_USR_ID
+        FROM CONVERSATION
+        WHERE 1=1
+        AND CO_ID = #{coId}
+        AND CRE_USR_ID = #{usrId}
+        ORDER BY UPD_DT DESC
+    </select>
+
+    <select id="loadMessageHistory" parameterType="string" resultType="com.clt.hrm.infra.ai.dtos.ChatMessageDto">
+        SELECT 
+            MSG_ID,
+            MSG_CNTNT,
+            MSG_SNDR,
+            CRE_DT,
+            UPD_DT,
+            CRE_USR_ID,
+            UPD_USR_ID
+        FROM MESSAGE
+        WHERE CONVERSATION_ID = #{conversationId}
+        ORDER BY CRE_DT ASC
+    </select>
+
+    <select id="getMessages" parameterType="string" resultType="com.clt.hrm.infra.ai.dtos.ChatMessageDto">
+        SELECT 
+            MSG_ID,
+            MSG_CNTNT,
+            MSG_SNDR,
+            CRE_DT,
+            UPD_DT,
+            CRE_USR_ID,
+            UPD_USR_ID
+        FROM MESSAGE
+        WHERE CONVERSATION_ID = #{conversationId}
+    </select>
+
+    <delete id="deleteMessages" parameterType="string">
+        DELETE FROM MESSAGE
+        WHERE CONVERSATION_ID = #{conversationId}
+    </delete>
+
+    <!-- Batch insert messages -->
+    <insert id="saveMessages" parameterType="java.util.List">
+        INSERT INTO ai.message (
+            msg_id,
+            conversation_id,
+            msg_sndr,
+            msg_cntnt,
+            sort_order,
+            co_id,
+            cre_usr_id,
+            cre_dt,
+            upd_usr_id,
+            upd_dt
+        ) VALUES
+        <foreach collection="list" item="msg" separator=",">
+            (
+                #{msg.msgId},
+                #{msg.conversationId},
+                #{msg.msgSndr},
+                #{msg.msgCntnt},
+                #{msg.sortOrder},
+                #{msg.coId},
+                #{msg.creUsrId},
+                now(),
+                #{msg.updUsrId},
+                now()
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertMessage" parameterType="com.clt.hrm.infra.ai.dtos.ChatMessageDto">
+        INSERT INTO MESSAGE (
+            CO_ID,
+            CONVERSATION_ID,
+            MSG_ID,
+            MSG_CNTNT,
+            MSG_SNDR,
+            CRE_USR_ID,
+            UPD_USR_ID,
+            CRE_DT,
+            UPD_DT
+        ) VALUES (
+            #{coId},
+            #{conversationId},
+            #{msgId},
+            #{msgCntnt},
+            #{msgSndr},
+            #{creUsrId},
+            #{updUsrId},
+            NOW(),
+            NOW()
+        )
+    </insert>
+
+    <delete id="deleteConversationMessages" parameterType="map">
+        DELETE FROM MESSAGE
+        WHERE CONVERSATION_ID = #{conversationId}
+        AND CO_ID = #{coId}
+    </delete>
+
+    <delete id="deleteConversation" parameterType="map">
+        DELETE FROM CONVERSATION
+        WHERE CONVERSATION_ID = #{conversationId}
+        AND CO_ID = #{coId}
+    </delete>
+
+    <insert id="insertConversation" parameterType="com.clt.hrm.infra.ai.dtos.ConversationDto">
+        INSERT INTO CONVERSATION (
+            CO_ID,
+            CONVERSATION_ID,
+            CONVERSATION_TITLE,
+            CRE_USR_ID,
+            UPD_USR_ID,
+            CRE_DT,
+            UPD_DT
+        ) VALUES (
+            #{coId},
+            #{conversationId},
+            #{conversationTitle},
+            #{creUsrId},
+            #{updUsrId},
+            NOW(),
+            NOW()
+        )
+    </insert>
+</mapper>

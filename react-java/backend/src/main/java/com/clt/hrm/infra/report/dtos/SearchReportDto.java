@@ -1,20 +1,16 @@
 package com.clt.hrm.infra.report.dtos;
 
-import com.clt.hrm.infra.common.dtos.PaginationDto;
-import com.clt.hrm.infra.common.dtos.SortDto;
+import com.clt.hrm.infra.common.dtos.SearchBaseDto;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class SearchReportDto {
-    private String coId;
+@EqualsAndHashCode(callSuper = false)
+public class SearchReportDto extends SearchBaseDto {
     private String rptId;
     private String rptCd;
     private String rptNm;
     private String pgmId;
     private String pgmCd;
-    private String useFlg;
     private String textSearch;
-    
-    private SortDto sort;
-    private PaginationDto pagination;
 }

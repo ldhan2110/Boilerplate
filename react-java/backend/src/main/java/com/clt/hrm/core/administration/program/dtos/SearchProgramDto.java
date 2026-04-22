@@ -1,21 +1,15 @@
 package com.clt.hrm.core.administration.program.dtos;
 
-import com.clt.hrm.infra.common.dtos.PaginationDto;
-import com.clt.hrm.infra.common.dtos.SortDto;
-
+import com.clt.hrm.infra.common.dtos.SearchBaseDto;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class SearchProgramDto {
-	private String coId;
+@EqualsAndHashCode(callSuper = false)
+public class SearchProgramDto extends SearchBaseDto{
 	private String pgmId;
 	private String pgmCd;
     private String pgmNm;
     private String pgmTpCd;
-    private String useFlg;
-    
-    // Pagination & Sorting
-    private SortDto sort;
-    private PaginationDto pagination;
 }
 
