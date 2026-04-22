@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.infra.file.mapper.FileMapper">
+	<select id="findFile" parameterType="com.clt.hrm.infra.file.dtos.SearchFileDto" resultType="com.clt.hrm.infra.file.dtos.FileDto">
+		SELECT 
+			CO_ID,
+            FILE_ID,
+            FILE_NM,
+            FILE_PATH,
+            FILE_TP,
+            FILE_SZ,
+            CRE_USR_ID,
+            CRE_DT,
+            UPD_USR_ID,
+            UPD_DT
+		FROM COM_FILE
+		WHERE 1 = 1
+		<if test="coId != null and coId != ''">
+			AND CO_ID = #{coId}
+		</if>
+		<if test="fileId != null and fileId != ''">
+			AND FILE_ID = #{fileId}
+		</if>
+		<if test="filePath != null and filePath != ''">
+			AND FILE_PATH = #{filePath}
+		</if>
+		LIMIT 1
+	</select>
+
+	<insert id="insertFile" parameterType="com.clt.hrm.infra.file.dtos.FileDto">
+	    <selectKey keyProperty="fileId" resultType="String" order="BEFORE">
+	        SELECT get_mdl_seq2(#{coId}, 'FILE', 6)
+	    </selectKey>
+        INSERT INTO COM_FILE (
+			CO_ID,
+            FILE_ID,
+            FILE_NM,
+            FILE_PATH,
+            FILE_TP,
+            FILE_SZ,
+            CRE_USR_ID,
+            CRE_DT,
+            UPD_USR_ID,
+            UPD_DT
+		)
+        VALUES (
+			#{coId},
+            #{fileId},
+            #{fileNm},
+            #{filePath},
+            #{fileTp},
+            #{fileSz},
+            #{creUsrId},
+            CURRENT_TIMESTAMP,
+            #{updUsrId},
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+    
+    <delete id="deleteFile" parameterType="com.clt.hrm.infra.file.dtos.FileDto">
+	    DELETE FROM COM_FILE
+			WHERE CO_ID = #{coId}
+			AND FILE_ID = #{fileId}
+    </delete>
+</mapper>

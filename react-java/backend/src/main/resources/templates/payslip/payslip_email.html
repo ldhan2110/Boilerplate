@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="'Payslip – ' + ${data.workMonthLabel}">Payslip – 12.2025</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: #222;
+      background: #f4f4f4;
+    }
+    .email-wrap {
+      max-width: 700px;
+      margin: 24px auto;
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .greeting { padding: 20px 24px 16px; line-height: 1.75; }
+    .greeting p { margin-bottom: 8px; }
+    .payslip {
+      margin: 0 16px 16px;
+      border: 2px solid #1565c0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .ps-header {
+      background: #fff;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1565c0;
+    }
+    .ps-header .co-name {
+      font-weight: bold;
+      font-size: 13px;
+      color: #1565c0;
+      text-transform: uppercase;
+    }
+    .ps-header .period {
+      font-weight: bold;
+      font-size: 13px;
+      color: #1565c0;
+      text-transform: uppercase;
+    }
+    .emp-info {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #90caf9;
+      background: #e3f2fd;
+      padding: 8px 12px;
+    }
+    .emp-info-col { flex: 1; }
+    .emp-info-col table { width: 100%; border-collapse: collapse; }
+    .emp-info-col td { padding: 2px 4px; font-size: 11.5px; }
+    .emp-info-col td:first-child { white-space: nowrap; color: #555; }
+    .emp-info-col td:last-child { font-weight: bold; }
+    .salary-layout { display: flex; gap: 0; }
+    .salary-col { flex: 1; padding: 6px 10px; }
+    .salary-col + .salary-col { border-left: 1px solid #90caf9; }
+    .section-title {
+      background: #1565c0;
+      color: #fff;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11.5px;
+      padding: 3px 6px;
+      margin: 4px -10px 4px;
+      letter-spacing: .3px;
+    }
+    .salary-table { width: 100%; border-collapse: collapse; }
+    .salary-table td {
+      padding: 2px 3px;
+      font-size: 11.5px;
+      vertical-align: top;
+    }
+    .salary-table .label { color: #333; }
+    .salary-table .val-hrs { text-align: right; white-space: nowrap; color: #1565c0; }
+    .salary-table .val-amt { text-align: right; white-space: nowrap; font-weight: 600; }
+    .salary-table tr:nth-child(even) td { background: #f8fbff; }
+    .salary-table .total-row td {
+      font-weight: bold;
+      border-top: 1px solid #90caf9;
+      padding-top: 4px;
+    }
+    .deduct-title {
+      background: #c62828;
+      color: #fff;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11.5px;
+      padding: 3px 6px;
+      margin: 4px 0;
+      letter-spacing: .3px;
+    }
+    .ps-footer {
+      background: #e3f2fd;
+      border-top: 2px solid #1565c0;
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 11px;
+      color: #444;
+    }
+    .ps-footer .slogan { font-style: italic; margin-bottom: 6px; }
+    .ps-footer .page { font-size: 10px; color: #666; }
+    .net-row td {
+      font-size: 13px;
+      font-weight: bold;
+      color: #c62828;
+      border-top: 2px solid #1565c0;
+      padding-top: 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="email-wrap">
+
+  <div class="greeting">
+    <p>Hello <strong th:text="${data.employeeName}">Employee</strong>!</p>
+    <p>
+      Human Resources is sending you the payslip for <strong th:text="${data.workMonthLabel}">12.2025</strong>.
+    </p>
+    <p>Please review the details and contact HR if you find any discrepancies.</p>
+    <p>Kind regards and thank you.</p>
+    <p>P/S: Wishing you health, good luck, and success.</p>
+  </div>
+
+  <div class="payslip">
+
+    <div class="ps-header">
+      <span class="co-name" th:text="${data.companyName}">Company</span>
+      <span class="period" th:text="'SALARY MONTH ' + ${data.workMonthLabel}">SALARY MONTH 12.2025</span>
+    </div>
+
+    <div class="emp-info">
+      <div class="emp-info-col">
+        <table>
+          <tr>
+            <td>Employee</td>
+            <td th:text="'[' + ${data.employeeCode} + '] ' + ${data.employeeName}">[16200] Name</td>
+          </tr>
+          <tr>
+            <td>Position</td>
+            <td th:text="${data.jobTitle}">Job</td>
+          </tr>
+          <tr>
+            <td>Department</td>
+            <td th:text="${data.section}">Section</td>
+          </tr>
+          <tr>
+            <td>Join date</td>
+            <td th:text="${#temporals.format(data.joinDate, 'dd/MM/yyyy')}">01/01/2020</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="salary-layout">
+
+      <div class="salary-col">
+        <div class="section-title">INCOME FROM SALARY</div>
+        <table class="salary-table">
+          <colgroup>
+            <col style="width:55%"/>
+            <col style="width:20%"/>
+            <col style="width:25%"/>
+          </colgroup>
+          <tr>
+            <td class="label">Working days / holidays</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.workingDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.workingDayAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Break time</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.restTimeHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' hrs'">0.00 hrs</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Overtime (150%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ot150Hours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' hrs'">0.00 hrs</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.ot150Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Night OT (210%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ot210Hours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' hrs'">0.00 hrs</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.ot210Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Additional night OT</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.nightOtHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' hrs'">0.00 hrs</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.nightOtAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Sunday work (200%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.sunday200Hours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.sunday200Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Sunday night (+70%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.sundayNightHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.sundayNightAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Holiday work (400%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.holiday400Days ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.holiday400Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Holiday night (+110%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.holidayNightHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.holidayNightAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Annual leave</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.annualLeaveUsedDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Paid statutory leave</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.companyLeaveDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Company holiday</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.holidayDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Unpaid leave</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.unpaidLeaveDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Women’s day allowance (1.5h)</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.womenDayRest ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Childcare support</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.babySupportAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Attendance bonus</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.attendanceBonus ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">National holiday bonus (30 Apr–1 May &amp; 2 Sep)</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.nationalDayBonus ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="2" class="label">TOTAL GROSS</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.totalGross ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="salary-col">
+        <table class="salary-table" style="margin-bottom:4px;">
+          <colgroup>
+            <col style="width:60%"/>
+            <col style="width:40%"/>
+          </colgroup>
+          <tr>
+            <td class="label">Basic salary</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.basicSalary, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Responsibility allowance</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.respAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Hazardous work allowance</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.harmfulAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Shift allowance</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.shiftAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Petrol / transport support</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.petrolHousingAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Attendance allowance</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.workHardAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Rule compliance bonus</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.complianceBonusAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">OT hours (ref.)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ttlOvtPrgsVal ?: 0, 1, 'COMMA', 2, 'POINT')} + ' hrs'">0.00 hrs</td>
+          </tr>
+          <tr>
+            <td class="label">Annual leave taken</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ttlAnulLveUsdDysNo ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+          </tr>
+          <tr>
+            <td class="label">Annual leave remaining</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.anulLveRmnDysNo ?: 0, 1, 'COMMA', 2, 'POINT')} + ' days'">0.00 days</td>
+          </tr>
+        </table>
+
+        <div class="deduct-title">DEDUCTIONS</div>
+        <table class="salary-table">
+          <colgroup>
+            <col style="width:60%"/>
+            <col style="width:40%"/>
+          </colgroup>
+          <tr>
+            <td class="label">Social insurance (8%)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.siAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Unemployment insurance (1%)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.uiAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Health insurance (1.5%)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.hiAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Natural disaster / flood fund</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.floodFundAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Personal income tax</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.pitAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Post-tax deductions</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.deductAfterTax ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Salary advance</td>
+            <td class="val-amt" th:text="${data.salaryAdvance != null ? #numbers.formatDecimal(data.salaryAdvance, 1, 'COMMA', 0, 'POINT') : '--'}">--</td>
+          </tr>
+          <tr>
+            <td class="label">Union fee</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.unionFeeAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr class="total-row">
+            <td class="label">TOTAL DEDUCTIONS</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.totalDeductions ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Severance</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.severancePay ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Prior-month adjustment</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.lastMonthAdjust ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr class="net-row">
+            <td class="label">NET PAY</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.netSalary ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="ps-footer">
+      <div class="slogan">Thank you for your contribution to the company!</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+	"properties": [
+		{
+			"name": "jwt.expireTime",
+			"type": "java.lang.String",
+			"description": "Expiration Time (hours)"
+		},
+		{
+			"name": "jwt.secret",
+			"type": "java.lang.String",
+			"description": "Secrect key for JWT Token"
+		},
+		{
+			"name": "kafka.enabled",
+			"type": "java.lang.String",
+			"description": "Enable configuration for Kafka Bean"
+		},
+		{
+			"name": "jwt.access-token-secret",
+			"type": "java.lang.String",
+			"description": "A description for 'jwt.access-token-secret'"
+		},
+		{
+			"name": "redis.enabled",
+			"type": "java.lang.String",
+			"description": "Enable or disable custom Redis configuration"
+		},
+		{
+			"name": "jwt.refresh-token-secret",
+			"type": "java.lang.String",
+			"description": "A description for 'jwt.refresh-token-secret'"
+		},
+		{
+			"name": "jwt.refresh-token-secret",
+			"type": "java.lang.String",
+			"description": "A description for 'jwt.refresh-token-secret'"
+		}
+	]
+}

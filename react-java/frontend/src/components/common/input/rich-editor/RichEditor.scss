@@ -1,0 +1,507 @@
+
+.rich-editor {
+	--rich-editor-height: 200px;
+	--rich-editor-border-color: var(--ant-color-border);
+	--rich-editor-border-radius: var(--ant-border-radius);
+	--rich-editor-focus-border-color: var(--ant-color-primary);
+	--rich-editor-focus-shadow: 0 0 0 2px var(--ant-color-primary-bg);
+	--rich-editor-toolbar-bg: var(--ant-color-fill-secondary);
+	--rich-editor-disabled-bg: var(--ant-color-disabled-bg);
+
+	width: 100%;
+	position: relative;
+
+	// Trumbowyg box styling
+	.trumbowyg-box {
+		border: 1px solid var(--rich-editor-border-color);
+		border-radius: var(--rich-editor-border-radius);
+		transition:
+			border-color 0.2s,
+			box-shadow 0.2s;
+		background: var(--ant-color-bg-container);
+		margin: 0;
+
+		&:focus-within {
+			border-color: var(--rich-editor-focus-border-color);
+			box-shadow: var(--rich-editor-focus-shadow);
+		}
+
+		// Editor area - Fixed height with scroll
+		.trumbowyg-editor {
+			height: var(--rich-editor-height);
+			padding: 12px 16px;
+			font-size: 14px;
+			line-height: 1.6;
+			color: var(--ant-color-text);
+
+			// Placeholder styling
+			&[placeholder]:empty:before {
+				content: attr(placeholder);
+				color: var(--ant-color-text-placeholder);
+				font-style: normal;
+			}
+
+			// Table styling in editor
+			table {
+				border-collapse: collapse;
+				width: 100%;
+				margin: 8px 0;
+
+				th,
+				td {
+					border: 1px solid var(--rich-editor-border-color);
+					padding: 8px 12px;
+					text-align: left;
+				}
+
+				th {
+					background-color: var(--rich-editor-toolbar-bg);
+					font-weight: 600;
+				}
+			}
+
+			// Image styling
+			img {
+				max-width: 100%;
+				height: auto;
+				border-radius: 4px;
+			}
+
+			// Code/pre styling
+			pre {
+				background-color: var(--ant-color-fill-tertiary);
+				padding: 12px;
+				border-radius: 4px;
+				overflow-x: auto;
+				font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+				font-size: 13px;
+				color: var(--ant-color-text);
+			}
+
+			code {
+				background-color: var(--ant-color-fill-tertiary);
+				padding: 2px 6px;
+				border-radius: 3px;
+				font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+				font-size: 13px;
+				color: var(--ant-color-text);
+			}
+
+			// Blockquote styling
+			blockquote {
+				border-left: 4px solid var(--rich-editor-focus-border-color);
+				margin: 8px 0;
+				padding: 8px 16px;
+				background-color: var(--ant-color-primary-bg);
+				color: var(--ant-color-text-secondary);
+			}
+
+			// Link styling
+			a {
+				color: var(--rich-editor-focus-border-color);
+				text-decoration: none;
+
+				&:hover {
+					text-decoration: underline;
+				}
+			}
+
+			// List styling
+			ul,
+			ol {
+				padding-left: 24px;
+				margin: 8px 0;
+			}
+
+			li {
+				margin: 4px 0;
+			}
+
+			// Heading styling
+			h1,
+			h2,
+			h3,
+			h4,
+			h5,
+			h6 {
+				margin: 16px 0 8px;
+				font-weight: 600;
+				line-height: 1.4;
+			}
+
+			p {
+				margin: 8px 0;
+			}
+
+			// Horizontal rule
+			hr {
+				border: none;
+				border-top: 1px solid var(--rich-editor-border-color);
+				margin: 16px 0;
+			}
+		}
+
+		// Button pane (toolbar)
+		.trumbowyg-button-pane {
+			background-color: var(--rich-editor-toolbar-bg);
+			border-bottom: 1px solid var(--rich-editor-border-color);
+			padding: 4px 8px;
+
+			&::after {
+				background: transparent;
+			}
+
+			// Button groups
+			.trumbowyg-button-group {
+				margin: 0 4px;
+
+				&::after {
+					background-color: var(--rich-editor-border-color);
+					height: 20px;
+					margin-top: 5px;
+				}
+
+				&:last-child::after {
+					display: none;
+				}
+			}
+
+			// Individual buttons
+			button {
+				width: 32px;
+				height: 32px;
+				padding: 4px;
+				margin: 2px 1px;
+				border-radius: 4px;
+				transition:
+					background-color 0.2s,
+					color 0.2s;
+
+				&:hover:not(:disabled) {
+					background-color: var(--ant-color-fill-secondary);
+				}
+
+				&:active:not(:disabled) {
+					background-color: var(--ant-color-fill);
+				}
+
+				&.trumbowyg-active {
+					background-color: var(--ant-color-primary-bg);
+
+					svg {
+						fill: var(--rich-editor-focus-border-color);
+					}
+				}
+
+				svg {
+					fill: var(--ant-color-text-secondary);
+					width: 16px;
+					height: 16px;
+				}
+
+				&:disabled {
+					opacity: 0.4;
+					cursor: not-allowed;
+				}
+			}
+
+			// Right buttons (fullscreen, etc.)
+			.trumbowyg-right {
+				float: right;
+			}
+		}
+
+		// Fullscreen mode
+		&.trumbowyg-fullscreen {
+			.trumbowyg-editor {
+				height: calc(100vh - 50px) !important;
+			}
+		}
+	}
+
+	.trumbowyg-dropdown-backColor:not(.trumbowyg-dropdown--color-list) button:focus::after, .trumbowyg-dropdown-backColor:not(.trumbowyg-dropdown--color-list) button:hover::after, .trumbowyg-dropdown-foreColor:not(.trumbowyg-dropdown--color-list) button:focus::after, .trumbowyg-dropdown-foreColor:not(.trumbowyg-dropdown--color-list) button:hover::after {
+		width: 41px;
+	}
+
+	.trumbowyg-dropdown-backColor,
+	.trumbowyg-dropdown-foreColor {
+		z-index: 9999 !important;
+		height: 90%;
+		width: 26% !important;
+		overflow-y: auto;
+		padding: 7px 11px;
+		// width of scrollbar
+		&::-webkit-scrollbar {
+			width: 5px;
+		}
+		
+		// scrollbar track
+		&::-webkit-scrollbar-track {
+			background: var(--ant-color-fill-secondary);
+			border-radius: 8px;
+		}
+		
+		  // scrollbar thumb
+		&::-webkit-scrollbar-thumb {
+			background: var(--ant-color-border);
+			border-radius: 8px;
+		
+			&:hover {
+			  background: var(--ant-color-border-secondary);
+			}
+		}
+	}
+
+	.trumbowyg-dropdown-table {
+		width: 26% !important;
+		z-index: 9999 !important;
+		height: 90%;
+		overflow-y: auto;
+
+
+		// width of scrollbar
+		&::-webkit-scrollbar {
+			width: 5px;
+		}
+		
+		// scrollbar track
+		&::-webkit-scrollbar-track {
+			background: var(--ant-color-fill-secondary);
+			border-radius: 8px;
+		}
+		
+		  // scrollbar thumb
+		&::-webkit-scrollbar-thumb {
+			background: var(--ant-color-border);
+			border-radius: 8px;
+		
+			&:hover {
+			  background: var(--ant-color-border-secondary);
+			}
+		}
+	}
+
+
+	// Dropdown menus
+	.trumbowyg-dropdown {
+		border: 1px solid var(--rich-editor-border-color);
+		border-radius: var(--rich-editor-border-radius);
+		box-shadow:
+			0 6px 16px 0 rgba(0, 0, 0, 0.08),
+			0 3px 6px -4px rgba(0, 0, 0, 0.12),
+			0 9px 28px 8px rgba(0, 0, 0, 0.05);
+		background: var(--ant-color-bg-elevated);
+
+		button {
+			padding: 8px 16px;
+			font-size: 14px;
+			line-height: 1.5;
+			color: var(--ant-color-text);
+			transition: background-color 0.2s;
+
+			&:hover {
+				background-color: var(--ant-color-fill-secondary);
+			}
+
+			&.trumbowyg-active {
+				background-color: var(--ant-color-primary-bg);
+				color: var(--rich-editor-focus-border-color);
+			}
+		}
+	}
+
+
+	// Table plugin dropdown
+	.trumbowyg-dropdown-table {
+		padding: 8px;
+
+		table {
+			border-collapse: collapse;
+
+			td {
+				width: 18px;
+				height: 18px;
+				border: 1px solid var(--rich-editor-border-color);
+				cursor: pointer;
+				transition: background-color 0.15s;
+
+				&:hover,
+				&.active {
+					background-color: var(--ant-color-primary-bg);
+					border-color: var(--rich-editor-focus-border-color);
+				}
+			}
+		}
+	}
+
+	// No toolbar variant
+	&--no-toolbar {
+		.trumbowyg-box {
+			.trumbowyg-button-pane {
+				display: none;
+			}
+		}
+	}
+
+	// Disabled state
+	&--disabled,
+	&--readonly {
+		.trumbowyg-box {
+			background-color: var(--rich-editor-disabled-bg);
+			cursor: not-allowed;
+
+			.trumbowyg-editor {
+				color: var(--ant-color-text-disabled);
+				cursor: not-allowed;
+				pointer-events: none;
+			}
+
+			.trumbowyg-button-pane {
+				button {
+					opacity: 0.4;
+					cursor: not-allowed;
+					pointer-events: none;
+				}
+			}
+		}
+	}
+}
+
+
+.trumbowyg-modal-box form {
+	padding-right: 16px;
+	padding-bottom: 12px;
+}
+
+.trumbowyg-input-row {
+	display: flex;
+	width: 100%;
+}
+
+.trumbowyg-modal-box .trumbowyg-input-html  {
+	display: flex;
+	align-items: center;
+	width: 100%;
+}
+
+.trumbowyg-modal-box .trumbowyg-input-html input  {
+	border: 1px solid var(--rich-editor-border-color) !important;
+	padding: 8px; 
+	transition: all 150ms;
+    height: 27px;
+    line-height: 27px;
+    border: 0;
+    width: 100%;
+    padding: 0 7px;
+	background: var(--ant-color-bg-container);
+	color: var(--ant-color-text);
+}
+
+.trumbowyg-modal-box .trumbowyg-input-html select {
+	width: 100%;
+	padding: 8px; 
+	transition: all 150ms;
+    height: 27px;
+    line-height: 27px;
+    border: 0;
+    width: 100%;
+    padding: 0 7px;        
+	border: 1px solid var(--rich-editor-border-color) !important;
+	background: var(--ant-color-bg-container);
+	color: var(--ant-color-text);
+}
+
+.trumbowyg-msg-error {
+	color: var(--ant-color-error);
+	font-size: 12px;
+	padding-left: 12px;
+}
+
+.trumbowyg-dropdown button {
+	background: var(--ant-color-bg-elevated);
+	color: var(--ant-color-text) !important;
+}
+.trumbowyg-dropdown button:hover {
+	background: var(--ant-color-fill-secondary) !important;
+}
+
+.trumbowyg-fullscreen-button svg {
+	color: transparent !important;
+}
+
+.trumbowyg-dropdown svg {
+	fill: var(--ant-color-text) !important;
+}
+
+.trumbowyg-msg-error::before {
+	content: "(";
+}
+
+.trumbowyg-msg-error::after {
+	content: ")";
+}
+
+.trumbowyg-modal-box .trumbowyg-input-row {
+    position: relative;
+    margin: -1px 12px;
+    border: 1px solid var(--rich-editor-border-color);
+    overflow: hidden;
+}
+
+.trumbowyg-modal-box .trumbowyg-input-infos label {
+	color: var(--ant-color-text-secondary);
+    overflow: hidden;
+	margin: 0px 12px;
+	font-weight: 600;
+}
+
+.trumbowyg-input-infos {
+	width: 50%;
+	text-align: left;
+    border: 1px solid var(--rich-editor-border-color);
+	background-color: var(--ant-color-fill-quaternary);
+}
+
+// Resizimg plugin styles (canvas-based image resizing)
+.rich-editor {
+	.trumbowyg-editor {
+		// Canvas element for image resizing
+		canvas[id^='trumbowyg-resizimg-'] {
+			display: inline-block;
+			vertical-align: middle;
+			outline: none;
+			
+			&:focus {
+				outline: 2px solid var(--rich-editor-focus-border-color);
+				outline-offset: -2px;
+			}
+		}
+
+		// Resizable wrapper from jquery-resizable-dom
+		.resizable {
+			position: relative;
+			display: inline-block;
+		}
+
+		// Image styling when clickable for resize
+		img {
+			cursor: pointer;
+			
+			&:hover {
+				outline: 2px dashed var(--rich-editor-focus-border-color);
+				outline-offset: 2px;
+			}
+		}
+	}
+}
+
+// Modal styling
+.trumbowyg-modal-box {
+	color: var(--ant-color-text) !important;
+	border: 1px solid var(--rich-editor-border-color) !important;
+	border-radius: var(--rich-editor-border-radius) !important;
+
+	.trumbowyg-modal-title {
+		color: var(--ant-color-text) !important;
+	}	
+}

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.infra.export.mapper.ExportMapper">
+	<select id="getExportJobList" parameterType="com.clt.hrm.infra.export.dtos.SearchExportJobDto" resultType="com.clt.hrm.infra.export.dtos.ExportJobDto">
+		 SELECT JB.CO_ID,
+				JB.JB_ID,
+				JB.JB_STS,
+				JB.FILE_ID,
+				JB.FILE_NM,
+				JB.TOTAL_ROWS,
+				JB.JB_PROG,
+				JB.CRE_USR_ID,
+				JB.CRE_DT,
+				JB.UPD_USR_ID,
+				JB.UPD_DT
+			FROM COM_XPT_JB JB LEFT JOIN COM_FILE FILE ON (
+				FILE.CO_ID = JB.CO_ID
+				AND FILE.FILE_ID = JB.FILE_ID
+			)
+			WHERE JB.CO_ID = #{coId}
+			AND JB.CRE_USR_ID = #{creUsrId}
+			<if test="jbId != null and jbId != ''">
+				AND JB.JB_ID = #{jbId}
+			</if>
+			 <if test="jbIds != null and jbIds.length > 0">
+				AND JB.JB_ID IN
+				<foreach item="id" collection="jbIds" open="(" separator="," close=")">
+			        #{id}
+			    </foreach>
+			 </if>
+			ORDER BY JB.UPD_DT DESC
+			 <if test="pagination.current != null and pagination != ''">
+				LIMIT #{pagination.pageSize} OFFSET (#{pagination.current} - 1) * #{pagination.pageSize}
+		    </if>
+	</select>
+	
+	<select id="countExportJobList" parameterType="com.clt.hrm.infra.export.dtos.SearchExportJobDto" resultType="int">
+		 SELECT COUNT(*)
+			FROM COM_XPT_JB
+			WHERE CO_ID = #{coId}
+			AND CRE_USR_ID = #{creUsrId}
+			<if test="jbId != null and jbId != ''">
+				AND JB_ID = #{jbId}
+			</if>
+	</select>
+	
+	<select id="findJobByJobId" parameterType="com.clt.hrm.infra.export.dtos.ExportJobDto" resultType="com.clt.hrm.infra.export.dtos.ExportJobDto">
+		 SELECT CO_ID,
+				JB_ID,
+				JB_STS,
+				FILE_ID,
+				FILE_NM,
+				TOTAL_ROWS,
+				JB_PROG,
+				CRE_USR_ID,
+				CRE_DT,
+				UPD_USR_ID,
+				UPD_DT
+			FROM COM_XPT_JB
+			WHERE CO_ID = #{coId}
+			AND JB_ID = #{jbId}
+	</select>
+	
+	<insert id="insertExportJob" parameterType="com.clt.hrm.infra.export.dtos.ExportJobDto">
+			<selectKey keyProperty="jbId" resultType="String" order="BEFORE">
+	        	SELECT get_mdl_seq2(#{coId}, 'XPT', 6)
+	    	</selectKey>
+			INSERT INTO COM_XPT_JB (
+				CO_ID,
+				JB_ID,
+				JB_STS,
+				FILE_ID,
+				FILE_NM,
+				TOTAL_ROWS,
+				JB_PROG,
+				JB_RQST_PARA,
+				CRE_USR_ID,
+				CRE_DT,
+				UPD_USR_ID,
+				UPD_DT
+			) VALUES (
+				#{coId},
+		        #{jbId},
+		        #{jbSts},
+		        #{fileId},
+		        #{fileNm},
+		        #{totalRows},
+		        #{jbProg},
+		        #{jbRqstPara, typeHandler=com.clt.hrm.infra.common.typehandler.JsonNodeTypeHandler},
+		        #{creUsrId},
+				NOW(),
+				#{creUsrId},
+				NOW()
+			)
+	</insert>
+	
+	<update id="updateJobStatus" parameterType="com.clt.hrm.infra.export.dtos.ExportJobDto">
+	 	UPDATE COM_XPT_JB
+	        SET JB_STS = #{jbSts},
+	         <if test="fileId != null and fileId != ''">
+	       	 	FILE_ID = #{fileId},
+	       	</if>
+	       	<if test="errMsg != null and errMsg != ''">
+	       	 	ERR_MSG = #{errMsg},
+	       	</if>
+	        UPD_DT = NOW(),
+	        UPD_USR_ID = 'SYSTEM'
+	     WHERE CO_ID = #{coId}
+	       AND JB_ID = #{jbId}
+	</update>
+	
+	<update id="updateProgress">
+	 	UPDATE COM_XPT_JB
+	        SET JB_PROG = #{jbProg},
+	        UPD_DT = NOW(),
+	        UPD_USR_ID = 'SYSTEM'
+	     WHERE CO_ID = #{coId}
+	       AND JB_ID = #{jbId}
+	</update>
+</mapper>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.infra.report.mappers.ReportMapper">
+    
+    <select id="selectReportList" parameterType="com.clt.hrm.infra.report.dtos.SearchReportDto" resultType="com.clt.hrm.infra.report.dtos.ReportDto">
+        SELECT *
+        FROM (
+        SELECT
+            R.CO_ID as CO_ID,
+            R.RPT_ID as RPT_ID,
+            R.RPT_CD as RPT_CD,
+            R.RPT_NM as RPT_NM,
+            R.RPT_URL as RPT_URL,
+            R.RPT_FILE_ID as RPT_FILE_ID,
+            F.FILE_NM as RPT_FILE_NAME,
+            R.PGM_ID as PGM_ID,
+            P.PGM_NM as PGM_NM,
+            R.USE_FLG as USE_FLG,
+            R.CRE_USR_ID as CRE_USR_ID,
+            R.CRE_DT as CRE_DT,
+            R.UPD_USR_ID as UPD_USR_ID,
+            R.UPD_DT as UPD_DT
+        FROM COM_RPT_STUP R
+        LEFT JOIN COM_FILE F ON R.RPT_FILE_ID = F.FILE_ID AND R.CO_ID = F.CO_ID
+        LEFT JOIN COM_PGM P ON R.PGM_ID = P.PGM_ID AND R.CO_ID = P.CO_ID
+        WHERE 1=1
+            <if test="useFlg != null and useFlg != ''">
+                AND R.USE_FLG = #{useFlg}
+            </if>
+            <if test="coId != null and coId != ''">
+                AND R.CO_ID = #{coId}
+            </if>
+            <if test="rptId != null and rptId != ''">
+                AND R.RPT_ID = #{rptId}
+            </if>
+            <if test="rptCd != null and rptCd != ''">
+                AND R.RPT_CD = #{rptCd}
+            </if>
+            <if test="pgmId != null and pgmId != ''">
+                AND R.PGM_ID = #{pgmId}
+            </if>
+            <if test="pgmCd != null and pgmCd != ''">
+                AND P.PGM_CD = #{pgmCd}
+            </if>
+            <if test="textSearch != null and textSearch != ''">
+                AND (
+                    R.RPT_NM ILIKE '%' || #{textSearch} || '%'
+                    OR R.RPT_CD ILIKE '%' || #{textSearch} || '%'
+                )
+            </if>
+        <choose>
+            <when test="sort != null and sort.sortField == 'RPT_CD'">
+                ORDER BY R.RPT_CD ${sort.sortType}, R.UPD_DT DESC
+            </when>
+            <when test="sort != null and sort.sortField == 'RPT_NM'">
+                ORDER BY R.RPT_NM ${sort.sortType}, R.UPD_DT DESC
+            </when>
+            <when test="sort != null and sort.sortField == 'USE_FLG'">
+                ORDER BY R.USE_FLG ${sort.sortType}, R.UPD_DT DESC
+            </when>
+            <otherwise>
+                ORDER BY R.UPD_DT DESC
+            </otherwise>
+        </choose>
+        ) AS R_LIST
+        WHERE 1=1
+        <if test="pagination != null and pagination.current != null and pagination.current != ''">
+            LIMIT #{pagination.pageSize} OFFSET (#{pagination.current} - 1) * #{pagination.pageSize}
+        </if>
+    </select>
+
+    <select id="countReportList" parameterType="com.clt.hrm.infra.report.dtos.SearchReportDto" resultType="int">
+        SELECT COUNT(*)
+        FROM COM_RPT_STUP R
+        LEFT JOIN COM_PGM P ON R.PGM_ID = P.PGM_ID AND R.CO_ID = P.CO_ID
+        WHERE 1=1
+            <if test="useFlg != null and useFlg != ''">
+                AND R.USE_FLG = #{useFlg}
+            </if>
+            <if test="coId != null and coId != ''">
+                AND R.CO_ID = #{coId}
+            </if>
+            <if test="rptId != null and rptId != ''">
+                AND R.RPT_ID = #{rptId}
+            </if>
+            <if test="rptCd != null and rptCd != ''">
+                AND R.RPT_CD = #{rptCd}
+            </if>
+            <if test="pgmId != null and pgmId != ''">
+                AND R.PGM_ID = #{pgmId}
+            </if>
+            <if test="pgmCd != null and pgmCd != ''">
+                AND P.PGM_CD = #{pgmCd}
+            </if>
+            <if test="textSearch != null and textSearch != ''">
+                AND (
+                    R.RPT_NM ILIKE '%' || #{textSearch} || '%'
+                    OR R.RPT_CD ILIKE '%' || #{textSearch} || '%'
+                )
+            </if>
+    </select>
+
+    <select id="getReport" parameterType="com.clt.hrm.infra.report.dtos.SearchReportDto" resultType="com.clt.hrm.infra.report.dtos.ReportDto">
+        SELECT
+            R.CO_ID as CO_ID,
+            R.RPT_ID as RPT_ID,
+            R.RPT_CD as RPT_CD,
+            R.RPT_NM as RPT_NM,
+            R.RPT_URL as RPT_URL,
+            R.RPT_FILE_ID as RPT_FILE_ID,
+            F.FILE_NM as RPT_FILE_NAME,
+            R.PGM_ID as PGM_ID,
+            P.PGM_NM as PGM_NM,
+            R.USE_FLG as USE_FLG,
+            R.CRE_USR_ID as CRE_USR_ID,
+            R.CRE_DT as CRE_DT,
+            R.UPD_USR_ID as UPD_USR_ID,
+            R.UPD_DT as UPD_DT
+        FROM COM_RPT_STUP R
+        LEFT JOIN COM_PGM P ON R.PGM_ID = P.PGM_ID AND R.CO_ID = P.CO_ID
+        LEFT JOIN COM_FILE F ON R.RPT_FILE_ID = F.FILE_ID AND R.CO_ID = F.CO_ID
+        WHERE 1=1
+            <if test="coId != null and coId != ''">
+                AND R.CO_ID = #{coId}
+            </if>
+            <if test="rptId != null and rptId != ''">
+                AND R.RPT_ID = #{rptId}
+            </if>
+            <if test="rptCd != null and rptCd != ''">
+                AND R.RPT_CD = #{rptCd}
+            </if>
+        LIMIT 1
+    </select>
+
+    <select id="checkDuplicateReportCode"  parameterType="com.clt.hrm.infra.report.dtos.SearchReportDto" resultType="int">
+        SELECT COUNT(1)
+        FROM COM_RPT_STUP R
+        WHERE 1=1
+            AND R.CO_ID = #{coId}
+            <if test="rptId != null and rptId != ''">
+                AND R.RPT_ID != #{rptId}
+            </if>
+            <if test="rptCd != null and rptCd != ''">
+                AND R.RPT_CD = #{rptCd}
+            </if>
+    </select>
+
+    <insert id="insertReport" parameterType="com.clt.hrm.infra.report.dtos.ReportDto">
+        <selectKey keyProperty="rptId" resultType="String" order="BEFORE">
+            SELECT get_mdl_seq2(#{coId}, 'RPT', 6)
+        </selectKey>
+        INSERT INTO COM_RPT_STUP (
+            CO_ID,
+            RPT_ID,
+            RPT_CD,
+            RPT_NM,
+            RPT_FILE_ID,
+            RPT_URL,
+            PGM_ID,
+            USE_FLG,
+            CRE_USR_ID,
+            CRE_DT,
+            UPD_USR_ID,
+            UPD_DT
+        ) VALUES (
+            #{coId},
+            #{rptId},
+            #{rptCd},
+            #{rptNm},
+            #{rptFileId},
+            #{rptUrl},
+            #{pgmId},
+            COALESCE(#{useFlg}, 'Y'),
+            #{creUsrId},
+            CURRENT_TIMESTAMP,
+            #{updUsrId},
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <update id="updateReport" parameterType="com.clt.hrm.infra.report.dtos.ReportDto">
+        UPDATE COM_RPT_STUP
+        <set>
+            <if test="rptCd != null and rptCd != ''">
+                RPT_CD = #{rptCd},
+            </if>
+            <if test="rptNm != null and rptNm != ''">
+                RPT_NM = #{rptNm},
+            </if>
+            <if test="rptFileId != null and rptFileId != ''">
+                RPT_FILE_ID = #{rptFileId},
+            </if>
+            <if test="pgmId != null and pgmId != ''">
+                PGM_ID = #{pgmId},
+            </if>
+            <if test="useFlg != null and useFlg != ''">
+                USE_FLG = #{useFlg},
+            </if>
+            <if test="rptUrl != null and rptUrl != ''">
+                RPT_URL = #{rptUrl},
+            </if>
+            UPD_USR_ID = #{updUsrId},
+            UPD_DT = CURRENT_TIMESTAMP
+        </set>
+        WHERE CO_ID = #{coId}
+            AND RPT_CD = #{rptCd}
+    </update>
+
+    <delete id="deleteReport">
+        DELETE FROM COM_RPT_STUP
+        WHERE CO_ID = #{coId}
+            AND RPT_CD IN 
+                <foreach collection="rptCdList" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+    </delete>
+
+</mapper>

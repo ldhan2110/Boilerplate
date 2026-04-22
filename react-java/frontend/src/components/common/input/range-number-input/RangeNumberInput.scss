@@ -1,0 +1,101 @@
+.range-number-input {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--ant-color-border);
+    border-radius: 6px;
+    padding: 0 11px;
+    background: var(--ant-color-bg-container);
+    transition: all 0.2s;
+    position: relative;
+
+    &:hover {
+        border-color: var(--ant-color-primary);
+    }
+
+    &--focused {
+        border-color: var(--ant-color-primary);
+        box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+        outline: 0;
+    }
+
+    &--disabled {
+        background-color: var(--ant-color-disabled-bg);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    &__input {
+        flex: 1;
+        width: 100%;
+
+        &.ant-input-number {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            width: 100%;
+
+            .ant-input-number-input {
+                padding: 4px 0;
+                text-align: center;
+            }
+
+            &:hover,
+            &:focus,
+            &.ant-input-number-focused {
+                border: none !important;
+                box-shadow: none !important;
+            }
+        }
+    }
+
+    &__separator {
+        color: var(--ant-color-text-placeholder);
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    &__clear {
+        position: absolute;
+        right: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: var(--ant-color-text-placeholder);
+        font-size: 16px;
+        line-height: 1;
+        padding: 0 4px;
+        z-index: 1;
+        background: var(--ant-color-bg-container);
+        transition: color 0.2s;
+
+        &:hover {
+            color: var(--ant-color-text-secondary);
+        }
+    }
+}
+
+.range-number-input > .ant-input-number-affix-wrapper {
+    border: none;
+    padding: 0;
+    box-shadow: none !important;
+}
+
+.range-number-input__input.ant-input-number {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+
+    &:hover,
+    &:focus,
+    &.ant-input-number-focused {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .ant-input-number-input {
+        padding: 4px 0;
+        text-align: center;
+    }
+}

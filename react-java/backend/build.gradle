@@ -1,0 +1,93 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.0'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+archivesBaseName = 'hrm-x'
+group = 'com.clt.hrm'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	all {
+		exclude(group: 'org.springframework.boot', module: 'spring-boot-starter-logging')
+	}
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+  mavenCentral()
+}
+
+bootJar {
+    launchScript()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-quartz' 
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+	implementation 'org.apache.logging.log4j:log4j-layout-template-json'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+	implementation 'net.sf.jasperreports:jasperreports:7.0.3'
+	implementation 'net.sf.jasperreports:jasperreports-fonts:7.0.3'
+	implementation 'net.sf.jasperreports:jasperreports-functions:7.0.3'
+	implementation 'net.sf.jasperreports:jasperreports-metadata:7.0.3'
+	implementation 'net.sf.jasperreports:jasperreports-pdf:7.0.3'
+	implementation 'org.apache.commons:commons-text:1.10.0'
+	implementation 'org.apache.commons:commons-collections4:4.4'
+	implementation 'org.apache.commons:commons-lang3:3.12.0'
+	implementation 'commons-io:commons-io:2.19.0'
+	implementation 'org.apache.poi:poi:5.4.1'
+	implementation 'org.apache.poi:poi-ooxml:5.4.1'
+	implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.4.9'
+	// DOCX/XLSX -> PDF (open-source) via docx4j FO exporter + Apache FOP
+	implementation 'org.docx4j:docx4j-export-fo:11.4.9'
+	implementation 'org.apache.xmlgraphics:fop:2.9'
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'commons-io:commons-io:2.21.0'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	implementation 'com.cronutils:cron-utils:9.2.1'
+	implementation "dev.langchain4j:langchain4j-spring-boot-starter:1.12.2-beta22"
+	implementation 'dev.langchain4j:langchain4j-ollama:1.12.2'
+    implementation "dev.langchain4j:langchain4j-google-ai-gemini:1.12.2"
+	implementation 'dev.langchain4j:langchain4j-web-search-engine-tavily:1.12.2-beta22'
+	implementation 'dev.langchain4j:langchain4j-document-parser-apache-pdfbox:1.12.2-beta22'
+	implementation 'dev.langchain4j:langchain4j-document-parser-apache-poi:1.12.2-beta22'
+	implementation 'dev.langchain4j:langchain4j-open-ai:1.12.2'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // needed for JSON support
+	runtimeOnly 'org.postgresql:postgresql'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

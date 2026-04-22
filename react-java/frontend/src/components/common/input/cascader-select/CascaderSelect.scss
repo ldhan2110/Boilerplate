@@ -1,0 +1,16 @@
+.cascader-select-dropdown {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+
+	&__search {
+		padding: 8px;
+		border-bottom: 1px solid #f0f0f0;
+		flex-shrink: 0;
+	}
+
+	&__menu {
+		flex: 1;
+		overflow: auto;
+	}
+}

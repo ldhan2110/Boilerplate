@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.core.administration.company.mapper.AdmCompanyMapper">
+	<select id="searchCompanyList" parameterType="com.clt.hrm.core.administration.company.dtos.SearchCompanyDto" resultType="com.clt.hrm.core.administration.company.dtos.CompanyInfoDto"> 
+		SELECT * 
+		FROM 
+			(SELECT CO.CO_ID,
+				CO.CO_NM,
+				CO.USE_FLG,
+				CO.CO_TP_CD,
+				CO.CO_FRGN_NM,
+				CO.TAX_CD,
+				CO.TAX_OFC,
+				CO.CO_LOCL_NM,
+				CO.CO_ADDR_VAL_1 AS co_addr_val1,
+				CO.CO_ADDR_VAL_2 AS co_addr_val2,
+				CO.CO_ADDR_VAL_3 AS co_addr_val3,
+				CO.EML_ADDR AS eml_addr,
+				CO.FAX_NO AS fax_no,
+				CO.PHN_NO AS phn_no,
+				CO.SL_REP AS sl_rep,
+				CO.WEB_ADDR AS web_addr,
+				CO.CO_DESC AS co_desc,
+				CO.CO_ANV_DT AS co_anv_dt,
+				CO.CO_SZ AS co_sz,
+				CO.CO_NTN AS co_ntn,
+				CO.EMPE_SZ AS empe_sz,
+				CO.CURR_CD AS curr_cd,
+				CO.CO_INDUS_ZN AS co_indus_zn,
+				CO.CO_PROD AS co_prod,
+				CO.TM_ZN AS tm_zn,
+				CO.LGO_FILE_ID AS lgoFileId,
+				CO.CRE_DT, 
+				CO.CRE_USR_ID, 
+				CO.UPD_DT,
+				CO.UPD_USR_ID,
+				CO.BANK_TP_CD,
+				CO.BANK_ACCT_NO,
+				CO.BANK_NM AS bank_nm,
+				CO.CHTR_CAPI_VAL AS chtr_capi_val,
+				CO.ESTB_DT AS estb_dt
+			FROM ADM_CO CO
+			WHERE 1=1
+			<if test="coId != null and coId != ''">
+				AND CO.CO_ID = #{coId}
+			</if>
+			<if test="searchText != null and searchText != ''">
+				AND (
+					CO.CO_ID ILIKE '%' || #{searchText} || '%'
+					OR CO.CO_NM ILIKE '%' || #{searchText} || '%'
+					OR CO.TAX_CD ILIKE '%' || #{searchText} || '%'
+				)
+			</if>
+			<if test="useFlg != null and useFlg != ''">
+				AND CO.USE_FLG = #{useFlg}
+			</if>
+			<if test="taxCd != null and taxCd != ''">
+				AND CO.TAX_CD ILIKE '%' || #{taxCd} || '%'
+			</if>
+			<if test="coTpCd != null and coTpCd != ''">
+				AND CO.CO_TP_CD = #{coTpCd}
+			</if>
+			<if test="coNtn != null and coNtn != ''">
+				AND CO.CO_NTN = #{coNtn}
+			</if>
+			<choose>
+			    <when test="sort != null and sort.sortField != null and sort.sortField != ''">
+			      ORDER BY ${sort.sortField} ${sort.sortType}, CO.UPD_DT DESC
+			    </when>
+			    <otherwise>
+			      ORDER BY CO.UPD_DT DESC
+			    </otherwise>
+			</choose>	
+		) AS CO_LIST
+		WHERE 1=1
+		<include refid="com.clt.hrm.infra.common.mappers.CommonMapper.DynamicFilter"/>
+		<if test="pagination != null and pagination.current != null and pagination.current != ''">
+			LIMIT #{pagination.pageSize} OFFSET (#{pagination.current} - 1) * #{pagination.pageSize}
+		</if>
+	</select>
+
+	<select id="countCompanyList" parameterType="com.clt.hrm.core.administration.company.dtos.SearchCompanyDto" resultType="int">
+		SELECT COUNT(*) 
+		FROM ADM_CO 
+		WHERE 1=1
+		<if test="coId != null and coId != ''">
+			AND CO_ID = #{coId}
+		</if>
+		<if test="searchText != null and searchText != ''">
+			AND (
+				CO_ID ILIKE '%' || #{searchText} || '%'
+				OR CO_NM ILIKE '%' || #{searchText} || '%'
+				OR TAX_CD ILIKE '%' || #{searchText} || '%'
+			)
+		</if>
+		<if test="useFlg != null and useFlg != ''">
+			AND USE_FLG = #{useFlg}
+		</if>
+		<if test="taxCd != null and taxCd != ''">
+			AND TAX_CD ILIKE '%' || #{taxCd} || '%'
+		</if>
+		<if test="coTpCd != null and coTpCd != ''">
+			AND CO_TP_CD = #{coTpCd}
+		</if>
+		<if test="coNtn != null and coNtn != ''">
+			AND CO_NTN = #{coNtn}
+		</if>
+		<include refid="com.clt.hrm.infra.common.mappers.CommonMapper.DynamicFilter"/>
+	</select>
+	
+	<select id="selectCompanyInfo" parameterType="com.clt.hrm.core.administration.company.dtos.SearchCompanyDto" resultType="com.clt.hrm.core.administration.company.dtos.CompanyInfoDto">
+		SELECT CO.CO_ID,
+			CO.CO_NM,
+			CO.USE_FLG,
+			CO.CO_TP_CD,
+			CO.CO_FRGN_NM,
+			CO.TAX_CD,
+			CO.TAX_OFC,
+			CO.CO_LOCL_NM,
+			CO.CO_ADDR_VAL_1 AS co_addr_val1,
+			CO.CO_ADDR_VAL_2 AS co_addr_val2,
+			CO.CO_ADDR_VAL_3 AS co_addr_val3,
+			CO.EML_ADDR AS eml_addr,
+			CO.FAX_NO AS fax_no,
+			CO.PHN_NO AS phn_no,
+			CO.SL_REP AS sl_rep,
+			CO.WEB_ADDR AS web_addr,
+			CO.CO_DESC AS co_desc,
+			CO.CO_ANV_DT AS co_anv_dt,
+			CO.CO_SZ AS co_sz,
+			CO.CO_NTN AS co_ntn,
+			CO.EMPE_SZ AS empe_sz,
+			CO.CURR_CD AS curr_cd,
+			CO.CO_INDUS_ZN AS co_indus_zn,
+			CO.CO_PROD AS co_prod,
+			CO.TM_ZN AS tm_zn,
+			CO.LGO_FILE_ID AS lgoFileId,
+			CO.CRE_DT, 
+			CO.CRE_USR_ID, 
+			CO.UPD_DT,
+			CO.UPD_USR_ID,
+			CO.BANK_TP_CD,
+			CO.BANK_ACCT_NO,
+			CO.BANK_NM AS bank_nm,
+			CO.CHTR_CAPI_VAL AS chtr_capi_val,
+			CO.ESTB_DT AS estb_dt
+		FROM ADM_CO CO
+		WHERE 1=1
+		<if test="coId != null and coId != ''">
+			AND CO.CO_ID = #{coId}
+		</if>
+		<if test="searchText != null and searchText != ''">
+			AND CO.CO_NM ILIKE '%' || #{searchText} || '%'
+		</if>
+		<if test="useFlg != null and useFlg != ''">
+			AND CO.USE_FLG = #{useFlg}
+		</if>
+		LIMIT 1
+	</select>
+
+	<select id="selectCompanyById" parameterType="String" resultType="com.clt.hrm.core.administration.company.dtos.CompanyInfoDto">
+		SELECT CO_ID,
+			CO_NM,
+			TAX_CD,
+			LGO_FILE_ID AS lgoFileId
+		FROM ADM_CO
+		WHERE CO_ID = #{coId}
+		LIMIT 1
+	</select>
+
+	<select id="selectCompanyByTaxCd" resultType="com.clt.hrm.core.administration.company.dtos.CompanyInfoDto">
+		SELECT CO_ID,
+			CO_NM,
+			TAX_CD
+		FROM ADM_CO
+		WHERE TAX_CD = #{taxCd}
+			AND TAX_CD IS NOT NULL
+			AND TAX_CD != ''
+		<if test="excludeCoId != null and excludeCoId != ''">
+			AND CO_ID != #{excludeCoId}
+		</if>
+		LIMIT 1
+	</select>
+
+	<insert id="insertCompany" parameterType="com.clt.hrm.core.administration.company.dtos.CompanyInfoDto">
+		INSERT INTO ADM_CO (
+			CO_ID,
+			CO_NM,
+			USE_FLG,
+			CRE_USR_ID,
+			CRE_DT,
+			UPD_USR_ID,
+			UPD_DT,
+			TM_ZN,
+			CO_TP_CD,
+			CO_FRGN_NM,
+			TAX_CD,
+			TAX_OFC,
+			CO_LOCL_NM,
+			CO_ADDR_VAL_1,
+			CO_ADDR_VAL_2,
+			CO_ADDR_VAL_3,
+			EML_ADDR,
+			FAX_NO,
+			PHN_NO,
+			SL_REP,
+			WEB_ADDR,
+			CO_DESC,
+			CO_ANV_DT,
+			CO_SZ,
+			CO_NTN,
+			EMPE_SZ,
+			CURR_CD,
+			CO_INDUS_ZN,
+			CO_PROD,
+			LGO_FILE_ID,
+			BANK_TP_CD,
+			BANK_ACCT_NO,
+			BANK_NM,
+			CHTR_CAPI_VAL,
+			ESTB_DT
+		) VALUES (
+			#{coId},
+			#{coNm},
+			COALESCE(#{useFlg}, 'Y'),
+			#{creUsrId},
+			CURRENT_TIMESTAMP,
+			#{updUsrId},
+			CURRENT_TIMESTAMP,
+			COALESCE(#{tmZn}, 'Asia/Ho_Chi_Minh'),
+			#{coTpCd},
+			#{coFrgnNm},
+			#{taxCd},
+			#{taxOfc},
+			#{coLoclNm},
+			#{coAddrVal1},
+			#{coAddrVal2},
+			#{coAddrVal3},
+			#{emlAddr},
+			#{faxNo},
+			#{phnNo},
+			#{slRep},
+			#{webAddr},
+			#{coDesc},
+			#{coAnvDt, jdbcType=DATE},
+			#{coSz},
+			#{coNtn},
+			#{empeSz},
+			#{currCd},
+			#{coIndusZn},
+			#{coProd},
+			#{lgoFileId},
+			#{bankTpCd},
+			#{bankAcctNo},
+			#{bankNm},
+			CAST(#{chtrCapiVal} AS NUMERIC),
+			#{estbDt , jdbcType=DATE}
+		)
+	</insert>
+
+	<update id="updateCompany" parameterType="com.clt.hrm.core.administration.company.dtos.CompanyInfoDto">
+		UPDATE ADM_CO
+		<set>
+			<if test="coNm != null and coNm != ''">
+				CO_NM = #{coNm},
+			</if>
+			<if test="useFlg != null and useFlg != ''">
+				USE_FLG = #{useFlg},
+			</if>
+			<if test="coTpCd != null and coTpCd != ''">
+				CO_TP_CD = #{coTpCd},
+			</if>
+			<if test="coFrgnNm != null and coFrgnNm != ''">
+				CO_FRGN_NM = #{coFrgnNm},
+			</if>
+			<if test="taxCd != null and taxCd != ''">
+				TAX_CD = #{taxCd},
+			</if>
+			<if test="taxOfc != null and taxOfc != ''">
+				TAX_OFC = #{taxOfc},
+			</if>
+			<if test="coLoclNm != null and coLoclNm != ''">
+				CO_LOCL_NM = #{coLoclNm},
+			</if>
+			<if test="coAddrVal1 != null and coAddrVal1 != ''">
+				CO_ADDR_VAL_1 = #{coAddrVal1},
+			</if>
+			<if test="coAddrVal2 != null and coAddrVal2 != ''">
+				CO_ADDR_VAL_2 = #{coAddrVal2},
+			</if>
+			<if test="coAddrVal3 != null and coAddrVal3 != ''">
+				CO_ADDR_VAL_3 = #{coAddrVal3},
+			</if>
+			<if test="emlAddr != null and emlAddr != ''">
+				EML_ADDR = #{emlAddr},
+			</if>
+			<if test="faxNo != null and faxNo != ''">
+				FAX_NO = #{faxNo},
+			</if>
+			<if test="phnNo != null and phnNo != ''">
+				PHN_NO = #{phnNo},
+			</if>
+			<if test="slRep != null and slRep != ''">
+				SL_REP = #{slRep},
+			</if>
+			<if test="webAddr != null and webAddr != ''">
+				WEB_ADDR = #{webAddr},
+			</if>
+			<if test="coDesc != null and coDesc != ''">
+				CO_DESC = #{coDesc},
+			</if>
+			<if test="coAnvDt != null">
+				CO_ANV_DT = #{coAnvDt, jdbcType=DATE},
+			</if>
+			<if test="coSz != null and coSz != ''">
+				CO_SZ = #{coSz},
+			</if>
+			<if test="coNtn != null and coNtn != ''">
+				CO_NTN = #{coNtn},
+			</if>
+			<if test="empeSz != null and empeSz != ''">
+				EMPE_SZ = #{empeSz},
+			</if>
+			<if test="currCd != null and currCd != ''">
+				CURR_CD = #{currCd},
+			</if>
+			<if test="coIndusZn != null and coIndusZn != ''">
+				CO_INDUS_ZN = #{coIndusZn},
+			</if>
+			<if test="coProd != null and coProd != ''">
+				CO_PROD = #{coProd},
+			</if>
+			<if test="tmZn != null and tmZn != ''">
+				TM_ZN = #{tmZn},
+			</if>
+			<if test="lgoFileId != null">
+				LGO_FILE_ID =
+				<choose>
+					<when test="lgoFileId == ''">
+						NULL,
+					</when>
+					<otherwise>
+						#{lgoFileId},
+					</otherwise>
+				</choose>
+			</if>
+			<if test="bankTpCd != null and bankTpCd != ''">
+				BANK_TP_CD = #{bankTpCd},
+			</if>
+			<if test="bankAcctNo != null and bankAcctNo != ''">
+				BANK_ACCT_NO = #{bankAcctNo},
+			</if>
+			<if test="bankNm != null and bankNm != ''">
+				BANK_NM = #{bankNm},
+			</if>
+			<if test="chtrCapiVal != null">
+				CHTR_CAPI_VAL = CAST(#{chtrCapiVal} AS NUMERIC),
+			</if>
+			<if test="estbDt != null">
+				ESTB_DT = #{estbDt, jdbcType=DATE},
+			</if>
+			UPD_USR_ID = #{updUsrId},
+			UPD_DT = CURRENT_TIMESTAMP
+		</set>
+		WHERE CO_ID = #{coId}
+	</update>
+</mapper>
+

@@ -1,0 +1,250 @@
+.report-viewer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: #525252;
+  }
+
+  .report-viewer-toolbar {
+    background-color: #2c2c2c;
+    padding: 8px 12px;
+    border-bottom: 1px solid #404040;
+    flex-shrink: 0;
+  }
+
+  .report-viewer-toolbar-inner {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .report-viewer-toolbar-divider {
+    width: 1px;
+    height: 20px;
+    background-color: #555;
+    margin: 0 8px;
+    flex-shrink: 0;
+  }
+
+  .report-viewer-toolbar-btn {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .report-viewer-toolbar-btn:hover:not(:disabled) {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .report-viewer-toolbar-btn:disabled {
+    color: rgba(255, 255, 255, 0.35) !important;
+  }
+
+  .report-viewer-zoom-level {
+    font-weight: 500;
+    min-width: 40px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+  }
+
+  .report-viewer-page-info {
+    font-weight: 500;
+    min-width: 44px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+  }
+
+  .report-viewer-toolbar-select.report-viewer-toolbar-select {
+    width: 100px;
+    min-width: 100px;
+  }
+
+  .report-viewer-toolbar-select .ant-select-selector {
+    background-color: #404040 !important;
+    border-color: #555 !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .report-viewer-toolbar-select.ant-select-focused .ant-select-selector {
+    border-color: #1890ff !important;
+  }
+
+  .report-viewer-content {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+    position: relative;
+    background-color: #525252;
+  }
+
+  /* Region passed to print-js (HTML) for Word/Excel preview */
+  .report-viewer-print-region {
+    background-color: #525252;
+  }
+
+  @media print {
+    .report-viewer-print-region {
+      background-color: #fff !important;
+    }
+  }
+  
+  .report-viewer-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    min-height: 400px;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .report-viewer-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    min-height: 400px;
+    color: #ff7875;
+  }
+  
+  /* PDF Viewer Styles */
+  .pdf-viewer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .pdf-viewer-container {
+    background-color: #fff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    display: inline-block;
+  }
+  
+  .pdf-viewer-pagination {
+    background-color: #fff;
+    padding: 12px 24px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* DOCX Viewer Styles */
+  .docx-viewer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .docx-viewer-wrapper {
+    display: inline-block;
+    max-width: 100%;
+  }
+  
+  .docx-container {
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-height: 400px;
+  }
+  
+  .docx-preview-container {
+    padding: 40px;
+    max-width: 816px; /* A4 width approximation */
+    margin: 0 auto;
+  }
+
+  /* DOCX viewer: make images fill their container so they match template size */
+  .docx-preview-container img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
+    object-position: top left;
+  }
+  
+  /* Excel Viewer Styles */
+  .excel-viewer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .excel-viewer-wrapper {
+    display: inline-block;
+    max-width: 100%;
+  }
+  
+  .excel-container {
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-height: 400px;
+    padding: 20px;
+  }
+  
+  .excel-sheet-container {
+    margin-bottom: 40px;
+  }
+  
+  .excel-sheet-container:last-child {
+    margin-bottom: 0;
+  }
+  
+  .excel-sheet-header {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1890ff;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #1890ff;
+  }
+  
+  .excel-table-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+  
+  .excel-table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background-color: #fff;
+  }
+  
+  .excel-table-wrapper table th {
+    background-color: #fafafa;
+    font-weight: 600;
+    padding: 8px 12px;
+    text-align: left;
+    border: 1px solid #d9d9d9;
+    white-space: nowrap;
+  }
+  
+  .excel-table-wrapper table td {
+    padding: 8px 12px;
+    border: 1px solid #d9d9d9;
+    white-space: nowrap;
+  }
+  
+  .excel-table-wrapper table tr:nth-child(even) {
+    background-color: #fafafa;
+  }
+  
+  .excel-table-wrapper table tr:hover {
+    background-color: #e6f7ff;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .report-viewer-toolbar {
+      padding: 12px;
+    }
+    
+    .report-viewer-content {
+      padding: 12px;
+    }
+    
+    .docx-preview-container {
+      padding: 20px;
+    }
+  }
+  

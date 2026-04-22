@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.infra.common.mappers.CommonMapper">
+	<sql id="multiSortOrderBy">
+        <choose>
+            <when test="sorts != null and sorts.size() > 0">
+                ORDER BY
+                <foreach collection="sorts" item="s" separator=",">
+                    ${s.sortField} ${s.sortType}
+                </foreach>
+            </when>
+            <when test="sort != null and sort.sortField != null and sort.sortField != ''">
+                ORDER BY ${sort.sortField} ${sort.sortType}
+            </when>
+            <otherwise>
+                ORDER BY ${defaultSort}
+            </otherwise>
+        </choose>
+    </sql>
+	
+	<sql id="DynamicFilter">
+		<if test="filters != null and filters.size() > 0"> 
+		AND
+		<foreach collection="filters" item="filter" separator="AND">
+				<choose>
+					<when test="filter.operator == 'EQUALS' or filter.operator == 'RESET'">
+						<choose>
+							<when test="filter.valueType == 'DATE'">
+								DATE(${filter.field}) = DATE(#{filter.value})
+							</when>
+							<when test="filter.valueType == 'TIME'">
+								TO_CHAR(${filter.field}, 'HH24:MI') = TO_CHAR(#{filter.value}, 'HH24:MI')
+							</when>
+							<otherwise>
+								${filter.field} = #{filter.value}
+							</otherwise>
+						</choose>
+					</when>
+					<when test="filter.operator == 'NOT_EQUALS'">
+						<choose>
+							<when test="filter.valueType == 'DATE'">
+								DATE(${filter.field}) != DATE(#{filter.value})
+							</when>
+							<when test="filter.valueType == 'TIME'">
+								TO_CHAR(${filter.field}, 'HH24:MI') != TO_CHAR(#{filter.value}, 'HH24:MI')
+							</when>
+							<otherwise>
+								${filter.field} != #{filter.value}
+							</otherwise>
+						</choose>
+					</when>
+					<when test="filter.operator == 'CONTAINS'">
+						${filter.field} ILIKE '%' || #{filter.value} || '%'
+					</when>
+					<when test="filter.operator == 'GREATER_THAN'">
+						<choose>
+							<when test="filter.valueType == 'DATE'">
+								DATE(${filter.field}) &gt; DATE(#{filter.value})
+							</when>
+							<when test="filter.valueType == 'TIME'">
+								TO_CHAR(${filter.field}, 'HH24:MI') &gt; TO_CHAR(#{filter.value}, 'HH24:MI')
+							</when>
+							<otherwise>
+								${filter.field} &gt; #{filter.value}
+							</otherwise>
+						</choose>
+					</when>
+					<when test="filter.operator == 'LESS_THAN'">
+						<choose>
+							<when test="filter.valueType == 'DATE'">
+								DATE(${filter.field}) &lt; DATE(#{filter.value})
+							</when>
+							<when test="filter.valueType == 'TIME'">
+								TO_CHAR(${filter.field}, 'HH24:MI') &lt; TO_CHAR(#{filter.value}, 'HH24:MI')
+							</when>
+							<otherwise>
+								${filter.field} &lt; #{filter.value}
+							</otherwise>
+						</choose>
+					</when>
+					<when test="filter.operator == 'GREATER_OR_EQUAL'">
+						<choose>
+							<when test="filter.valueType == 'DATE'">
+								DATE(${filter.field}) &gt;= DATE(#{filter.value})
+							</when>
+							<when test="filter.valueType == 'TIME'">
+								TO_CHAR(${filter.field}, 'HH24:MI') &gt;= TO_CHAR(#{filter.value}, 'HH24:MI')
+							</when>
+							<otherwise>
+								${filter.field} &gt;= #{filter.value}
+							</otherwise>
+						</choose>
+					</when>
+					<when test="filter.operator == 'LESS_OR_EQUAL'">
+						<choose>
+							<when test="filter.valueType == 'DATE'">
+								DATE(${filter.field}) &lt;= DATE(#{filter.value})
+							</when>
+							<when test="filter.valueType == 'TIME'">
+								TO_CHAR(${filter.field}, 'HH24:MI') &lt;= TO_CHAR(${filter.field}, 'HH24:MI')
+							</when>
+							<otherwise>
+								${filter.field} &lt;= #{filter.value}
+							</otherwise>
+						</choose>
+					</when>
+					<when test="filter.operator == 'IN'"> ${filter.field} IN <foreach
+							collection="filter.value" item="v" open="("
+							separator="," close=")">
+							#{v}
+						</foreach>
+					</when>
+					<when test="filter.operator == 'NOT_IN'"> ${filter.field} NOT IN <foreach
+							collection="filter.value" item="v" open="("
+							separator="," close=")">
+							#{v}
+						</foreach>
+					</when>
+					<when test="filter.operator == 'BETWEEN'">
+						<choose>
+							<when test="filter.valueType == 'DATE'">
+								<if test="filter.value != null and filter.value != '' and filter.valueTo != null and filter.valueTo != ''">
+									DATE(${filter.field}) BETWEEN DATE(#{filter.value}) AND DATE(#{filter.valueTo})
+								</if>
+							</when>
+							<when test="filter.valueType == 'TIME'">
+								<if test="filter.value != null and filter.value != '' and filter.valueTo != null and filter.valueTo != ''">
+									TO_CHAR(${filter.field}, 'HH24:MI') BETWEEN #{filter.value} AND #{filter.valueTo}
+								</if>
+							</when>
+							<otherwise>
+								<if test="filter.value != null and filter.value != '' and filter.valueTo != null and filter.valueTo != ''">
+									${filter.field} BETWEEN #{filter.value} AND #{filter.valueTo}
+								</if>
+							</otherwise>
+						</choose>
+					</when>
+				</choose>
+			</foreach>
+		</if>
+	</sql>
+
+	<!--
+		Code/Name IN list search: when searchTextTokens is set, returns records where
+		codeField IN (tokens) OR nameField IN (tokens).
+		Use with: <include refid="...CodeOrNameInList"><property name="codeField" value="EMPE_CD"/><property name="nameField" value="EMPE_NM"/></include>
+	-->
+	<sql id="CodeOrNameInList">
+		<if test="searchTextTokens != null and searchTextTokens.size() > 0">
+			AND (${codeField} IN
+			<foreach collection="searchTextTokens" item="t" open="(" separator="," close=")">
+				#{t}
+			</foreach>
+			OR ${nameField} IN
+			<foreach collection="searchTextTokens" item="t" open="(" separator="," close=")">
+				#{t}
+			</foreach>
+			)
+		</if>
+	</sql>
+</mapper>

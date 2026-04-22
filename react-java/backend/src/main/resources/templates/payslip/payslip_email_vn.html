@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="'Phiếu lương – ' + ${data.workMonthLabel}">Phiếu lương – 12.2025</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: #222;
+      background: #f4f4f4;
+    }
+    .email-wrap {
+      max-width: 700px;
+      margin: 24px auto;
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .greeting { padding: 20px 24px 16px; line-height: 1.75; }
+    .greeting p { margin-bottom: 8px; }
+    .payslip {
+      margin: 0 16px 16px;
+      border: 2px solid #1565c0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .ps-header {
+      background: #fff;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1565c0;
+    }
+    .ps-header .co-name {
+      font-weight: bold;
+      font-size: 13px;
+      color: #1565c0;
+      text-transform: uppercase;
+    }
+    .ps-header .period {
+      font-weight: bold;
+      font-size: 13px;
+      color: #1565c0;
+      text-transform: uppercase;
+    }
+    .emp-info {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #90caf9;
+      background: #e3f2fd;
+      padding: 8px 12px;
+    }
+    .emp-info-col { flex: 1; }
+    .emp-info-col table { width: 100%; border-collapse: collapse; }
+    .emp-info-col td { padding: 2px 4px; font-size: 11.5px; }
+    .emp-info-col td:first-child { white-space: nowrap; color: #555; }
+    .emp-info-col td:last-child { font-weight: bold; }
+    .salary-layout { display: flex; gap: 0; }
+    .salary-col { flex: 1; padding: 6px 10px; }
+    .salary-col + .salary-col { border-left: 1px solid #90caf9; }
+    .section-title {
+      background: #1565c0;
+      color: #fff;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11.5px;
+      padding: 3px 6px;
+      margin: 4px -10px 4px;
+      letter-spacing: .3px;
+    }
+    .salary-table { width: 100%; border-collapse: collapse; }
+    .salary-table td {
+      padding: 2px 3px;
+      font-size: 11.5px;
+      vertical-align: top;
+    }
+    .salary-table .label { color: #333; }
+    .salary-table .val-hrs { text-align: right; white-space: nowrap; color: #1565c0; }
+    .salary-table .val-amt { text-align: right; white-space: nowrap; font-weight: 600; }
+    .salary-table tr:nth-child(even) td { background: #f8fbff; }
+    .salary-table .total-row td {
+      font-weight: bold;
+      border-top: 1px solid #90caf9;
+      padding-top: 4px;
+    }
+    .deduct-title {
+      background: #c62828;
+      color: #fff;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11.5px;
+      padding: 3px 6px;
+      margin: 4px 0;
+      letter-spacing: .3px;
+    }
+    .ps-footer {
+      background: #e3f2fd;
+      border-top: 2px solid #1565c0;
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 11px;
+      color: #444;
+    }
+    .ps-footer .slogan { font-style: italic; margin-bottom: 6px; }
+    .ps-footer .page { font-size: 10px; color: #666; }
+    .net-row td {
+      font-size: 13px;
+      font-weight: bold;
+      color: #c62828;
+      border-top: 2px solid #1565c0;
+      padding-top: 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="email-wrap">
+
+  <div class="greeting">
+    <p>Xin chào <strong th:text="${data.employeeName}">Nhân viên</strong>!</p>
+    <p>
+      Phòng Nhân sự gửi đến bạn phiếu lương tháng <strong th:text="${data.workMonthLabel}">12.2025</strong>.
+    </p>
+    <p>Vui lòng kiểm tra thông tin và liên hệ phòng Nhân sự nếu có bất kỳ sai sót nào.</p>
+    <p>Trân trọng và cảm ơn.</p>
+    <p>P/S: Chúc bạn sức khỏe, may mắn và thành công.</p>
+  </div>
+
+  <div class="payslip">
+
+    <div class="ps-header">
+      <span class="co-name" th:text="${data.companyName}">Công ty</span>
+      <span class="period" th:text="'LƯƠNG THÁNG ' + ${data.workMonthLabel}">LƯƠNG THÁNG 12.2025</span>
+    </div>
+
+    <div class="emp-info">
+      <div class="emp-info-col">
+        <table>
+          <tr>
+            <td>Nhân viên</td>
+            <td th:text="'[' + ${data.employeeCode} + '] ' + ${data.employeeName}">[16200] Họ tên</td>
+          </tr>
+          <tr>
+            <td>Chức danh</td>
+            <td th:text="${data.jobTitle}">Vị trí</td>
+          </tr>
+          <tr>
+            <td>Bộ phận</td>
+            <td th:text="${data.section}">Bộ phận</td>
+          </tr>
+          <tr>
+            <td>Ngày vào làm</td>
+            <td th:text="${#temporals.format(data.joinDate, 'dd/MM/yyyy')}">01/01/2020</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="salary-layout">
+
+      <div class="salary-col">
+        <div class="section-title">THU NHẬP TỪ LƯƠNG</div>
+        <table class="salary-table">
+          <colgroup>
+            <col style="width:55%"/>
+            <col style="width:20%"/>
+            <col style="width:25%"/>
+          </colgroup>
+          <tr>
+            <td class="label">Ngày công / ngày lễ</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.workingDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.workingDayAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Thời gian nghỉ giải lao</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.restTimeHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' giờ'">0.00 giờ</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Tăng ca thường (150%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ot150Hours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' giờ'">0.00 giờ</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.ot150Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Tăng ca sau 22h (210%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ot210Hours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' giờ'">0.00 giờ</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.ot210Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Phụ cấp tăng ca đêm</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.nightOtHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' giờ'">0.00 giờ</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.nightOtAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Làm chủ nhật (200%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.sunday200Hours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.sunday200Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Làm đêm chủ nhật (+70%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.sundayNightHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.sundayNightAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Làm ngày lễ (400%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.holiday400Days ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.holiday400Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Làm đêm ngày lễ (+110%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.holidayNightHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.holidayNightAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Phép năm</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.annualLeaveUsedDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Nghỉ chế độ</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.companyLeaveDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Công ty cho nghỉ</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.holidayDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Nghỉ không lương</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.unpaidLeaveDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">Trợ cấp phụ nữ (1.5h)</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.womenDayRest ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Hỗ trợ nuôi con nhỏ</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.babySupportAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Thưởng chuyên cần</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.attendanceBonus ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Thưởng lễ (30/4–1/5 &amp; 2/9)</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.nationalDayBonus ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="2" class="label">TỔNG LƯƠNG</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.totalGross ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="salary-col">
+        <table class="salary-table" style="margin-bottom:4px;">
+          <colgroup>
+            <col style="width:60%"/>
+            <col style="width:40%"/>
+          </colgroup>
+          <tr>
+            <td class="label">Lương cơ bản</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.basicSalary, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Phụ cấp trách nhiệm</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.respAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Phụ cấp độc hại</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.harmfulAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Bồi dưỡng làm ca</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.shiftAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Hỗ trợ xăng xe</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.petrolHousingAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Phụ cấp chuyên cần</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.workHardAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Thưởng tuân thủ nội quy</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.complianceBonusAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Tăng ca lũy tiến</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ttlOvtPrgsVal ?: 0, 1, 'COMMA', 2, 'POINT')} + ' giờ'">0.00 giờ</td>
+          </tr>
+          <tr>
+            <td class="label">Phép năm đã nghỉ</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ttlAnulLveUsdDysNo ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+          </tr>
+          <tr>
+            <td class="label">Phép năm còn lại</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.anulLveRmnDysNo ?: 0, 1, 'COMMA', 2, 'POINT')} + ' ngày'">0.00 ngày</td>
+          </tr>
+        </table>
+
+        <div class="deduct-title">CÁC KHOẢN KHẤU TRỪ</div>
+        <table class="salary-table">
+          <colgroup>
+            <col style="width:60%"/>
+            <col style="width:40%"/>
+          </colgroup>
+          <tr>
+            <td class="label">Bảo hiểm xã hội (8%)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.siAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Bảo hiểm thất nghiệp (1%)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.uiAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Bảo hiểm y tế (1.5%)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.hiAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Quỹ thiên tai, lũ lụt</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.floodFundAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Thuế thu nhập cá nhân</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.pitAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Khoản trừ sau thuế</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.deductAfterTax ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Tạm ứng lương</td>
+            <td class="val-amt" th:text="${data.salaryAdvance != null ? #numbers.formatDecimal(data.salaryAdvance, 1, 'COMMA', 0, 'POINT') : '--'}">--</td>
+          </tr>
+          <tr>
+            <td class="label">Phí công đoàn</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.unionFeeAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr class="total-row">
+            <td class="label">TỔNG KHẤU TRỪ</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.totalDeductions ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Trợ cấp thôi việc</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.severancePay ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">Điều chỉnh tháng trước</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.lastMonthAdjust ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr class="net-row">
+            <td class="label">LƯƠNG THỰC NHẬN</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.netSalary ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="ps-footer">
+      <div class="slogan">Cảm ơn sự đóng góp của bạn cho công ty!</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

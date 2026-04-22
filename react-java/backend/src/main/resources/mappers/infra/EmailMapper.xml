@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.infra.email.mappers.EmailMapper">
+    <insert id="insertEmail" parameterType="com.clt.hrm.infra.email.dtos.EmailDto">
+        <selectKey keyProperty="emlId" resultType="String" order="BEFORE">
+            SELECT get_mdl_seq2(#{coId}, 'EML', 6)
+        </selectKey>
+        INSERT INTO COM_EML_SND (
+            CO_ID,
+            EML_ID,
+            EML_TO,
+            EML_CC,
+            EML_BCC,
+            EML_SUBJ_VAL,
+            EML_CNTN_VAL,
+            EML_SND_STS_CD,
+            EML_ATCH_ID,
+            EML_SYS_MSG,
+            CRE_USR_ID,
+            CRE_DT,
+            UPD_USR_ID,
+            UPD_DT,
+            EML_FAL_RSN
+        ) VALUES (
+            #{coId},
+            #{emlId},
+            #{emlTo},
+            #{emlCc},
+            #{emlBcc},
+            #{emlSubjVal},
+            #{emlCntnVal},
+            #{emlSndStsCd},
+            #{emlAtchId},
+            #{emlSysMsg},
+            #{creUsrId},
+            CURRENT_TIMESTAMP,
+            #{updUsrId},
+            CURRENT_TIMESTAMP,
+            #{emlFalRsn}
+        )
+    </insert>
+
+    <select id="selectEmailAttachmentId" parameterType="String" resultType="String">
+        SELECT get_mdl_seq2(#{coId}, 'EMLATC', 6)
+    </select>
+
+    <insert id="insertEmailAttachment" parameterType="com.clt.hrm.infra.email.dtos.EmailAttachmentDto">
+        INSERT INTO COM_EML_ATCH (
+            CO_ID,
+            EML_ATCH_ID,
+            FILE_ID,
+            DSP_ORD_VAL,
+            CRE_USR_ID,
+            CRE_DT,
+            UPD_USR_ID,
+            UPD_DT
+        ) VALUES (
+            #{coId},
+            #{emlAtchId},
+            #{fileId},
+            #{dspOrdVal},
+            #{creUsrId},
+            CURRENT_TIMESTAMP,
+            #{updUsrId},
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <update id="updateEmailStatus" parameterType="com.clt.hrm.infra.email.dtos.EmailDto">
+        UPDATE COM_EML_SND
+        SET EML_SND_STS_CD = #{emlSndStsCd},
+            EML_SYS_MSG = #{emlSysMsg},
+            EML_FAL_RSN = #{emlFalRsn},
+            UPD_USR_ID = #{updUsrId},
+            UPD_DT = CURRENT_TIMESTAMP
+        WHERE CO_ID = #{coId}
+          AND EML_ID = #{emlId}
+    </update>
+
+    <!-- Idempotency check: exact match on EML_SYS_MSG (format: "key=PAYSLIP|..."). -->
+    <select id="countInFlightOrSentBySysMsg" parameterType="com.clt.hrm.infra.email.dtos.SearchEmailDto" resultType="int">
+        SELECT COUNT(*)
+        FROM COM_EML_SND
+        WHERE CO_ID = #{coId}
+          AND EML_SND_STS_CD IN ('QUEUED', 'PROCESSING', 'PENDING', 'SUCCESS')
+          <if test="emlSubjVal != null and emlSubjVal != ''">
+              AND EML_SUBJ_VAL = #{emlSubjVal}
+          </if>
+          <if test="emlTo != null and emlTo != ''">
+              AND UPPER(EML_TO) = UPPER(#{emlTo})
+          </if>
+          <if test="emlSysMsg != null and emlSysMsg != ''">
+              AND EML_SYS_MSG = #{emlSysMsg}
+          </if>
+    </select>
+
+    <select id="selectEmailList" parameterType="com.clt.hrm.infra.email.dtos.SearchEmailDto" resultType="com.clt.hrm.infra.email.dtos.EmailListDto">
+        SELECT
+            EML_ID, EML_TO, 
+            EML_CC, EML_BCC, 
+            EML_SUBJ_VAL,
+            EML_SND_STS_CD, 
+            EML_SYS_MSG, 
+            EML_ATCH_ID,
+            CRE_USR_ID, 
+            TO_CHAR(CRE_DT, 'YYYY-MM-DD HH24:MI:SS') AS CRE_DT
+        FROM COM_EML_SND
+        WHERE CO_ID = #{coId}
+        <if test="fromDate != null and fromDate != ''">
+            AND CRE_DT &gt;= TO_TIMESTAMP(#{fromDate}, 'YYYY-MM-DD')
+        </if>
+        <if test="toDate != null and toDate != ''">
+            AND CRE_DT &lt; TO_TIMESTAMP(#{toDate}, 'YYYY-MM-DD') + INTERVAL '1 day'
+        </if>
+        <if test="emlSndStsCd != null and emlSndStsCd != ''">
+            AND EML_SND_STS_CD = #{emlSndStsCd}
+        </if>
+        <if test="emlTo != null and emlTo != ''">
+            AND UPPER(EML_TO) LIKE '%' || UPPER(#{emlTo}) || '%'
+        </if>
+        <if test="emlSubjVal != null and emlSubjVal != ''">
+            AND UPPER(EML_SUBJ_VAL) LIKE '%' || UPPER(#{emlSubjVal}) || '%'
+        </if>
+        <if test="sort != null and sort.sortField != null and sort.sortField != ''">
+            ORDER BY ${sort.sortField}
+            <if test="sort.sortType != null and sort.sortType != ''">
+                ${sort.sortType}
+            </if>
+        </if>
+        <if test="sort == null or sort.sortField == null or sort.sortField == ''">
+            ORDER BY CRE_DT DESC
+        </if>
+        <if test="pagination != null and pagination.current != null">
+            LIMIT #{pagination.pageSize} OFFSET (#{pagination.current} - 1) * #{pagination.pageSize}
+        </if>
+    </select>
+
+    <select id="selectEmailCount" parameterType="com.clt.hrm.infra.email.dtos.SearchEmailDto" resultType="int">
+        SELECT COUNT(*)
+        FROM COM_EML_SND
+        WHERE CO_ID = #{coId}
+        <if test="fromDate != null and fromDate != ''">
+            AND CRE_DT &gt;= TO_TIMESTAMP(#{fromDate}, 'YYYY-MM-DD')
+        </if>
+        <if test="toDate != null and toDate != ''">
+            AND CRE_DT &lt; TO_TIMESTAMP(#{toDate}, 'YYYY-MM-DD') + INTERVAL '1 day'
+        </if>
+        <if test="emlSndStsCd != null and emlSndStsCd != ''">
+            AND EML_SND_STS_CD = #{emlSndStsCd}
+        </if>
+        <if test="emlTo != null and emlTo != ''">
+            AND UPPER(EML_TO) LIKE '%' || UPPER(#{emlTo}) || '%'
+        </if>
+        <if test="emlSubjVal != null and emlSubjVal != ''">
+            AND UPPER(EML_SUBJ_VAL) LIKE '%' || UPPER(#{emlSubjVal}) || '%'
+        </if>
+    </select>
+
+    <select id="selectEmail" parameterType="com.clt.hrm.infra.email.dtos.EmailDto" resultType="com.clt.hrm.infra.email.dtos.EmailDetailDto">
+        SELECT
+            EML_ID, 
+            EML_TO, 
+            EML_CC, 
+            EML_BCC, 
+            EML_SUBJ_VAL, 
+            EML_CNTN_VAL,
+            EML_SND_STS_CD, 
+            EML_SYS_MSG, 
+            EML_ATCH_ID,
+            CRE_USR_ID, 
+            TO_CHAR(CRE_DT, 'YYYY-MM-DD HH24:MI:SS') AS CRE_DT
+        FROM COM_EML_SND
+        WHERE CO_ID = #{coId}
+          AND EML_ID = #{emlId}
+    </select>
+
+    <select id="selectEmailAttachments" parameterType="com.clt.hrm.infra.email.dtos.EmailDto" resultType="com.clt.hrm.infra.email.dtos.EmailAttachmentDetailDto">
+        SELECT
+            a.EML_ATCH_ID, 
+            a.FILE_ID, 
+            f.FILE_NM, 
+            f.FILE_TP, 
+            f.FILE_SZ, 
+            a.DSP_ORD_VAL
+        FROM COM_EML_ATCH a
+        JOIN COM_FILE f ON f.CO_ID = a.CO_ID AND f.FILE_ID = a.FILE_ID
+        WHERE a.CO_ID = #{coId}
+          AND a.EML_ATCH_ID = #{emlAtchId}
+        ORDER BY a.DSP_ORD_VAL
+    </select>
+
+    <delete id="deleteEmail" parameterType="com.clt.hrm.infra.email.dtos.EmailDto">
+        DELETE FROM COM_EML_SND
+        WHERE CO_ID = #{coId}
+          AND EML_ID = #{emlId}
+    </delete>
+
+    <delete id="deleteEmailAttachments" parameterType="com.clt.hrm.infra.email.dtos.EmailDto">
+        DELETE FROM COM_EML_ATCH
+        WHERE CO_ID = #{coId}
+          AND EML_ATCH_ID = #{emlAtchId}
+    </delete>
+
+    <!--
+       ╔══════════════════════════════════════════════════════════╗
+       ║          PAYSLIP OUTBOX / BATCH-DISPATCH QUERIES         ║
+       ╚══════════════════════════════════════════════════════════╝
+    -->
+
+    <!--
+        Bulk idempotency check: 1 SELECT with IN-clause instead of N individual SELECTs.
+        EML_SYS_MSG format: "key=PAYSLIP|..." (exact match only).
+        Includes ERROR status so that sendPayslipEmails() won't create duplicate records
+        for employees that already have a failed email — use resendPayslipEmails() instead.
+        Parameters (SearchEmailDto): coId, sysMsgs
+    -->
+    <select id="selectProcessedSysMsgs"
+            parameterType="com.clt.hrm.infra.email.dtos.SearchEmailDto"
+            resultType="String">
+        SELECT EML_SYS_MSG
+        FROM   COM_EML_SND
+        WHERE  CO_ID          = #{coId}
+          AND  EML_SND_STS_CD IN ('QUEUED', 'PROCESSING', 'PENDING', 'SUCCESS', 'ERROR')
+          AND  EML_SYS_MSG IN
+        <foreach collection="sysMsgs" item="key" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </select>
+
+    <!--
+        Batch-insert multiple email outbox rows in one round-trip.
+        emlId is generated per-row by the DB function.
+        The caller must set: coId, emlTo, emlSubjVal, emlCntnVal,
+                             emlSndStsCd (= 'QUEUED'), emlSysMsg, creUsrId, updUsrId.
+    -->
+    <insert id="insertEmailsBatch" parameterType="list">
+        INSERT INTO COM_EML_SND (
+            CO_ID, EML_ID,
+            EML_TO, EML_CC, EML_BCC,
+            EML_SUBJ_VAL, EML_CNTN_VAL,
+            EML_SND_STS_CD, EML_SYS_MSG,
+            CRE_USR_ID, CRE_DT,
+            UPD_USR_ID, UPD_DT,
+            EML_FAL_RSN
+        )
+        VALUES
+        <foreach collection="list" item="e" separator=",">
+        (
+            #{e.coId},
+            get_mdl_seq2(#{e.coId}, 'EML', 6),
+            #{e.emlTo},
+            #{e.emlCc},
+            #{e.emlBcc},
+            #{e.emlSubjVal},
+            #{e.emlCntnVal},
+            #{e.emlSndStsCd},
+            #{e.emlSysMsg},
+            #{e.creUsrId},
+            CURRENT_TIMESTAMP,
+            #{e.updUsrId},
+            CURRENT_TIMESTAMP,
+            #{e.emlFalRsn}
+        )
+        </foreach>
+    </insert>
+
+    <!--
+        Atomically claim a batch of QUEUED payslip emails for dispatch:
+          1. CTE picks up to batchSize QUEUED rows (ORDER BY CRE_DT for fairness)
+             using FOR UPDATE SKIP LOCKED so concurrent nodes skip already-claimed rows.
+          2. UPDATE transitions them to PROCESSING.
+          3. RETURNING gives back the rows to the caller so it can send each one.
+
+        Parameters (SearchEmailDto):
+          coId         – tenant
+          sysMsgPrefix – e.g. "key=PAYSLIP|" (left-anchored prefix, uses LIKE 'prefix%')
+          batchSize    – max rows per cycle (e.g. 50)
+    -->
+    <select id="selectAndLockQueuedEmails"
+            parameterType="com.clt.hrm.infra.email.dtos.SearchEmailDto"
+            resultType="com.clt.hrm.infra.email.dtos.EmailDto">
+        WITH locked AS (
+            SELECT EML_ID
+            FROM   COM_EML_SND
+            WHERE  CO_ID          = #{coId}
+              AND  EML_SND_STS_CD = 'QUEUED'
+              AND  EML_SYS_MSG    LIKE #{sysMsgPrefix} || '%'
+            ORDER  BY CRE_DT
+            LIMIT  #{batchSize}
+            FOR UPDATE SKIP LOCKED
+        )
+        UPDATE COM_EML_SND e
+        SET    EML_SND_STS_CD = 'PROCESSING',
+               UPD_DT         = CURRENT_TIMESTAMP
+        FROM   locked
+        WHERE  e.CO_ID  = #{coId}
+          AND  e.EML_ID = locked.EML_ID
+        RETURNING
+            e.EML_ID    AS emlId,
+            e.EML_TO    AS emlTo,
+            e.EML_SUBJ_VAL  AS emlSubjVal,
+            e.EML_CNTN_VAL  AS emlCntnVal,
+            e.EML_SYS_MSG   AS emlSysMsg,
+            e.CRE_USR_ID    AS creUsrId,
+            e.UPD_USR_ID    AS updUsrId,
+            e.CO_ID         AS coId
+    </select>
+
+    <!--
+        Crash recovery: reset rows that have been stuck in PROCESSING for more
+        than staleMinutes (default 10) back to QUEUED so they will be re-dispatched.
+        Returns the count of rows reset.
+
+        Parameters (SearchEmailDto): coId, sysMsgPrefix, staleMinutes
+    -->
+    <update id="resetStaleProcessingEmails"
+            parameterType="com.clt.hrm.infra.email.dtos.SearchEmailDto">
+        UPDATE COM_EML_SND
+        SET    EML_SND_STS_CD = 'QUEUED',
+               EML_SYS_MSG    = EML_SYS_MSG,
+               UPD_DT         = CURRENT_TIMESTAMP
+        WHERE  CO_ID          = #{coId}
+          AND  EML_SND_STS_CD = 'PROCESSING'
+          AND  EML_SYS_MSG    LIKE #{sysMsgPrefix} || '%'
+          AND  UPD_DT         &lt; CURRENT_TIMESTAMP - (#{staleMinutes} || ' minutes')::INTERVAL
+    </update>
+
+    <!--
+        Find all tenant IDs that still have rows needing action:
+          - QUEUED (waiting to be dispatched), OR
+          - PROCESSING but stale (likely crashed — will be reset by recovery).
+        Used by the recovery scheduler to know which tenants to process.
+
+        Parameters (SearchEmailDto): sysMsgPrefix, staleMinutes
+        No coId filter — scans all tenants.
+    -->
+    <select id="selectCoIdsWithPendingPayslipEmails"
+            parameterType="com.clt.hrm.infra.email.dtos.SearchEmailDto"
+            resultType="String">
+        SELECT DISTINCT CO_ID
+        FROM   COM_EML_SND
+        WHERE  EML_SYS_MSG LIKE #{sysMsgPrefix} || '%'
+          AND (
+               EML_SND_STS_CD = 'QUEUED'
+            OR (
+                   EML_SND_STS_CD = 'PROCESSING'
+               AND UPD_DT &lt; CURRENT_TIMESTAMP - (#{staleMinutes} || ' minutes')::INTERVAL
+               )
+          )
+    </select>
+
+</mapper>

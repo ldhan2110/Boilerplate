@@ -1,0 +1,89 @@
+.edit-table,
+.tableCustom {
+    :global {
+        .ant-table-pagination {
+            background: var(--ant-table-header-bg);
+            margin: 0px !important;
+            padding: 16px 0px;
+            border: 1px solid var(--ant-table-border-color);
+            border-top: none;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        /* allow clicks inside prefix filter */
+        .clickable-prefix-input .ant-input-number-prefix {
+            pointer-events: auto !important;
+        }
+        
+        .clickable-prefix-input .ant-input-number-input {
+            pointer-events: auto;
+        }
+
+        .ant-table-thead tr,
+        .ant-table-summary tr,
+        .ant-table-row {
+            background: var(--ant-color-bg-container);
+        }
+
+        .ant-table-cell-fix-right,
+        .ant-table-cell-fix-left {
+            z-index: 110;
+            background-color: inherit;
+        }
+
+        /* Reduce row height */
+        .ant-table-tbody-virtual-holder-inner .ant-table-cell {
+            padding: 2px 4px !important;
+        }
+
+        .ant-table-tbody > tr:not(.ant-table-measure-row) > td {
+            padding: 2px 8px !important;
+        }
+
+        .ant-table-tbody-virtual-holder-inner .ant-table-selection-column {
+            padding: 2px 7px !important;
+        }
+        
+        /* Header is safe (no measure row there) */
+        .ant-table-thead > tr > th {
+            padding: 4px 8px !important;
+        }
+
+        /* Row background colors based on procFlag */
+        /* Updated rows (procFlag='U') - yellow background (visible in both light and dark mode) */
+        .ant-table-tbody > tr.row-updated > td {
+            background-color: rgb(255, 245, 159) !important;
+        }
+
+        /* Inserted rows (procFlag='I') - green background (visible in both light and dark mode) */
+        .ant-table-tbody > tr.row-inserted > td {
+            background-color: rgb(170, 249, 174) !important;
+        }
+
+        /* Error rows (validation errors) - light red background (visible in both light and dark mode) */
+        .ant-table-tbody > tr.row-error > td {
+            background-color: rgb(255, 202, 210) !important;
+        }
+
+        /* Error rows in virtualized table */
+        .ant-table-tbody-virtual-holder-inner > div.row-error {
+            background-color: rgb(255, 202, 210) !important;
+        }
+
+        /* Keyboard-focused cell highlight — apply border on the td so it covers the full cell */
+        .ant-table-cell:has(.cell-focused) {
+            box-shadow: inset 0 0 0 1.5px #1677ff !important;
+            outline: none;
+        }
+
+        .cell-focused {
+            outline: none;
+        }
+
+        /* Multi-sort: ensure sort icons remain visible on all sorted columns */
+        .ant-table-thead th .ant-table-column-sorter {
+            display: inline-flex;
+        }
+    }
+}

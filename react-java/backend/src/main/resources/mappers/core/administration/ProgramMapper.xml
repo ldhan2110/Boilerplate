@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.core.administration.program.mapper.AdmProgramMapper">
+	<select id="searchProgramTreeList" parameterType="com.clt.hrm.core.administration.program.dtos.SearchProgramDto" resultType="com.clt.hrm.core.administration.program.dtos.ProgramDto">
+			WITH RECURSIVE ProgramTree AS (
+			    -- 1. ANCHOR MEMBER (Starts the recursion with the root nodes)
+			    select
+			    	p.co_id,
+			        p.pgm_id,
+			        p.pgm_cd,
+			        p.pgm_tp_cd,
+			        p.prnt_pgm_id,
+			        p.pgm_nm,
+			        p.dsp_order,
+			        p.pgm_rmk,
+			        p.use_flg,
+			        p.upd_dt,
+			        p.upd_usr_id,
+			        1 AS level,
+			        CAST(p.pgm_id AS text) AS tree_key,
+			        LPAD(CAST(p.dsp_order AS TEXT), 3, '0') AS tree_path
+			    FROM
+			        com_pgm p
+			    WHERE
+			        -- Find the top-level programs (roots)
+			        p.prnt_pgm_id IS NULL
+			        and p.co_id = #{coId}
+			
+			    UNION ALL
+			
+			    -- 2. RECURSIVE MEMBER (Finds children and continues until no more nodes are found)
+			    select
+			    	child.co_id,
+			        child.pgm_id,
+			        child.pgm_cd,
+			        child.pgm_tp_cd,
+			        child.prnt_pgm_id,
+			        child.pgm_nm,
+			        child.dsp_order,
+			        child.pgm_rmk,
+			        child.use_flg,
+			        child.upd_dt,
+			        child.upd_usr_id,
+			        parent.level + 1 AS level,
+			        parent.tree_key || '-' || CAST(child.pgm_id AS text),
+			        -- Extend the sort path by appending the child's padded order value
+			        parent.tree_path || '-' || LPAD(CAST(child.dsp_order AS TEXT), 3, '0')
+			    FROM
+			        com_pgm child
+			    INNER JOIN
+			        ProgramTree parent ON (child.prnt_pgm_id = parent.pgm_id and child.co_id  = parent.co_id)
+			)
+			-- 3. FINAL SELECTION AND ORDERING
+			select
+				co_id,
+			    pgm_id,
+			    pgm_cd,
+			    pgm_tp_cd,
+			    pgm_nm,
+			    prnt_pgm_id,
+			    dsp_order,
+			    pgm_rmk,
+			    use_flg,
+			    upd_dt,
+			    upd_usr_id,
+			    level,
+			    tree_key,
+			    --LPAD('', (level - 1) * 4, ' ') || '-> ' || pgm_nm AS tree_display, -- Creates a visual indentation based on the level for better readability
+			    tree_path
+			FROM
+			    ProgramTree
+			where 1=1
+				and co_id = #{coId}
+				<if test="pgmId != null and pgmId != ''">
+					AND PGM_ID = #{pgmId}
+				</if>
+				<if test="pgmCd != null and pgmCd != ''">
+					AND PGM_CD = #{pgmCd}
+				</if>
+		        <if test="pgmNm != null and pgmNm != ''">
+					AND PGM_NM ILIKE '%' || #{pgmNm} || '%'
+				</if>
+				<if test="pgmTpCd != null and pgmTpCd != ''">
+					AND PGM_TP_CD = #{pgmTpCd} 
+				</if>
+		        <if test="useFlg != null and useFlg != ''">
+					AND USE_FLG = #{useFlg}
+				</if>
+			ORDER BY
+			    tree_path;
+	</select>
+	
+	
+	<select id="selectProgram" parameterType="com.clt.hrm.core.administration.program.dtos.SearchProgramDto" resultType="com.clt.hrm.core.administration.program.dtos.ProgramDto">
+			SELECT PGM.CO_ID,
+				PGM.PGM_ID,
+				PGM.PGM_CD,
+				PGM.PGM_NM,
+				PGM.PGM_TP_CD,
+				PGM.PRNT_PGM_ID,
+				PGM.DSP_ORDER,
+				PGM.PGM_RMK,
+				PGM.USE_FLG, 
+				PGM.CRE_DT, 
+				PGM.CRE_USR_ID, 
+				PGM.UPD_DT,
+				PGM.UPD_USR_ID 
+			FROM COM_PGM PGM
+			WHERE 1=1 
+				AND PGM.CO_ID = #{coId} 
+			<if test="pgmId != null and pgmId != ''">
+				AND PGM.PGM_ID = #{pgmId}
+			</if>
+			<if test="pgmCd != null and pgmCd != ''">
+				AND PGM.PGM_CD = #{pgmCd}
+			</if>
+	        <if test="pgmNm != null and pgmNm != ''">
+				AND PGM.PGM_NM ILIKE '%' || #{pgmNm} || '%'
+			</if>
+			<if test="pgmTpCd != null and pgmTpCd != ''">
+				AND PGM.PGM_TP_CD = #{pgmTpCd} 
+			</if>
+	        <if test="useFlg != null and useFlg != ''">
+				AND PGM.USE_FLG = #{useFlg}
+			</if>
+			LIMIT 1
+	</select>
+	
+	<insert id="insertProgram" parameterType="com.clt.hrm.core.administration.program.dtos.ProgramDto">
+		<selectKey keyProperty="pgmId" resultType="String" order="BEFORE">
+	        SELECT get_mdl_seq2(#{coId}, 'PGM', 6)
+	    </selectKey>
+		INSERT INTO COM_PGM (
+			CO_ID,
+			PGM_ID,
+			PGM_CD,
+			PGM_NM,
+			PGM_TP_CD,
+			PRNT_PGM_ID,
+			DSP_ORDER,
+			PGM_RMK,
+			USE_FLG,
+			CRE_USR_ID,
+			UPD_USR_ID,
+			CRE_DT,
+			UPD_DT
+		) VALUES (
+			#{coId},
+			#{pgmId},
+			#{pgmCd},
+			#{pgmNm},
+			#{pgmTpCd},
+			#{prntPgmId},
+			COALESCE(#{dspOrder}, 9999),
+			#{pgmRmk},
+			COALESCE(#{useFlg}, 'Y'),
+			#{creUsrId},
+			#{creUsrId},
+			NOW(),
+			NOW()
+		)
+	</insert>
+	
+	<update id="updateProgram" parameterType="com.clt.hrm.core.administration.program.dtos.ProgramDto">
+		UPDATE COM_PGM
+		SET
+			PGM_CD = #{pgmCd},
+			PGM_NM = #{pgmNm},
+			PRNT_PGM_ID = #{prntPgmId},
+			DSP_ORDER = COALESCE(#{dspOrder}, 9999),
+			PGM_RMK = #{pgmRmk},
+			USE_FLG = #{useFlg},
+			UPD_USR_ID = #{updUsrId},
+			UPD_DT = NOW()
+		WHERE CO_ID = #{coId}
+		AND PGM_ID = #{pgmId}
+	</update>
+	
+	<delete id="deleteProgram" parameterType="com.clt.hrm.core.administration.program.dtos.ProgramDto">
+		DELETE FROM COM_PGM 
+			WHERE CO_ID = #{coId}
+			AND PGM_ID = #{pgmId}
+	</delete>
+	
+	<select id="getPermissionByProgram" parameterType="com.clt.hrm.core.administration.program.dtos.ProgramDto" resultType="com.clt.hrm.core.administration.program.dtos.PermissionDto">
+			SELECT PERM.CO_ID,
+				PERM.PERM_ID,
+				PERM.PERM_CD,
+				PERM.PERM_NM,
+				PERM.PGM_ID,
+				PERM.CRE_DT, 
+				PERM.CRE_USR_ID, 
+				PERM.UPD_DT,
+				PERM.UPD_USR_ID 
+			FROM COM_PERM PERM
+			WHERE 1=1 
+				AND PERM.CO_ID = #{coId} 
+			<if test="pgmId != null and pgmId != ''">
+				AND PERM.PGM_ID = #{pgmId}
+			</if>
+	</select>
+	
+	<insert id="insertPermission" parameterType="com.clt.hrm.core.administration.program.dtos.PermissionDto">
+		<selectKey keyProperty="permId" resultType="String" order="BEFORE">
+	        SELECT get_mdl_seq2(#{coId}, 'PERM', 6)
+	    </selectKey>
+		INSERT INTO COM_PERM (
+			CO_ID,
+			PERM_ID,
+			PERM_CD,
+			PERM_NM,
+			PGM_ID,
+			CRE_USR_ID,
+			UPD_USR_ID,
+			CRE_DT,
+			UPD_DT
+		) VALUES (
+			#{coId},
+			#{permId},
+			#{permCd},
+			#{permNm},
+			#{pgmId},
+			#{creUsrId},
+			#{creUsrId},
+			NOW(),
+			NOW()
+		)
+	</insert>
+	
+	<update id="updatePermission" parameterType="com.clt.hrm.core.administration.program.dtos.PermissionDto">
+		UPDATE COM_PERM
+		SET
+			PERM_CD = #{permCd},
+			PERM_NM = #{permNm},
+			UPD_USR_ID = #{updUsrId},
+			UPD_DT = NOW()
+		WHERE CO_ID = #{coId}
+		AND PERM_ID = #{permId}
+	</update>
+	
+	
+	<delete id="deletePermission" parameterType="com.clt.hrm.core.administration.program.dtos.PermissionDto">
+		DELETE FROM COM_PERM 
+			WHERE CO_ID = #{coId}
+			AND PGM_ID = #{pgmId}
+			<if test="permId != null and permId != ''">
+				AND PERM_ID = #{permId}
+			</if>
+	</delete>
+</mapper>
+

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.core.authentication.mapper.AuthMapper">
+	<select id="loadUserByUsername" parameterType="java.lang.String" resultType="com.clt.hrm.core.authentication.entities.UserInfo">
+        SELECT usr.CO_ID,
+               usr.USR_ID,
+               usr.USR_NM,
+               usr.USR_EML,
+               usr.USE_FLG,
+               usr.ROLE_ID,
+               usr.CO_ID || '::' || USR_ID  AS USERNAME,
+               usr.USR_PWD                  AS PASSWORD,
+               com.TM_ZN                    AS CO_TMZ,
+			   usr.LANG_VAL                 AS LANG_VAL,
+			   usr.SYS_MOD_VAL              AS SYS_MOD_VAL,
+			   usr.DT_FMT_VAL               AS DT_FMT_VAL,
+			   usr.SYS_COLR_VAL             AS SYS_COLR_VAL
+        FROM ADM_USR usr JOIN ADM_ROLE role ON (
+				usr.CO_ID = role.CO_ID
+				AND usr.ROLE_ID = role.ROLE_ID
+			 ) JOIN ADM_CO com ON (
+				usr.CO_ID = com.CO_ID
+			 )
+        WHERE usr.CO_ID || '::' || usr.USR_ID = #{username}
+    </select>
+	
+	<select id="isActiveCompany" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT CO_ID
+		FROM ADM_CO
+			WHERE CO_ID = #{coId}
+			AND USE_FLG = 'Y'
+	</select>
+	
+	<select id="isActiveUser" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT USR_ID
+		FROM ADM_USR
+			WHERE CO_ID || '::' || USR_ID = #{username}
+			AND USE_FLG = 'Y'
+	</select>
+
+	<select id="getUserRole" resultType="com.clt.hrm.core.authentication.dtos.RoleInfoDto">
+		SELECT ROLE.CO_ID,
+				ROLE.ROLE_ID, 
+				ROLE.ROLE_CD,
+				ROLE.ROLE_NM,
+				ROLE.ROLE_DESC,
+				ROLE.USE_FLG, 
+				ROLE.CRE_DT, 
+				ROLE.CRE_USR_ID, 
+				ROLE.UPD_DT,
+				ROLE.UPD_USR_ID 
+			FROM ADM_ROLE ROLE
+			WHERE 1=1 
+				AND ROLE.CO_ID = #{coId} 
+				AND ROLE.ROLE_ID = #{roleId}
+				AND ROLE.USE_FLG = 'Y'
+		LIMIT 1
+	</select>
+
+	<select id="getUserRoleAuth" resultType="com.clt.hrm.core.authentication.dtos.RoleAuthInfoDto">
+			SELECT
+				AUTH.CO_ID,
+				AUTH.ROLE_ID,
+				ROLE.ROLE_CD,
+				PERM.PERM_ID,
+				PERM.PERM_CD,
+				PGM.PGM_ID,
+				PGM.PGM_CD,
+				PGM.PGM_TP_CD,
+				AUTH.USE_FLG AS ACTIVE_YN
+			FROM
+				ADM_ROLE_AUTH AUTH
+			LEFT JOIN ADM_ROLE ROLE ON
+				(AUTH.CO_ID = ROLE.CO_ID
+					AND AUTH.ROLE_ID = ROLE.ROLE_ID)
+			LEFT JOIN COM_PGM PGM ON
+				(AUTH.CO_ID = PGM.CO_ID
+					AND AUTH.PGM_ID = PGM.PGM_ID)
+			LEFT JOIN COM_PERM PERM ON
+				(AUTH.CO_ID = PERM.CO_ID
+					AND AUTH.PERM_ID = PERM.PERM_ID)
+			WHERE 1=1 
+				AND AUTH.CO_ID = #{coId}
+				AND AUTH.ROLE_ID = #{roleId}
+				AND ROLE.USE_FLG = 'Y'
+	</select>
+</mapper>

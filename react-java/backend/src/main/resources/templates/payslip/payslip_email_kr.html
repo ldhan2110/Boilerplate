@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="'급여명세서 – ' + ${data.workMonthLabel}">급여명세서 – 12.2025</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: #222;
+      background: #f4f4f4;
+    }
+    .email-wrap {
+      max-width: 700px;
+      margin: 24px auto;
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .greeting { padding: 20px 24px 16px; line-height: 1.75; }
+    .greeting p { margin-bottom: 8px; }
+    .payslip {
+      margin: 0 16px 16px;
+      border: 2px solid #1565c0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .ps-header {
+      background: #fff;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1565c0;
+    }
+    .ps-header .co-name {
+      font-weight: bold;
+      font-size: 13px;
+      color: #1565c0;
+      text-transform: uppercase;
+    }
+    .ps-header .period {
+      font-weight: bold;
+      font-size: 13px;
+      color: #1565c0;
+      text-transform: uppercase;
+    }
+    .emp-info {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #90caf9;
+      background: #e3f2fd;
+      padding: 8px 12px;
+    }
+    .emp-info-col { flex: 1; }
+    .emp-info-col table { width: 100%; border-collapse: collapse; }
+    .emp-info-col td { padding: 2px 4px; font-size: 11.5px; }
+    .emp-info-col td:first-child { white-space: nowrap; color: #555; }
+    .emp-info-col td:last-child { font-weight: bold; }
+    .salary-layout { display: flex; gap: 0; }
+    .salary-col { flex: 1; padding: 6px 10px; }
+    .salary-col + .salary-col { border-left: 1px solid #90caf9; }
+    .section-title {
+      background: #1565c0;
+      color: #fff;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11.5px;
+      padding: 3px 6px;
+      margin: 4px -10px 4px;
+      letter-spacing: .3px;
+    }
+    .salary-table { width: 100%; border-collapse: collapse; }
+    .salary-table td {
+      padding: 2px 3px;
+      font-size: 11.5px;
+      vertical-align: top;
+    }
+    .salary-table .label { color: #333; }
+    .salary-table .val-hrs { text-align: right; white-space: nowrap; color: #1565c0; }
+    .salary-table .val-amt { text-align: right; white-space: nowrap; font-weight: 600; }
+    .salary-table tr:nth-child(even) td { background: #f8fbff; }
+    .salary-table .total-row td {
+      font-weight: bold;
+      border-top: 1px solid #90caf9;
+      padding-top: 4px;
+    }
+    .deduct-title {
+      background: #c62828;
+      color: #fff;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11.5px;
+      padding: 3px 6px;
+      margin: 4px 0;
+      letter-spacing: .3px;
+    }
+    .ps-footer {
+      background: #e3f2fd;
+      border-top: 2px solid #1565c0;
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 11px;
+      color: #444;
+    }
+    .ps-footer .slogan { font-style: italic; margin-bottom: 6px; }
+    .ps-footer .page { font-size: 10px; color: #666; }
+    .net-row td {
+      font-size: 13px;
+      font-weight: bold;
+      color: #c62828;
+      border-top: 2px solid #1565c0;
+      padding-top: 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="email-wrap">
+
+  <div class="greeting">
+    <p>안녕하세요, <strong th:text="${data.employeeName}">직원</strong>님!</p>
+    <p>
+      인사팀에서 <strong th:text="${data.workMonthLabel}">12.2025</strong> 급여명세서를 보내드립니다.
+    </p>
+    <p>내용을 확인하시고, 이상이 있으실 경우 인사팀에 문의해 주세요.</p>
+    <p>감사합니다.</p>
+    <p>P/S: 건강과 행운, 성공을 빕니다.</p>
+  </div>
+
+  <div class="payslip">
+
+    <div class="ps-header">
+      <span class="co-name" th:text="${data.companyName}">Company</span>
+      <span class="period" th:text="'급여월 ' + ${data.workMonthLabel}">급여월 12.2025</span>
+    </div>
+
+    <div class="emp-info">
+      <div class="emp-info-col">
+        <table>
+          <tr>
+            <td>직원</td>
+            <td th:text="'[' + ${data.employeeCode} + '] ' + ${data.employeeName}">[16200] 이름</td>
+          </tr>
+          <tr>
+            <td>직위</td>
+            <td th:text="${data.jobTitle}">직책</td>
+          </tr>
+          <tr>
+            <td>부서</td>
+            <td th:text="${data.section}">부서</td>
+          </tr>
+          <tr>
+            <td>입사일</td>
+            <td th:text="${#temporals.format(data.joinDate, 'dd/MM/yyyy')}">01/01/2020</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="salary-layout">
+
+      <div class="salary-col">
+        <div class="section-title">급여 수입</div>
+        <table class="salary-table">
+          <colgroup>
+            <col style="width:55%"/>
+            <col style="width:20%"/>
+            <col style="width:25%"/>
+          </colgroup>
+          <tr>
+            <td class="label">근무일수 / 휴일</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.workingDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.workingDayAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">휴게시간</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.restTimeHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 시간'">0.00 시간</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">초과근무 (150%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ot150Hours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 시간'">0.00 시간</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.ot150Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">야간 초과근무 (210%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ot210Hours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 시간'">0.00 시간</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.ot210Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">추가 야간 초과근무</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.nightOtHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 시간'">0.00 시간</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.nightOtAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">일요일 근무 (200%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.sunday200Hours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.sunday200Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">일요일 야간 (+70%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.sundayNightHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.sundayNightAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">공휴일 근무 (400%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.holiday400Days ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.holiday400Amount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">공휴일 야간 (+110%)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.holidayNightHours ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.holidayNightAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">연차 휴가</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.annualLeaveUsedDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">유급 법정 휴가</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.companyLeaveDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">회사 공휴일</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.holidayDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">무급 휴가</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.unpaidLeaveDays ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+            <td class="val-amt"></td>
+          </tr>
+          <tr>
+            <td class="label">여성의 날 수당 (1.5시간)</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.womenDayRest ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">육아 지원</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.babySupportAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">출근 보너스</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.attendanceBonus ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">국경일 보너스 (4/30–5/1 &amp; 9/2)</td>
+            <td class="val-hrs"></td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.nationalDayBonus ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="2" class="label">총 급여 (GROSS)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.totalGross ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="salary-col">
+        <table class="salary-table" style="margin-bottom:4px;">
+          <colgroup>
+            <col style="width:60%"/>
+            <col style="width:40%"/>
+          </colgroup>
+          <tr>
+            <td class="label">기본급</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.basicSalary, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">책임 수당</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.respAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">위험 업무 수당</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.harmfulAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">교대 근무 수당</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.shiftAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">교통비 지원</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.petrolHousingAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">출근 수당</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.workHardAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">규정 준수 보너스</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.complianceBonusAllowance ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">초과근무 시간 (참고)</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ttlOvtPrgsVal ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 시간'">0.00 시간</td>
+          </tr>
+          <tr>
+            <td class="label">사용 연차</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.ttlAnulLveUsdDysNo ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+          </tr>
+          <tr>
+            <td class="label">잔여 연차</td>
+            <td class="val-hrs" th:text="${#numbers.formatDecimal(data.anulLveRmnDysNo ?: 0, 1, 'COMMA', 2, 'POINT')} + ' 일'">0.00 일</td>
+          </tr>
+        </table>
+
+        <div class="deduct-title">공제 항목</div>
+        <table class="salary-table">
+          <colgroup>
+            <col style="width:60%"/>
+            <col style="width:40%"/>
+          </colgroup>
+          <tr>
+            <td class="label">국민연금 (8%)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.siAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">고용보험 (1%)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.uiAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">건강보험 (1.5%)</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.hiAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">자연재해 기금</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.floodFundAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">개인 소득세</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.pitAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">세후 공제</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.deductAfterTax ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">급여 선지급</td>
+            <td class="val-amt" th:text="${data.salaryAdvance != null ? #numbers.formatDecimal(data.salaryAdvance, 1, 'COMMA', 0, 'POINT') : '--'}">--</td>
+          </tr>
+          <tr>
+            <td class="label">조합비</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.unionFeeAmount ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr class="total-row">
+            <td class="label">총 공제액</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.totalDeductions ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">퇴직금</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.severancePay ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr>
+            <td class="label">전월 조정</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.lastMonthAdjust ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+          <tr class="net-row">
+            <td class="label">실수령액</td>
+            <td class="val-amt" th:text="${#numbers.formatDecimal(data.netSalary ?: 0, 1, 'COMMA', 0, 'POINT')}">0</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="ps-footer">
+      <div class="slogan">회사에 대한 귀하의 기여에 감사드립니다!</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

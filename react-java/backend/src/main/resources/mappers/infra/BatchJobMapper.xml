@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.infra.batchjob.mapper.BatchJobMapper">
+	<resultMap id="batchJobConfigResultMap" type="com.clt.hrm.infra.batchjob.dtos.BatchJobConfigDto">
+		<result property="jobParams" column="BAT_JB_PARA" typeHandler="com.clt.hrm.infra.common.typehandler.MapJsonTypeHandler"/>
+	</resultMap>
+
+	<select id="searchBatchJobConfigList" parameterType="com.clt.hrm.infra.batchjob.dtos.SearchBatchJobConfigDto" resultMap="batchJobConfigResultMap">
+		SELECT CO_ID,
+			BAT_JB_ID,
+			BAT_JB_NM,
+			BAT_JB_CLSS,
+			BAT_JB_STS_CD,
+			BAT_JB_DESC,
+			CRON_XPR_VAL,
+			CRON_DESC,
+			BAT_JB_NXT_RUN_DT,
+			BAT_JB_LST_RUN_DT,
+			USE_FLG,
+			BAT_JB_PARA,
+			CRE_USR_ID,
+            CRE_DT,
+            UPD_USR_ID,
+            UPD_DT
+		FROM COM_BAT_CFG
+		WHERE CO_ID = #{coId}
+		<if test="batJbId != null and batJbId != ''">
+			AND BAT_JB_ID = #{batJbId}
+		</if>
+		<if test="batJbNm != null and batJbNm != ''">
+			AND BAT_JB_NM ILIKE '%' || #{batJbNm} || '%'
+		</if>
+		<if test="useFlg != null and useFlg != ''">
+			AND USE_FLG = #{useFlg}
+		</if>
+		<choose>
+			<when test="sort.sortField != null and sort.sortField != ''">
+			   ORDER BY ${sort.sortField} ${sort.sortType}, UPD_DT DESC
+			</when>
+			<otherwise>
+			   ORDER BY UPD_DT DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="searchBatchJob" parameterType="com.clt.hrm.infra.batchjob.dtos.SearchBatchJobConfigDto" resultMap="batchJobConfigResultMap">
+		SELECT CO_ID,
+			BAT_JB_ID,
+			BAT_JB_NM,
+			BAT_JB_CLSS,
+			BAT_JB_STS_CD,
+			BAT_JB_DESC,
+			CRON_XPR_VAL,
+			CRON_DESC,
+			BAT_JB_NXT_RUN_DT,
+			BAT_JB_LST_RUN_DT,
+			USE_FLG,
+			BAT_JB_PARA,
+			CRE_USR_ID,
+            CRE_DT,
+            UPD_USR_ID,
+            UPD_DT
+		FROM COM_BAT_CFG
+		WHERE CO_ID = #{coId}
+		<if test="batJbId != null and batJbId != ''">
+			AND BAT_JB_ID = #{batJbId}
+		</if>
+		<if test="batJbNm != null and batJbNm != ''">
+			AND BAT_JB_NM ILIKE '%' || #{batJbNm} || '%'
+		</if>
+		<if test="useFlg != null and useFlg != ''">
+			AND USE_FLG = #{useFlg}
+		</if>
+		LIMIT 1
+	</select>
+	
+	<select id="getBatchJobConfig" parameterType="com.clt.hrm.infra.batchjob.dtos.BatchJobConfigDto" resultMap="batchJobConfigResultMap">
+		SELECT CO_ID,
+			BAT_JB_ID,
+			BAT_JB_NM,
+			BAT_JB_CLSS,
+			BAT_JB_STS_CD,
+			BAT_JB_DESC,
+			CRON_XPR_VAL,
+			CRON_DESC,
+			BAT_JB_NXT_RUN_DT,
+			BAT_JB_LST_RUN_DT,
+			USE_FLG,
+			BAT_JB_PARA,
+			CRE_USR_ID,
+            CRE_DT,
+            UPD_USR_ID,
+            UPD_DT
+		FROM COM_BAT_CFG
+		WHERE CO_ID = #{coId}
+		<if test="batJbId != null and batJbId != ''">
+			AND BAT_JB_ID = #{batJbId}
+		</if>
+		<if test="batJbNm != null and batJbNm != ''">
+			AND BAT_JB_NM ILIKE '%' || #{batJbNm} || '%'
+		</if>
+		<if test="useFlg != null and useFlg != ''">
+			AND USE_FLG = #{useFlg}
+		</if>
+		LIMIT 1
+	</select>
+	
+	<insert id="insertBatchJobConfig" parameterType="com.clt.hrm.infra.batchjob.dtos.BatchJobConfigDto">
+		 INSERT INTO COM_BAT_CFG (
+			CO_ID,
+			BAT_JB_ID,
+			BAT_JB_NM,
+			BAT_JB_CLSS,
+			BAT_JB_STS_CD,
+			BAT_JB_DESC,
+			CRON_XPR_VAL,
+			CRON_DESC,
+			BAT_JB_NXT_RUN_DT,
+			BAT_JB_LST_RUN_DT,
+			USE_FLG,
+			BAT_JB_PARA,
+			CRE_USR_ID,
+			CRE_DT,
+			UPD_USR_ID,
+			UPD_DT
+		) VALUES (
+			#{coId},
+			#{batJbId},
+			#{batJbNm},
+			#{batJbClss},
+			#{batJbStsCd},
+			#{batJbDesc},
+			#{cronXprVal},
+			#{cronDesc},
+			null,
+			null,
+			COALESCE(#{useFlg}, 'Y'),
+			COALESCE(#{jobParams, typeHandler=com.clt.hrm.infra.common.typehandler.MapJsonTypeHandler}::jsonb, '{}'::jsonb),
+			#{creUsrId},
+			CURRENT_TIMESTAMP,
+			#{updUsrId},
+			CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	
+	<delete id="deleteBatchJobConfig" parameterType="com.clt.hrm.infra.batchjob.dtos.BatchJobConfigDto">
+		DELETE FROM COM_BAT_CFG
+		WHERE CO_ID = #{coId}
+		AND BAT_JB_ID = #{batJbId}
+	</delete>
+	
+
+	<update id="updateBatchConfig" parameterType="com.clt.hrm.infra.batchjob.dtos.BatchJobConfigDto">
+		UPDATE COM_BAT_CFG
+			SET UPD_USR_ID = #{updUsrId},
+				<if test="batJbNm != null and batJbNm != ''">
+					BAT_JB_NM = #{batJbNm},
+				</if>
+				<if test="batJbDesc != null and batJbDesc != ''">
+					BAT_JB_DESC = #{batJbDesc},
+				</if>
+				<if test="batJbStsCd != null and batJbStsCd != ''">
+					BAT_JB_STS_CD = #{batJbStsCd},
+				</if>
+				<if test="cronXprVal != null and cronXprVal != ''">
+					CRON_XPR_VAL = #{cronXprVal},
+				</if>
+				<if test="cronDesc != null and cronDesc != ''">
+					CRON_DESC = #{cronDesc},
+				</if>
+				<if test="batJbNxtRunDt != null">
+					BAT_JB_NXT_RUN_DT = #{batJbNxtRunDt},
+				</if>
+				<if test="useFlg != null and useFlg != ''">
+					USE_FLG = #{useFlg},
+				</if>
+				<if test="jobParams != null">
+					BAT_JB_PARA = #{jobParams, typeHandler=com.clt.hrm.infra.common.typehandler.MapJsonTypeHandler}::jsonb,
+				</if>
+			    UPD_DT = CURRENT_TIMESTAMP
+			WHERE CO_ID = #{coId}
+			AND BAT_JB_ID = #{batJbId}
+	</update>
+	
+	<update id="updateBatchConfigStatus" parameterType="com.clt.hrm.infra.batchjob.dtos.BatchJobExecutionHistoryDto">
+		UPDATE COM_BAT_CFG
+			SET UPD_USR_ID = #{updUsrId},
+			<if test="batJbNxtRunDt != null">
+				BAT_JB_NXT_RUN_DT = #{batJbNxtRunDt},
+			</if>
+			<if test="batJbEndDt != null">
+				BAT_JB_LST_RUN_DT = #{batJbEndDt},
+			</if>
+			BAT_JB_STS_CD = #{batJbStsCd},
+			UPD_DT = CURRENT_TIMESTAMP
+		WHERE CO_ID = #{coId}
+			AND BAT_JB_ID = #{batJbId}
+	</update>
+	
+	
+	<select id="searchBatchJobHistoryList" parameterType="com.clt.hrm.infra.batchjob.dtos.SearchBatchJobExecutionHistoryDto" resultType="com.clt.hrm.infra.batchjob.dtos.BatchJobExecutionHistoryDto">
+		SELECT  CO_ID,
+				BAT_EXEC_ID,
+				BAT_JB_ID,
+				BAT_JB_STS_CD,
+				BAT_JB_ST_DT,
+				BAT_JB_END_DT,
+				BAT_JB_PARA,
+				BAT_JB_MSG,
+				CRE_USR_ID,
+	            CRE_DT,
+	            UPD_USR_ID,
+	            UPD_DT
+		    FROM COM_BAT_HIS
+		    WHERE CO_ID = #{coId}
+		    	AND BAT_JB_ID = #{batJbId}
+			<choose>
+			    <when test="sort.sortField != null and sort.sortField != ''">
+			      ORDER BY ${sort.sortField} ${sort.sortType}, UPD_DT DESC
+			    </when>
+			    <otherwise>
+			      ORDER BY UPD_DT DESC
+			    </otherwise>
+			</choose>
+	        <if test="pagination.current != null and pagination != ''">
+				LIMIT #{pagination.pageSize} OFFSET (#{pagination.current} - 1) * #{pagination.pageSize}
+		    </if>
+	</select>
+	
+	<select id="countBatchJobHistoryList" parameterType="com.clt.hrm.infra.batchjob.dtos.SearchBatchJobExecutionHistoryDto" resultType="int">
+		SELECT COUNT(*)
+			FROM COM_BAT_HIS
+		    WHERE CO_ID = #{coId}
+		   	AND BAT_JB_ID = #{batJbId}
+	</select>
+	
+	<insert id="insertBatchJobHistory" parameterType="com.clt.hrm.infra.batchjob.dtos.BatchJobExecutionHistoryDto">
+		 <selectKey keyProperty="batExecId" resultType="String" order="BEFORE">
+		        SELECT get_mdl_seq2(#{coId}, 'HIS', 6)
+		 </selectKey>
+			 INSERT INTO COM_BAT_HIS (
+				CO_ID,
+				BAT_EXEC_ID,
+				BAT_JB_ID,
+				BAT_JB_STS_CD,
+				BAT_JB_ST_DT,
+				BAT_JB_END_DT,
+				BAT_JB_PARA,
+				BAT_JB_MSG,
+				CRE_USR_ID,
+	            CRE_DT,
+	            UPD_USR_ID,
+	            UPD_DT
+			 ) VALUES (
+				#{coId},
+				#{batExecId},
+				#{batJbId},
+				#{batJbStsCd},
+				NOW(),
+				NULL,
+				#{batJbPara, typeHandler=com.clt.hrm.infra.common.typehandler.JsonNodeTypeHandler}::jsonb,
+				#{batJbMsg},
+				#{creUsrId},
+	            CURRENT_TIMESTAMP,
+	            #{updUsrId},
+	            CURRENT_TIMESTAMP
+			 )
+	</insert>
+	
+	<update id="updateBatchJobHistory" parameterType="com.clt.hrm.infra.batchjob.dtos.BatchJobExecutionHistoryDto">
+		 UPDATE COM_BAT_HIS
+			 	SET UPD_USR_ID = #{updUsrId},
+			 	<if test="batJbStsCd != null and batJbStsCd != ''">
+					BAT_JB_STS_CD = #{batJbStsCd},
+				</if>
+				<if test="batJbMsg != null and batJbMsg != ''">
+					BAT_JB_MSG = #{batJbMsg},
+				</if>
+				<if test="batJbPara != null and batJbPara != ''">
+					BAT_JB_PARA = #{batJbPara, typeHandler=com.clt.hrm.infra.common.typehandler.JsonNodeTypeHandler},
+				</if>
+				BAT_JB_END_DT = CURRENT_TIMESTAMP,
+			 	UPD_DT = CURRENT_TIMESTAMP
+		 WHERE CO_ID = #{coId}
+			AND BAT_EXEC_ID = #{batExecId}
+	</update>
+</mapper>

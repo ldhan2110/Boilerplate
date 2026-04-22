@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.tenant.mapper.TenantServiceMapper">
+    
+    <!-- Get service bean name from TENT_SVC table -->
+    <select id="getServiceBeanName" resultType="String">
+        SELECT 
+            BEAN_NAME
+        FROM tenant.TENT_SVC
+        WHERE TENT_ID = #{tenantId}
+            AND SVC_CD = #{serviceCode}
+            AND USE_FLG = 'Y'
+        LIMIT 1
+    </select>
+    
+    <!-- Get tenant database configuration -->
+    <select id="selectTenantDbConfig" parameterType="String" resultType="com.clt.hrm.tenant.entity.TenantDbConfig">
+        SELECT 
+            MST.TENT_ID AS tenantId,
+            CFG.DB_TP_CD AS dbType,
+            CFG.DB_HOST AS dbHost,
+            CFG.DB_PORT AS dbPort,
+            CFG.DB_NM AS dbName,
+            CFG.DB_USR_NM AS dbUsername,
+            CFG.DB_PWD AS dbPassword,
+            CFG.USE_FLG AS useFlg,
+            CFG.CRE_USR_ID AS creUsrId,
+            CFG.CRE_DT AS creDt,
+            CFG.UPD_USR_ID AS updUsrId,
+            CFG.UPD_DT AS updDt
+        FROM tenant.TENT_DB_CFG CFG 
+        JOIN tenant.TENT_MST MST 
+            ON CFG.TENT_ID = MST.TENT_ID
+        WHERE MST.TENT_ID = #{tenantId}
+            AND MST.USE_FLG = 'Y'
+            AND CFG.USE_FLG = 'Y'
+            AND CFG.PRIORITY = 1
+        LIMIT 1
+    </select>
+    
+    <!-- Get module information for validation -->
+    <select id="selectModuleInfo" resultType="com.clt.hrm.tenant.entity.TenantModuleInfo">
+        SELECT 
+            MDL.TENT_ID AS tenantId,
+            MDL.MDL_CD AS moduleCode,
+            MDL.USE_FLG AS useFlg,
+            MDL.VLD_FM AS validityFrom,
+            MDL.VLD_TO AS validityTo
+        FROM tenant.TENT_MDL MDL
+        JOIN tenant.TENT_MST MST
+            ON MDL.TENT_ID = MST.TENT_ID
+        WHERE MDL.TENT_ID = #{tenantId}
+            AND MDL.MDL_CD = #{moduleCode}
+            AND MST.USE_FLG = 'Y'
+        LIMIT 1
+    </select>
+    
+    <!-- Check if tenant exists and is active -->
+    <select id="isTenantActive" resultType="boolean">
+        SELECT 
+            CASE WHEN COUNT(*) > 0 THEN true ELSE false END
+        FROM tenant.TENT_MST
+        WHERE TENT_ID = #{tenantId}
+            AND USE_FLG = 'Y'
+    </select>
+</mapper>

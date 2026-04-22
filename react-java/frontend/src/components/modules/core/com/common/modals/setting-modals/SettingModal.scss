@@ -1,0 +1,195 @@
+.setting-modal {
+	--setting-modal-item-border-radius: 8px;
+	--setting-modal-item-padding: 16px;
+	--setting-modal-item-gap: 12px;
+	--setting-modal-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+	.ant-modal-content {
+		overflow: hidden;
+	}
+
+	.ant-modal-header {
+		border-bottom: 1px solid var(--ant-color-border-secondary);
+		padding-bottom: 10px;
+
+		.ant-modal-title {
+			font-size: 18px;
+			font-weight: 600;
+			color: var(--ant-color-text);
+			margin: 0;
+			
+			span {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				
+				.anticon {
+					color: var(--ant-color-primary);
+					font-size: 20px;
+				}
+			}
+		}
+	}
+
+	// .ant-modal-body {
+	// 	padding: 12px;
+	// }
+
+	.ant-modal-footer {
+		border-top: 1px solid var(--ant-color-border-secondary);
+		padding-top: 10px;
+	}
+
+	&__content {
+		display: flex;
+		flex-direction: column;
+		gap: var(--setting-modal-item-gap);
+		padding: 8px 0;
+	}
+
+	&__item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--setting-modal-item-padding);
+		background: var(--ant-color-bg-container);
+		border: 1px solid var(--ant-color-border);
+		border-radius: var(--setting-modal-item-border-radius);
+		transition: var(--setting-modal-transition);
+		gap: 16px;
+		min-height: 56px;
+
+		&:hover {
+			border-color: var(--ant-color-primary-hover);
+			background: var(--ant-color-fill-quaternary);
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		}
+
+		&:active {
+			transform: translateY(1px);
+		}
+
+		&__info {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			flex: 1;
+			min-width: 0;
+		}
+
+		&__icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 36px;
+			height: 36px;
+			border-radius: 8px;
+			background: var(--ant-color-primary-bg);
+			color: var(--ant-color-primary);
+			flex-shrink: 0;
+			transition: var(--setting-modal-transition);
+
+			.anticon {
+				font-size: 18px;
+			}
+		}
+
+		&__label-wrapper {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			flex: 1;
+			min-width: 0;
+		}
+
+		&__label {
+			font-size: 14px;
+			font-weight: 500;
+			color: var(--ant-color-text);
+			line-height: 1.4;
+			margin: 0;
+		}
+
+		&__description {
+			font-size: 12px;
+			color: var(--ant-color-text-secondary);
+			line-height: 1.4;
+			margin: 0;
+		}
+
+		&__control {
+			display: flex;
+			align-items: center;
+			flex-shrink: 0;
+
+			// Style the Select component
+			.ant-select {
+				min-width: 150px;
+				
+				&:hover {
+					border-color: var(--ant-color-primary-hover);
+				}
+			}
+
+			// Style the Switch component
+			.ant-switch {
+				flex-shrink: 0;
+			}
+
+			// Hide label in DarkModeToggle since we show it in the item label
+			&--dark-mode {
+				.ant-space {
+					gap: 0 !important;
+					
+					.ant-space-item {
+						&:first-child {
+							// Hide the "Dark Mode" text label
+							display: none;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Responsive adjustments
+	@media (max-width: 576px) {
+		.ant-modal {
+			max-width: calc(100vw - 32px);
+		}
+
+		&__item {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 12px;
+
+			&__control {
+				width: 100%;
+				justify-content: flex-start;
+
+				.ant-select {
+					width: 100%;
+					min-width: unset;
+				}
+			}
+		}
+	}
+}
+
+// Animation for modal entry
+.ant-modal {
+	.setting-modal {
+		animation: fadeInUp 0.3s ease-out;
+	}
+}
+
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}

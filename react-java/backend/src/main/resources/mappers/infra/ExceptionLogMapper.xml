@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.infra.exceptions.mapper.ExceptionLogMapper">
+	<select id="searchMessageHistoryList" parameterType="com.clt.hrm.infra.exceptions.dtos.SearchExceptionLogDto" resultType="com.clt.hrm.infra.exceptions.dtos.ExceptionLogDto">
+		SELECT * 
+		 FROM ( 
+			 SELECT 
+				MSG.CO_ID,
+		        MSG.MSG_ID,
+		        MSG.ERR_MSG,
+		        MSG.ENDPOINT,
+		        MSG.RQST_PARA,
+		        MSG.MDL_NM,
+		        MSG.CRE_USR_ID,
+				MSG.CRE_DT
+			FROM COM_SYS_ERR_MSG MSG
+				WHERE CO_ID = #{coId}
+			<if test="endPoint != null and endPoint != ''">
+				AND MSG.ENDPOINT ILIKE '%' || #{endPoint} || '%'
+			</if>
+			<choose>
+				<when test="dateFm != null and dateFm != '' and dateTo != null and dateTo != '' ">
+					AND TO_CHAR(MSG.CRE_DT, 'YYYY-MM-DD') BETWEEN #{dateFm} AND #{dateTo}
+				</when>
+				<otherwise>
+					AND TO_CHAR(MSG.CRE_DT, 'YYYY-MM-DD') BETWEEN TO_CHAR(CURRENT_DATE - INTERVAL '1 day', 'YYYY-MM-DD') AND TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="sort.sortField != null and sort.sortField != ''">
+				     ORDER BY ${sort.sortField} ${sort.sortType}
+				</when>
+				<otherwise>
+				     ORDER BY MSG.CRE_DT DESC
+				</otherwise>
+			</choose>
+		)
+		<if test="pagination.current != null and pagination != ''">
+			LIMIT #{pagination.pageSize} OFFSET (#{pagination.current} - 1) * #{pagination.pageSize}
+		</if>
+	</select>
+	
+	<insert id="persistLogError" parameterType="com.clt.hrm.infra.exceptions.dtos.ExceptionLogDto">
+        INSERT INTO COM_SYS_ERR_MSG (
+			CO_ID,
+	        MSG_ID,
+	        ERR_MSG,
+	        ENDPOINT,
+	        RQST_PARA,
+	        MDL_NM,
+	        CRE_USR_ID,
+			CRE_DT
+	     ) VALUES (
+			#{coId},
+	        (SELECT get_mdl_seq2(#{coId}, 'ERR', 6)),
+	        #{errMsg},
+	        #{endpoint},
+	        #{rqstPara, typeHandler=com.clt.hrm.infra.common.typehandler.JsonNodeTypeHandler},
+	        #{mdlNm},
+	        #{creUsrId},
+			NOW()
+	    )
+    </insert>
+    
+    <insert id="persistBatchLogError" parameterType="com.clt.hrm.infra.exceptions.dtos.ExceptionLogDto">
+	    INSERT INTO COM_SYS_ERR_MSG (
+				CO_ID,
+		        MSG_ID,
+		        ERR_MSG,
+		        ENDPOINT,
+		        RQST_PARA,
+		        MDL_NM,
+		        CRE_USR_ID,
+				CRE_DT
+		     ) VALUES
+		 <foreach collection="list" item="item" separator=",">
+		 	(
+				#{item.coId},
+		        (SELECT get_mdl_seq2(#{item.coId}, 'ERR', 6)),
+		        #{item.errMsg},
+		        #{item.endpoint},
+		        #{item.rqstPara, typeHandler=com.clt.hrm.infra.common.typehandler.JsonNodeTypeHandler},
+		        #{item.mdlNm},
+		        #{item.creUsrId},
+				#{item.creDt}::timestamptz
+	    	)
+		 </foreach>
+    </insert>
+
+	<delete id="cleanupLog" parameterType="String">
+		DELETE FROM COM_SYS_ERR_MSG 
+			WHERE CO_ID = #{coId}
+			AND CRE_DT <![CDATA[>=]]>
+				date_trunc('month', CURRENT_DATE) - INTERVAL '3 months'
+			AND CRE_DT <![CDATA[<]]>
+				date_trunc('month', CURRENT_DATE)
+	</delete>
+</mapper>

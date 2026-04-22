@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clt.hrm.core.common.code.mapper.ComCodeMapper">
+
+	<resultMap id="MasterCodeDtoResultMap" type="com.clt.hrm.core.common.code.dtos.MasterCodeDto">
+		<result column="CO_ID" property="coId"/>
+		<result column="MST_CD" property="mstCd"/>
+		<result column="MST_NM" property="mstNm"/>
+		<result column="MST_MDL_NM" property="mstMdlNm"/>
+		<result column="MST_DESC" property="mstDesc"/>
+		<result column="SUB_TBL_CFG" property="subTblCfg" typeHandler="com.clt.hrm.infra.common.typehandler.JsonNodeTypeHandler"/>
+		<result column="USE_FLG" property="useFlg"/>
+		<result column="CRE_USR_ID" property="creUsrId"/>
+		<result column="CRE_DT" property="creDt"/>
+		<result column="UPD_USR_ID" property="updUsrId"/>
+		<result column="UPD_DT" property="updDt"/>
+	</resultMap>
+	<select id="searchMasterCodeList" parameterType="com.clt.hrm.core.common.code.dtos.SearchMasterCodeDto" resultMap="MasterCodeDtoResultMap">
+		SELECT * 
+		FROM 
+			(SELECT 
+				CO_ID,
+				MST_CD,
+				MST_NM,
+				MST_MDL_NM,
+				MST_DESC,
+				SUB_TBL_CFG,
+				USE_FLG,
+				CRE_USR_ID,
+				CRE_DT,
+				UPD_USR_ID,
+				UPD_DT
+			FROM COM_MST_CD
+			WHERE 1=1 
+				AND CO_ID = #{coId}
+			<if test="mstCd != null and mstCd != ''">
+				AND UPPER(MST_CD) LIKE '%' || UPPER(#{mstCd}) || '%'
+			</if>
+			<if test="mstNm != null and mstNm != ''">
+				AND UPPER(MST_NM) ILIKE '%' || UPPER(#{mstNm}) || '%'
+			</if>
+			<if test="mstMdlNm != null and mstMdlNm != ''">
+				AND UPPER(MST_MDL_NM) = UPPER(#{mstMdlNm})
+			</if>
+			<if test="useFlg != null and useFlg != ''">
+				AND USE_FLG = #{useFlg}
+			</if>
+			<choose>
+				<when test="sort != null and sort.sortField != null and sort.sortField != ''">
+					ORDER BY ${sort.sortField} ${sort.sortType}, UPD_DT DESC
+				</when>
+				<otherwise>
+					ORDER BY UPD_DT DESC
+				</otherwise>
+			</choose>
+		) AS MST_LIST
+		WHERE 1=1
+		<include refid="com.clt.hrm.infra.common.mappers.CommonMapper.DynamicFilter"/>
+		<if test="pagination != null and pagination.current != null and pagination.current != ''">
+			LIMIT #{pagination.pageSize} OFFSET (#{pagination.current} - 1) * #{pagination.pageSize}
+		</if>
+	</select>
+
+	<select id="countMasterCodeList" parameterType="com.clt.hrm.core.common.code.dtos.SearchMasterCodeDto" resultType="int">
+		SELECT COUNT(*) 
+		FROM COM_MST_CD
+		WHERE 1=1 
+			AND CO_ID = #{coId}
+		<if test="mstCd != null and mstCd != ''">
+			AND UPPER(MST_CD) LIKE '%' || UPPER(#{mstCd}) || '%'
+		</if>
+		<if test="mstNm != null and mstNm != ''">
+			AND UPPER(MST_NM) ILIKE '%' || UPPER(#{mstNm}) || '%'
+		</if>
+		<if test="mstMdlNm != null and mstMdlNm != ''">
+			AND UPPER(MST_MDL_NM) = UPPER(#{mstMdlNm})
+		</if>
+		<if test="useFlg != null and useFlg != ''">
+			AND USE_FLG = #{useFlg}
+		</if>
+		<include refid="com.clt.hrm.infra.common.mappers.CommonMapper.DynamicFilter"/>
+	</select>
+
+	<select id="getMasterCodeWithSubCodes" parameterType="com.clt.hrm.core.common.code.dtos.SearchMasterCodeDto" resultType="com.clt.hrm.core.common.code.dtos.MasterCodeDto">
+		SELECT 
+			CO_ID,
+			MST_CD,
+			MST_NM,
+			MST_MDL_NM,
+			MST_DESC,
+			USE_FLG,
+			CRE_USR_ID,
+			CRE_DT,
+			UPD_USR_ID,
+			UPD_DT
+		FROM COM_MST_CD
+		WHERE 1=1 
+			AND CO_ID = #{coId}
+		<if test="mstCd != null and mstCd != ''">
+			AND MST_CD = #{mstCd}
+		</if>
+		<if test="useFlg != null and useFlg != ''">
+			AND USE_FLG = #{useFlg}
+		</if>
+		LIMIT 1
+	</select>
+
+	<select id="selectSubCodesByMaster" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			CO_ID,
+			MST_CD,
+			SUB_CD,
+			SUB_NM,
+			SUB_DESC,
+			SUB_ORD_NO,
+			ATTR_CTNT1,
+			ATTR_CTNT2,
+			ATTR_CTNT3,
+			ATTR_CTNT4,
+			ATTR_CTNT5,
+			ATTR_CTNT6,
+			ATTR_CTNT7,
+			ATTR_CTNT8,
+			ATTR_CTNT9,
+			ATTR_CTNT10,
+			ATTR_CTNT11,
+			ATTR_CTNT12,
+			ATTR_CTNT13,
+			ATTR_CTNT14,
+			ATTR_CTNT15,
+			ATTR_CTNT16,
+			ATTR_CTNT17,
+			ATTR_CTNT18,
+			ATTR_CTNT19,
+			ATTR_CTNT20,
+			DFLT_FLG,
+			USE_FLG,
+			CRE_USR_ID,
+			CRE_DT,
+			UPD_USR_ID,
+			UPD_DT
+		FROM COM_SUB_CD
+		WHERE CO_ID = #{coId}
+			AND MST_CD = #{mstCd}
+		ORDER BY SUB_ORD_NO, SUB_CD
+	</select>
+
+	<select id="selectActiveSubCodesByMaster" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			CO_ID,
+			MST_CD,
+			SUB_CD,
+			SUB_NM,
+			SUB_DESC,
+			SUB_ORD_NO,
+			ATTR_CTNT1,
+			ATTR_CTNT2,
+			ATTR_CTNT3,
+			ATTR_CTNT4,
+			ATTR_CTNT5,
+			ATTR_CTNT6,
+			ATTR_CTNT7,
+			ATTR_CTNT8,
+			ATTR_CTNT9,
+			ATTR_CTNT10,
+			ATTR_CTNT11,
+			ATTR_CTNT12,
+			ATTR_CTNT13,
+			ATTR_CTNT14,
+			ATTR_CTNT15,
+			ATTR_CTNT16,
+			ATTR_CTNT17,
+			ATTR_CTNT18,
+			ATTR_CTNT19,
+			ATTR_CTNT20,
+			DFLT_FLG,
+			USE_FLG,
+			CRE_USR_ID,
+			CRE_DT,
+			UPD_USR_ID,
+			UPD_DT
+		FROM COM_SUB_CD
+		WHERE CO_ID = #{coId}
+			AND MST_CD = #{mstCd}
+			AND USE_FLG = 'Y'
+		ORDER BY SUB_ORD_NO, SUB_CD
+	</select>
+
+	<insert id="insertMasterCode" parameterType="com.clt.hrm.core.common.code.dtos.MasterCodeDto">
+		INSERT INTO COM_MST_CD (
+			CO_ID,
+			MST_CD,
+			MST_NM,
+			MST_MDL_NM,
+			MST_DESC,
+			USE_FLG,
+			CRE_USR_ID,
+			CRE_DT,
+			UPD_USR_ID,
+			UPD_DT
+		) VALUES (
+			#{coId},
+			#{mstCd},
+			#{mstNm},
+			#{mstMdlNm},
+			#{mstDesc},
+			COALESCE(#{useFlg}, 'Y'),
+			#{creUsrId},
+			CURRENT_TIMESTAMP,
+			#{updUsrId},
+			CURRENT_TIMESTAMP
+		)
+	</insert>
+
+	<update id="updateMasterCode" parameterType="com.clt.hrm.core.common.code.dtos.MasterCodeDto">
+		UPDATE COM_MST_CD
+		<set>
+			<if test="mstNm != null and mstNm != ''">
+				MST_NM = #{mstNm},
+			</if>
+			<if test="mstMdlNm != null and mstMdlNm != ''">
+				MST_MDL_NM = #{mstMdlNm},
+			</if>
+			<if test="mstDesc != null and mstDesc != ''">
+				MST_DESC = #{mstDesc},
+			</if>
+			<if test="useFlg != null and useFlg != ''">
+				USE_FLG = #{useFlg},
+			</if>
+            UPD_USR_ID = #{updUsrId},
+			UPD_DT = CURRENT_TIMESTAMP
+		</set>
+		WHERE CO_ID = #{coId}
+			AND MST_CD = #{mstCd}
+	</update>
+
+	<delete id="deleteMasterCode" parameterType="com.clt.hrm.core.common.code.dtos.MasterCodeDto">
+		DELETE FROM COM_MST_CD
+		WHERE CO_ID = #{coId}
+			AND MST_CD = #{mstCd}
+	</delete>
+
+	<insert id="insertSubCode" parameterType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		INSERT INTO COM_SUB_CD (
+			CO_ID,
+			MST_CD,
+			SUB_CD,
+			SUB_NM,
+			SUB_DESC,
+			SUB_ORD_NO,
+			ATTR_CTNT1,
+			ATTR_CTNT2,
+			ATTR_CTNT3,
+			ATTR_CTNT4,
+			ATTR_CTNT5,
+			ATTR_CTNT6,
+			ATTR_CTNT7,
+			ATTR_CTNT8,
+			ATTR_CTNT9,
+			ATTR_CTNT10,
+			ATTR_CTNT11,
+			ATTR_CTNT12,
+			ATTR_CTNT13,
+			ATTR_CTNT14,
+			ATTR_CTNT15,
+			ATTR_CTNT16,
+			ATTR_CTNT17,
+			ATTR_CTNT18,
+			ATTR_CTNT19,
+			ATTR_CTNT20,
+			DFLT_FLG,
+			USE_FLG,
+			CRE_USR_ID,
+			CRE_DT,
+			UPD_USR_ID,
+			UPD_DT
+		) VALUES (
+			#{coId},
+			#{mstCd},
+			#{subCd},
+			#{subNm},
+			#{subDesc},
+			COALESCE(#{subOrdNo}::INTEGER, 99),
+			#{attrCtnt1},
+			#{attrCtnt2},
+			#{attrCtnt3},
+			#{attrCtnt4},
+			#{attrCtnt5},
+			#{attrCtnt6},
+			#{attrCtnt7},
+			#{attrCtnt8},
+			#{attrCtnt9},
+			#{attrCtnt10},
+			#{attrCtnt11},
+			#{attrCtnt12},
+			#{attrCtnt13},
+			#{attrCtnt14},
+			#{attrCtnt15},
+			#{attrCtnt16},
+			#{attrCtnt17},
+			#{attrCtnt18},
+			#{attrCtnt19},
+			#{attrCtnt20},
+			COALESCE(#{dfltFlg}, 'N'),
+			COALESCE(#{useFlg}, 'Y'),
+			#{creUsrId},
+			CURRENT_TIMESTAMP,
+			#{updUsrId},
+			CURRENT_TIMESTAMP
+		)
+	</insert>
+
+	<update id="updateSubCode" parameterType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		UPDATE COM_SUB_CD
+		<set>
+			<if test="subNm != null and subNm != ''">
+				SUB_NM = #{subNm},
+			</if>
+			<if test="subDesc != null and subDesc != ''">
+				SUB_DESC = #{subDesc},
+			</if>
+			<if test="subOrdNo != null">
+				SUB_ORD_NO = #{subOrdNo},
+			</if>
+			<if test="attrCtnt1 != null and attrCtnt1 != ''">
+				ATTR_CTNT1 = #{attrCtnt1},
+			</if>
+			<if test="attrCtnt2 != null and attrCtnt2 != ''">
+				ATTR_CTNT2 = #{attrCtnt2},
+			</if>
+			<if test="attrCtnt3 != null and attrCtnt3 != ''">
+				ATTR_CTNT3 = #{attrCtnt3},
+			</if>
+			<if test="attrCtnt4 != null and attrCtnt4 != ''">
+				ATTR_CTNT4 = #{attrCtnt4},
+			</if>
+			<if test="attrCtnt5 != null and attrCtnt5 != ''">
+				ATTR_CTNT5 = #{attrCtnt5},
+			</if>
+			<if test="attrCtnt6 != null and attrCtnt6 != ''">
+				ATTR_CTNT6 = #{attrCtnt6},
+			</if>
+			<if test="attrCtnt7 != null and attrCtnt7 != ''">
+				ATTR_CTNT7 = #{attrCtnt7},
+			</if>
+			<if test="attrCtnt8 != null and attrCtnt8 != ''">
+				ATTR_CTNT8 = #{attrCtnt8},
+			</if>
+			<if test="attrCtnt9 != null and attrCtnt9 != ''">
+				ATTR_CTNT9 = #{attrCtnt9},
+			</if>
+			<if test="attrCtnt10 != null and attrCtnt10 != ''">
+				ATTR_CTNT10 = #{attrCtnt10},
+			</if>
+			<if test="attrCtnt11 != null and attrCtnt11 != ''">
+				ATTR_CTNT11 = #{attrCtnt11},
+			</if>
+			<if test="attrCtnt12 != null and attrCtnt12 != ''">
+				ATTR_CTNT12 = #{attrCtnt12},
+			</if>
+			<if test="attrCtnt13 != null and attrCtnt13 != ''">
+				ATTR_CTNT13 = #{attrCtnt13},
+			</if>
+			<if test="attrCtnt14 != null and attrCtnt14 != ''">
+				ATTR_CTNT14 = #{attrCtnt14},
+			</if>
+			<if test="attrCtnt15 != null and attrCtnt15 != ''">
+				ATTR_CTNT15 = #{attrCtnt15},
+			</if>
+			<if test="attrCtnt16 != null and attrCtnt16 != ''">
+				ATTR_CTNT16 = #{attrCtnt16},
+			</if>
+			<if test="attrCtnt17 != null and attrCtnt17 != ''">
+				ATTR_CTNT17 = #{attrCtnt17},
+			</if>
+			<if test="attrCtnt18 != null and attrCtnt18 != ''">
+				ATTR_CTNT18 = #{attrCtnt18},
+			</if>
+			<if test="attrCtnt19 != null and attrCtnt19 != ''">
+				ATTR_CTNT19 = #{attrCtnt19},
+			</if>
+			<if test="attrCtnt20 != null and attrCtnt20 != ''">
+				ATTR_CTNT20 = #{attrCtnt20},
+			</if>
+			<if test="dfltFlg != null and dfltFlg != ''">
+				DFLT_FLG = COALESCE(#{dfltFlg}, 'N'),
+			</if>
+			<if test="useFlg != null and useFlg != ''">
+				USE_FLG = #{useFlg},
+			</if>
+            UPD_USR_ID = #{updUsrId},
+			UPD_DT = CURRENT_TIMESTAMP
+		</set>
+		WHERE CO_ID = #{coId}
+			AND MST_CD = #{mstCd}
+			AND SUB_CD = #{subCd}
+	</update>
+
+	<delete id="deleteSubCode" parameterType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		DELETE FROM COM_SUB_CD
+		WHERE CO_ID = #{coId}
+			AND MST_CD = #{mstCd}
+			AND SUB_CD = #{subCd}
+	</delete>
+
+	<delete id="deleteSubCodesByMaster">
+		DELETE FROM COM_SUB_CD
+		WHERE CO_ID = #{coId}
+			AND MST_CD = #{mstCd}
+	</delete>
+
+
+	<select id="selectWorkShiftList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			CO_ID,
+			SHFT_CD AS SUB_CD,
+			SHFT_NM AS SUB_NM
+		FROM COM_SHFT
+		WHERE 1=1
+			AND CO_ID = #{coId} 
+			AND USE_FLG = 'Y'
+		ORDER BY SHFT_CD ASC
+	</select>
+
+	<select id="selectWorkGroupList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT
+			CO_ID,
+			WRK_GRP_ID AS SUB_CD,
+			WRK_GRP_NM AS SUB_NM
+		FROM COM_WRK_GRP
+		WHERE 1=1
+			AND CO_ID = #{coId}
+			AND USE_FLG = 'Y'
+		ORDER BY WRK_GRP_ID ASC
+	</select>
+
+	<select id="selectWorkLocationList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT
+			CO_ID,
+			WRK_LOC_ID AS SUB_CD,
+			WRK_LOC_NM AS SUB_NM
+		FROM COM_WRK_LOC
+		WHERE 1=1
+			AND CO_ID = #{coId}
+			AND USE_FLG = 'Y'
+		ORDER BY WRK_LOC_ID ASC
+	</select>
+
+	<select id="selectNationList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			NTN_CD AS SUB_CD,
+			NTN_NM AS SUB_NM,
+			dflt_flg
+		FROM COM_NTN 
+		WHERE 1=1
+			AND USE_FLG = 'Y'
+		ORDER BY NTN_CD ASC
+	</select>
+
+	<select id="selectEthnicList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			ETHNIC_ID AS SUB_CD,
+			ETHNIC_NM AS SUB_NM,
+			dflt_flg
+		FROM COM_ETHNIC 
+		WHERE 1=1
+			AND USE_FLG = 'Y'
+		ORDER BY ETHNIC_ID ASC
+	</select>
+
+	<select id="selectOrgList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		WITH RECURSIVE org_descendants AS (
+			-- For each organization, find all its descendant organizations (including itself)
+			SELECT 
+				root.co_id,
+				root.orz_id AS root_orz_id,
+				root.orz_id AS descendant_orz_id
+			FROM adm_orz root
+			WHERE root.use_flg = 'Y' AND root.org_sts_flg = 'Y'
+			
+			UNION ALL
+			
+			SELECT 
+				od.co_id,
+				od.root_orz_id,
+				child.orz_id AS descendant_orz_id
+			FROM org_descendants od
+			INNER JOIN adm_orz child ON child.co_id = od.co_id AND child.prnt_orz_id = od.descendant_orz_id
+			WHERE child.use_flg = 'Y' AND child.org_sts_flg = 'Y'
+		),
+		v_count_emp AS (
+			-- Count employees for each organization including all child organizations
+			SELECT 
+				od.root_orz_id AS orz_id,
+				od.co_id,
+				COUNT(DISTINCT e.empe_id) AS num_of_emp
+			FROM org_descendants od
+			LEFT JOIN hrm_empe e ON e.co_id = od.co_id 
+				AND e.org_id = od.descendant_orz_id
+				AND e.use_flg = 'Y'
+			GROUP BY od.root_orz_id, od.co_id
+		),
+		org_hierarchy AS (
+			-- Base case: root organizations (where prnt_orz_id is NULL)
+			SELECT 
+				o.co_id,
+				o.orz_id,
+				o.prnt_orz_id,
+				o.orz_cd,
+				o.orz_nm,
+				o.orz_end_dt,
+				1 AS lvl,
+				ARRAY[o.orz_id]::varchar[] AS path,
+				'/' || COALESCE(TO_CHAR(o.orz_end_dt, 'YYYYMMDD'), '99999999') AS end_date_path
+			FROM adm_orz o
+			WHERE o.use_flg = 'Y'
+                AND o.org_sts_flg = 'Y'
+				AND o.co_id = #{coId}
+				AND o.prnt_orz_id IS NULL
+			
+			UNION ALL
+			
+			-- Recursive case: child organizations
+			SELECT 
+				o.co_id,
+				o.orz_id,
+				o.prnt_orz_id,
+				o.orz_cd,
+				o.orz_nm,
+				o.orz_end_dt,
+				oh.lvl + 1 AS lvl,
+				oh.path || o.orz_id AS path,
+				oh.end_date_path || '/' || COALESCE(TO_CHAR(o.orz_end_dt, 'YYYYMMDD'), '99999999') AS end_date_path
+			FROM adm_orz o
+			INNER JOIN org_hierarchy oh ON o.co_id = oh.co_id AND o.prnt_orz_id = oh.orz_id
+			WHERE o.use_flg = 'Y'
+              AND o.org_sts_flg = 'Y'
+		)
+		SELECT 
+			sub_cd,
+			sub_nm,
+			co_id,
+			lvl AS attr_ctnt1,
+			end_date AS attr_ctnt2,
+			text2 AS attr_ctnt3
+		FROM (
+			SELECT 
+				a.orz_id AS sub_cd,
+				REPEAT(' ', (a.lvl - 1) * 2) || '└ ' || a.orz_nm AS sub_nm,
+				REPEAT(' ', (a.lvl - 1) * 2) || '└ ' || a.orz_nm || ' (' || COALESCE(v.num_of_emp, 0) || ')' AS text2,
+				a.co_id AS co_id,
+				a.lvl AS lvl,
+				REGEXP_REPLACE(a.end_date_path, '[^0-9A-Za-z]', '', 'g') AS end_date,
+				a.path AS sort_path,
+				a.orz_cd AS sort_cd
+			FROM org_hierarchy a
+			INNER JOIN v_count_emp v ON a.co_id = v.co_id AND a.orz_id = v.orz_id
+		) subq
+		WHERE COALESCE(SUBSTRING(end_date FROM GREATEST(1, LENGTH(end_date) - 7)), '99999999') >= TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+		ORDER BY co_id, sort_path, sort_cd
+	</select>
+
+	<!-- New common code selects: City, District, Religion -->
+	<select id="selectCityList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			city_id AS SUB_CD,
+			city_nm AS SUB_NM
+		FROM COM_CITY 
+		WHERE 1=1
+			AND USE_FLG = 'Y'
+		ORDER BY city_id ASC
+	</select>
+
+	<select id="selectDistrictList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			district_id AS SUB_CD,
+			district_nm AS SUB_NM,
+			city_id as MST_CD
+		FROM COM_DISTRICT 
+		WHERE 1=1
+			AND USE_FLG = 'Y'
+		ORDER BY district_id ASC
+	</select>
+
+	<select id="selectReligionList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			religion_id AS SUB_CD,
+			religion_nm AS SUB_NM,
+			dflt_flg
+		FROM COM_RELIGION 
+		WHERE 1=1
+			AND USE_FLG = 'Y'
+		ORDER BY religion_id ASC
+	</select>
+
+
+
+	<select id="selectAbsenceTypeList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT
+			CO_ID,
+			ASE_TP_CD AS SUB_CD,
+			ASE_TP_NM AS SUB_NM,
+			CO_PAY_RT AS ATTR_CTNT1,
+			INSUR_PAY_RT AS ATTR_CTNT2,
+			CALC_ANUL_LVE_FLG AS ATTR_CTNT3
+		FROM COM_ASE_TP
+		WHERE CO_ID = #{coId}
+			AND USE_FLG = 'Y'
+		ORDER BY ASE_TP_CD
+	</select>
+
+	<select id="selectBankList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			bank_cd AS SUB_CD,
+			bank_shrt_nm || ' - ' || bank_lcl_nm AS SUB_NM,
+			dflt_flg
+		FROM COM_BANK 
+		WHERE 1=1
+			AND USE_FLG = 'Y'
+		ORDER BY bank_cd ASC
+	</select>
+
+	<select id="selectBankBranchList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			brnc_cd AS SUB_CD,
+			brnc_nm AS SUB_NM,
+			bank_cd AS ATTR_CTNT1,
+			dflt_flg
+		FROM COM_BANK_BRNC 
+		WHERE 1=1
+			AND USE_FLG = 'Y'
+		ORDER BY brnc_cd ASC
+	</select>
+
+	<select id="selectSocialInsuranceOfficeList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			si_ofc_id AS SUB_CD,
+			si_ofc_nm AS SUB_NM,
+			si_ofc_rmk AS SUB_DESC,
+			dflt_flg
+		FROM COM_SI_OFC 
+		WHERE 1=1
+			AND USE_FLG = 'Y'
+		ORDER BY si_ofc_id ASC
+	</select>
+
+	<select id="selectHospitalList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			hospital_id AS SUB_CD,
+			hospital_nm AS SUB_NM,
+			hospital_rmk AS SUB_DESC
+		FROM COM_HOSPITAL 
+		WHERE 1=1
+			AND USE_FLG = 'Y'
+		ORDER BY hospital_id ASC
+	</select>
+
+	<select id="selectTerminalList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			TML_ID AS SUB_CD,
+			TML_NM AS SUB_NM
+		FROM COM_TML_INFO 
+		WHERE 1=1
+			AND CO_ID = #{coId}
+			AND USE_FLG = 'Y'
+		ORDER BY TML_ID ASC
+	</select>
+
+	<select id="selectVehicleList" resultType="com.clt.hrm.core.common.code.dtos.SubCodeDto">
+		SELECT 
+			VEHICLE_CD AS SUB_CD,
+			VEHICLE_NM AS SUB_NM
+		FROM COM_VEHICLE 
+		WHERE 1=1
+			AND CO_ID = #{coId}
+			AND USE_FLG = 'Y'
+		ORDER BY VEHICLE_CD ASC
+	</select>
+</mapper>
+
