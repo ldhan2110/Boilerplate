@@ -1,0 +1,40 @@
+{
+  "app": { "name": "Boilerplate" },
+  "login": {
+    "welcome": "Chào mừng trở lại",
+    "subtitle": "Đăng nhập vào tài khoản của bạn",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Mật khẩu",
+    "forgotPassword": "Quên mật khẩu?",
+    "rememberMe": "Ghi nhớ đăng nhập",
+    "signIn": "Đăng nhập"
+  },
+  "sidebar": {
+    "main": "Chính",
+    "admin": "Quản trị",
+    "dashboard": "Bảng điều khiển",
+    "users": "Người dùng",
+    "settings": "Cài đặt",
+    "roles": "Vai trò",
+    "programs": "Chương trình"
+  },
+  "header": {
+    "notifications": "Thông báo",
+    "markAllRead": "Đánh dấu đã đọc",
+    "viewAll": "Xem tất cả",
+    "noNotifications": "Không có thông báo mới",
+    "darkMode": "Chế độ tối",
+    "lightMode": "Chế độ sáng",
+    "profile": "Hồ sơ",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất"
+  },
+  "theme": {
+    "accentColor": "Màu chủ đạo",
+    "green": "Xanh lá",
+    "blue": "Xanh dương",
+    "purple": "Tím",
+    "orange": "Cam"
+  }
+}

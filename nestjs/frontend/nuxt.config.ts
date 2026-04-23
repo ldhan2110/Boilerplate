@@ -33,7 +33,10 @@ export default defineNuxtConfig({
     options: {
       ripple: true,
       theme: {
-        preset: Aura
+        preset: Aura,
+        options: {
+          darkModeSelector: '.dark'
+        }
       }
     }
   },
@@ -44,7 +47,7 @@ export default defineNuxtConfig({
       { code: 'vi', name: 'Tiếng Việt', file: 'vi.json' }
     ],
     defaultLocale: 'en',
-    langDir: 'locales'
+    langDir: 'app/locales'
   },
 
   eslint: {
