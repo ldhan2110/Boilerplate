@@ -1,5 +1,6 @@
 import { IsOptional, IsString } from 'class-validator';
-import { SearchBaseDto } from '@infra/common/dtos/search-base.dto';
+import { SearchBaseDto } from '@infra/common/dto/search-base.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class SearchUserDto extends SearchBaseDto {
   @IsOptional()

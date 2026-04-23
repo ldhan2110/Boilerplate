@@ -4,7 +4,7 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { BaseDto } from '@infra/common/dtos';
+import { BaseDto } from '@infra/common/dto';
 
 export class UserInfoDto extends BaseDto {
   @IsOptional()

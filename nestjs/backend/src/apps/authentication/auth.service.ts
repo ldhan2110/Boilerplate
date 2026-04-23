@@ -1,16 +1,12 @@
-import {
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BizException } from '@infra/common/exceptions/biz.exception';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User } from '@infra/database/entities/administration';
 import { UsersService } from '@module/administration/users/users.service';
-import { LoginResponseDto } from './dto/login-response.dto';
-import { RefreshTokenResponseDto } from './dto/refresh-token.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
+import { LoginRequestDto, LoginResponseDto, RefreshTokenResponseDto, } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -36,8 +32,12 @@ export class AuthService {
     return isMatch ? user : null;
   }
 
-  // Mirrors Java: authenticate()
-  async login(user: User): Promise<LoginResponseDto> {
+  async login(req: LoginRequestDto): Promise<LoginResponseDto> {
+    const user = await this.validateUser(req.username, req.password);
+    if (!user) {
+      throw new BizException('AUT000001', 'ERROR', 'Invalid credentials');
+    }
+
     return {
       accessToken: this.generateAccessToken(user),
       accessExpireIn: this.accessExpireMs,
@@ -46,7 +46,6 @@ export class AuthService {
     };
   }
 
-  // Mirrors Java: generateAccessToken() — rotates both tokens
   async refreshTokens(refreshToken: string): Promise<RefreshTokenResponseDto> {
     let payload: JwtPayload;
 
@@ -55,12 +54,12 @@ export class AuthService {
         secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
       });
     } catch {
-      throw new ForbiddenException('Refresh token expired or invalid');
+      throw new BizException('AUT000001', 'ERROR', 'Refresh token expired or invalid');
     }
 
     const user = await this.usersService.findById(payload.sub);
     if (!user || !user.useFlg) {
-      throw new UnauthorizedException('User not found or inactive');
+      throw new BizException('AUT000002', 'ERROR', 'User not found or inactive');
     }
 
     return {

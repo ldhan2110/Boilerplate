@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BizException } from '@infra/common/exceptions/biz.exception';
 import { Company } from '@infra/database/entities/administration/company.entity';
 import { QueryFactory } from '@infra/database/query-factory';
 import { CompanyInfoDto, CompanyInfoListDto, SearchCompanyDto } from './dto';
@@ -79,7 +80,7 @@ export class CompaniesService {
     if (dto.coId) {
       const existing = await this.qf.findOne(Company, { coId: dto.coId });
       if (existing) {
-        throw new BadRequestException('ADM000016');
+        throw new BizException('ADM000016', 'ERROR');
       }
     }
 
@@ -87,7 +88,7 @@ export class CompaniesService {
     if (dto.taxCd) {
       const existingTax = await this.qf.findOne(Company, { taxCd: dto.taxCd });
       if (existingTax) {
-        throw new BadRequestException('ADM000017');
+        throw new BizException('ADM000017', 'ERROR');
       }
     }
 
@@ -134,12 +135,12 @@ export class CompaniesService {
 
   async updateCompany(dto: CompanyInfoDto): Promise<void> {
     if (!dto.coId) {
-      throw new BadRequestException('ADM000104');
+      throw new BizException('ADM000104', 'ERROR');
     }
 
     const existing = await this.qf.findOne(Company, { coId: dto.coId });
     if (!existing) {
-      throw new NotFoundException('ADM000104');
+      throw new BizException('ADM000104', 'ERROR');
     }
 
     // Validate taxCd uniqueness against other companies if taxCd is changing
@@ -151,7 +152,7 @@ export class CompaniesService {
         .getOne();
 
       if (taxConflict) {
-        throw new BadRequestException('ADM000107');
+        throw new BizException('ADM000107', 'ERROR');
       }
     }
 

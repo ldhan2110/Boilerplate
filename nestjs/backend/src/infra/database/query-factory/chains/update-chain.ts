@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BizException } from '@infra/common/exceptions/biz.exception';
 import { DeepPartial, EntityManager, EntityTarget, FindOptionsWhere, ObjectLiteral } from 'typeorm';
 
 /**
@@ -66,7 +66,7 @@ export class UpdateChain<T extends ObjectLiteral> {
       } as any);
 
       if (!existing) {
-        throw new NotFoundException('Entity not found for merge update.');
+        throw new BizException('SYS000002', 'ERROR', 'Entity not found for merge update');
       }
 
       const merged = { ...existing };

@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PermissionDto } from './permission.dto';
-import { BaseDto } from '@infra/common/dtos';
+import { BaseDto } from '@infra/common/dto';
 
 export class ProgramDto extends BaseDto {
   @IsOptional()

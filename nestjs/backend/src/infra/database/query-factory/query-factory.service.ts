@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundException } from '@nestjs/common';
+import { BizException } from '@infra/common/exceptions/biz.exception';
 import { DataSource, EntityTarget, FindOptionsWhere, ObjectLiteral, Repository } from 'typeorm';
 import { QueryChain } from './query-chain';
 import { RawQueryChain } from './raw-query-chain';
@@ -83,7 +83,7 @@ export class QueryFactory {
   ): Promise<T> {
     const result = await this.findOne(entity, where);
     if (!result) {
-      throw new NotFoundException('Entity not found.');
+      throw new BizException('SYS000002', 'ERROR', 'Entity not found');
     }
     return result;
   }

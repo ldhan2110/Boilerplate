@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 
 export class RefreshTokenRequestDto {
   @IsString()
@@ -6,8 +6,15 @@ export class RefreshTokenRequestDto {
 }
 
 export class RefreshTokenResponseDto {
+  @IsString()
   accessToken!: string;
+
+  @IsNumber()
   accessExpireIn!: number;
+
+  @IsString()
   refreshToken!: string;
+
+  @IsNumber()
   refreshExpireIn!: number;
 }

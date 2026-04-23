@@ -10,7 +10,7 @@ import {
 import { User } from '@infra/database/entities/administration';
 import { AuthService } from './auth.service';
 import { CurrentUser, Public } from './decorators';
-import { LoginResponseDto, RefreshTokenRequestDto, RefreshTokenResponseDto } from './dto';
+import { LoginRequestDto, LoginResponseDto, RefreshTokenRequestDto, RefreshTokenResponseDto } from './dto';
 import { LocalAuthGuard } from './guards';
 
 @Controller('api/auth')
@@ -21,8 +21,8 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@CurrentUser() user: User): Promise<LoginResponseDto> {
-    return this.authService.login(user);
+  login(@Body() req: LoginRequestDto): Promise<LoginResponseDto> {
+    return this.authService.login(req);
   }
 
   

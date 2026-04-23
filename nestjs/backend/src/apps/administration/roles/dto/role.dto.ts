@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { RoleAuthDto } from './role-auth.dto';
-import { BaseDto } from '@infra/common/dtos';
+import { BaseDto } from '@infra/common/dto';
 
 export class RoleDto extends BaseDto {
   @IsOptional()

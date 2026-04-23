@@ -1,5 +1,5 @@
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
-import { BaseDto } from '@infra/common/dtos';
+import { BaseDto } from '@infra/common/dto';
 
 export class RoleAuthDto extends BaseDto {
   @IsOptional()

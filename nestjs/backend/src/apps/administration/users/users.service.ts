@@ -1,12 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BizException } from '@infra/common/exceptions/biz.exception';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { User } from '@infra/database/entities/administration';
-import { SuccessDto } from '@infra/common/dtos/success.dto';
+import { SuccessDto } from '@infra/common/dto/success.dto';
 import { QueryFactory } from '@infra/database/query-factory';
 import {
   ChangeUserInfoDto,
@@ -127,7 +124,7 @@ export class UsersService {
     if (dto.usrId) {
       const existing = await this.qf.findOne(User, { usrId: dto.usrId });
       if (existing) {
-        throw new BadRequestException('ADM000001');
+        throw new BizException('ADM000001', 'ERROR');
       }
     }
 
@@ -150,7 +147,7 @@ export class UsersService {
     const { usrId, ...rest } = dto;
     const user = await this.qf.findOne(User, { usrId });
     if (!user) {
-      throw new BadRequestException('ADM000002');
+      throw new BizException('ADM000002', 'ERROR');
     }
 
     await this.qf.transaction(async (tx) => {
@@ -172,17 +169,19 @@ export class UsersService {
     // Password change block
     if (dto.newPassword) {
       if (!dto.oldPassword) {
-        throw new BadRequestException('Old password is required');
+        throw new BizException('ADM000004', 'ERROR', 'Old password is required');
       }
       const isMatch = await bcrypt.compare(dto.oldPassword, user.usrPwd);
       if (!isMatch) {
-        throw new UnauthorizedException('Old password is incorrect');
+        throw new BizException('ADM000005', 'ERROR', 'Old password is incorrect');
       }
       if (dto.newPassword !== dto.confirmNewPassword) {
-        throw new BadRequestException('New passwords do not match');
+        throw new BizException('ADM000008', 'ERROR', 'New passwords do not match');
       }
       if (!PASSWORD_POLICY.test(dto.newPassword)) {
-        throw new BadRequestException(
+        throw new BizException(
+          'ADM000009',
+          'ERROR',
           'Password must be at least 8 characters and contain uppercase, lowercase, digit, and special character',
         );
       }
@@ -214,7 +213,7 @@ export class UsersService {
 
   async resetUserPassword(users: UserInfoDto[]): Promise<SuccessDto> {
     if (!users || users.length === 0) {
-      throw new BadRequestException('ADM000003');
+      throw new BizException('ADM000003', 'ERROR');
     }
 
     const hashed = await bcrypt.hash(this.defaultPassword, 10);
@@ -235,7 +234,7 @@ export class UsersService {
   async saveUserSetting(dto: UserInfoDto): Promise<SuccessDto> {
     const user = await this.qf.findOne(User, { usrId: dto.usrId });
     if (!user) {
-      throw new BadRequestException('ADM000002');
+      throw new BizException('ADM000002', 'ERROR');
     }
 
     const updates: Partial<User> = {};

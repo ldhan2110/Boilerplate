@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BizException } from '@infra/common/exceptions/biz.exception';
 import {
   DataSource,
   EntityTarget,
@@ -61,7 +61,7 @@ export class TransactionContext {
   ): Promise<T> {
     const result = await this.findOne(entity, where);
     if (!result) {
-      throw new NotFoundException('Entity not found.');
+      throw new BizException('SYS000002', 'ERROR', 'Entity not found');
     }
     return result;
   }

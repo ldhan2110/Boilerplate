@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BizException } from '@infra/common/exceptions/biz.exception';
 import { Role, RoleAuth } from '@infra/database/entities/administration';
 import { QueryFactory } from '@infra/database/query-factory';
 import { RoleAuthDto, RoleDto, RoleListDto, SearchRoleDto } from './dto';
-import { SuccessDto } from '@infra/common/dtos';
+import { SuccessDto } from '@infra/common/dto';
 
 @Injectable()
 export class RolesService {
@@ -142,7 +143,7 @@ export class RolesService {
 
     const existing = await this.qf.findOne(Role, { roleCd });
     if (existing) {
-      throw new BadRequestException('ADM000010');
+      throw new BizException('ADM000010', 'ERROR');
     }
 
     await this.qf.transaction(async (tx) => {

@@ -1,5 +1,5 @@
 import { IsOptional, IsString } from 'class-validator';
-import { SearchBaseDto } from '@infra/common/dtos';
+import { SearchBaseDto } from '@infra/common/dto';
 
 export class SearchProgramDto extends SearchBaseDto {
   @IsOptional()

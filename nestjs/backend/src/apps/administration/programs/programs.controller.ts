@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { SuccessDto } from '@infra/common/dtos';
+import { SuccessDto } from '@infra/common/dto';
 import { PermissionDto, ProgramDto, ProgramListDto, SearchProgramDto } from './dto';
 import { ProgramsService } from './programs.service';
 

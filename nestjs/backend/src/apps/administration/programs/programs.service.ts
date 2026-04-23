@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BizException } from '@infra/common/exceptions/biz.exception';
 import {
   Permission,
   Program,
@@ -81,7 +82,7 @@ export class ProgramsService {
 
   async getProgram(dto: SearchProgramDto): Promise<ProgramDto | null> {
     if (!dto.pgmId && !dto.pgmCd) {
-      throw new BadRequestException('pgmId or pgmCd is required');
+      throw new BizException('PGM000001', 'ERROR', 'pgmId or pgmCd is required');
     }
 
     const chain = this.qf.select(Program, 'pgm');
@@ -105,7 +106,7 @@ export class ProgramsService {
     // 1. Unique pgmCd check (read outside transaction)
     const existing = await this.qf.findOne(Program, { pgmCd: dto.pgmCd });
     if (existing) {
-      throw new BadRequestException(ERR_PROGRAM_CD_DUPLICATE);
+      throw new BizException(ERR_PROGRAM_CD_DUPLICATE, 'ERROR');
     }
 
     // 2. Parent validation for UI type (read outside transaction)
@@ -185,7 +186,7 @@ export class ProgramsService {
 
   async deletePrograms(list: ProgramDto[]): Promise<void> {
     if (!list || list.length === 0) {
-      throw new BadRequestException(ERR_EMPTY_LIST);
+      throw new BizException(ERR_EMPTY_LIST, 'ERROR');
     }
 
     for (const dto of list) {
@@ -195,7 +196,7 @@ export class ProgramsService {
         .whereStrict('ra.pgmId = :pgmId', { pgmId: dto.pgmId })
         .getManyAndCount();
       if (authRows[1] > 0) {
-        throw new BadRequestException(ERR_ROLE_AUTH_EXISTS);
+        throw new BizException(ERR_ROLE_AUTH_EXISTS, 'ERROR');
       }
     }
 
@@ -213,7 +214,7 @@ export class ProgramsService {
 
   async getPermissionByProgram(dto: SearchProgramDto): Promise<PermissionDto[]> {
     if (!dto.pgmId) {
-      throw new BadRequestException('pgmId is required');
+      throw new BizException('PGM000002', 'ERROR', 'pgmId is required');
     }
 
     const permissions = await this.qf
@@ -226,7 +227,7 @@ export class ProgramsService {
 
   async savePermissionByProgram(list: PermissionDto[]): Promise<void> {
     if (!list || list.length === 0) {
-      throw new BadRequestException(ERR_EMPTY_LIST);
+      throw new BizException(ERR_EMPTY_LIST, 'ERROR');
     }
 
     await this.qf.transaction(async (tx) => {
@@ -245,7 +246,7 @@ export class ProgramsService {
             break;
 
           default:
-            throw new BadRequestException(`Unknown procFlag: ${dto.procFlag}`);
+            throw new BizException('COM000009', 'ERROR', `Unknown procFlag: ${dto.procFlag}`);
         }
       }
     });
@@ -255,15 +256,15 @@ export class ProgramsService {
 
   private async validateParentIsMenu(prntPgmId: string | null | undefined): Promise<void> {
     if (!prntPgmId) {
-      throw new BadRequestException(ERR_PROGRAM_NOT_FOUND);
+      throw new BizException(ERR_PROGRAM_NOT_FOUND, 'ERROR');
     }
 
     const parent = await this.qf.findOne(Program, { pgmId: prntPgmId });
     if (!parent) {
-      throw new NotFoundException(ERR_PROGRAM_NOT_FOUND);
+      throw new BizException(ERR_PROGRAM_NOT_FOUND, 'ERROR');
     }
     if (parent.pgmTpCd !== 'MENU') {
-      throw new BadRequestException(ERR_PARENT_NOT_MENU);
+      throw new BizException(ERR_PARENT_NOT_MENU, 'ERROR');
     }
   }
 
@@ -329,7 +330,7 @@ export class ProgramsService {
   }
 
   private async deletePermission(tx: TransactionContext, permId: string | undefined): Promise<void> {
-    if (!permId) throw new BadRequestException('permId is required for delete');
+    if (!permId) throw new BizException('PGM000003', 'ERROR', 'permId is required for delete');
     // Cascade: delete role-auths referencing this permission first
     await tx.delete(RoleAuth).where({ permId }).execute();
     await tx.delete(Permission).where({ permId }).execute();
