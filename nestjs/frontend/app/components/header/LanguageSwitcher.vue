@@ -1,14 +1,18 @@
 <script setup lang="ts">
 const { locale, locales, setLocale } = useI18n()
+const userStore = useUserStore()
 
 const currentLocale = computed(() =>
-  locales.value.find((l: any) => l.code === locale.value)
+  (locales.value as any[]).find((l: any) => l.code === locale.value)
 )
 
 const localeItems = computed(() =>
   (locales.value as any[]).map(l => ({
     label: l.name,
-    click: () => setLocale(l.code)
+    onSelect: () => {
+      setLocale(l.code)
+      userStore.updatePreference('locale', l.code)
+    }
   }))
 )
 </script>
