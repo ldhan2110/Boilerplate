@@ -16,3 +16,14 @@
   --color-green-900: #0A5331;
   --color-green-950: #052E16;
 }
+
+/* Sidebar transitions */
+.sidebar-enter-active,
+.sidebar-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.sidebar-enter-from,
+.sidebar-leave-to {
+  transform: translateX(-100%);
+}
