@@ -8,7 +8,10 @@
     "password": "Mật khẩu",
     "forgotPassword": "Quên mật khẩu?",
     "rememberMe": "Ghi nhớ đăng nhập",
-    "signIn": "Đăng nhập"
+    "signIn": "Đăng nhập",
+    "invalidCredentials": "Tên đăng nhập hoặc mật khẩu không đúng",
+    "loginError": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "signingIn": "Đang đăng nhập..."
   },
   "sidebar": {
     "main": "Chính",

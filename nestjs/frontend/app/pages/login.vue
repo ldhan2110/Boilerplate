@@ -4,6 +4,31 @@ definePageMeta({
 })
 
 const { t } = useI18n()
+const userStore = useUserStore()
+
+const form = reactive({
+  username: '',
+  password: ''
+})
+const loading = ref(false)
+const error = ref('')
+
+async function handleLogin() {
+  error.value = ''
+  loading.value = true
+  try {
+    const success = await userStore.login(form.username, form.password)
+    if (success) {
+      await navigateTo('/')
+    } else {
+      error.value = t('login.invalidCredentials')
+    }
+  } catch {
+    error.value = t('login.loginError')
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -23,15 +48,22 @@ const { t } = useI18n()
           </p>
         </div>
 
+        <!-- Error message -->
+        <div v-if="error" class="mb-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+          {{ error }}
+        </div>
+
         <!-- Form -->
-        <form @submit.prevent class="space-y-4">
+        <form class="space-y-4" @submit.prevent="handleLogin">
           <UFormField :label="t('login.email')">
             <UInput
-              type="email"
+              v-model="form.username"
+              type="text"
               :placeholder="t('login.emailPlaceholder')"
               icon="i-lucide-mail"
               size="lg"
               class="w-full"
+              :disabled="loading"
             />
           </UFormField>
 
@@ -48,11 +80,13 @@ const { t } = useI18n()
               </div>
             </template>
             <UInput
+              v-model="form.password"
               type="password"
               placeholder="••••••••"
               icon="i-lucide-lock"
               size="lg"
               class="w-full"
+              :disabled="loading"
             />
           </UFormField>
 
@@ -61,10 +95,12 @@ const { t } = useI18n()
           </div>
 
           <UButton
-            :label="t('login.signIn')"
+            :label="loading ? t('login.signingIn') : t('login.signIn')"
             type="submit"
             block
             size="lg"
+            :loading="loading"
+            :disabled="loading || !form.username || !form.password"
           />
         </form>
 

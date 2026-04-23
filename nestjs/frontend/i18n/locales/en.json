@@ -8,7 +8,10 @@
     "password": "Password",
     "forgotPassword": "Forgot password?",
     "rememberMe": "Remember me",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "invalidCredentials": "Invalid username or password",
+    "loginError": "An error occurred. Please try again.",
+    "signingIn": "Signing in..."
   },
   "sidebar": {
     "main": "Main",
