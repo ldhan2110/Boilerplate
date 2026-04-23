@@ -47,10 +47,10 @@ export function useApi() {
     get: <T>(url: string, options?: Parameters<typeof $fetch>[1]) =>
       request<T>(url, { ...options, method: 'GET' }),
 
-    post: <T>(url: string, body?: unknown, options?: Parameters<typeof $fetch>[1]) =>
+    post: <T>(url: string, body?: Record<string, any> | null, options?: Parameters<typeof $fetch>[1]) =>
       request<T>(url, { ...options, method: 'POST', body }),
 
-    patch: <T>(url: string, body?: unknown, options?: Parameters<typeof $fetch>[1]) =>
+    patch: <T>(url: string, body?: Record<string, any> | null, options?: Parameters<typeof $fetch>[1]) =>
       request<T>(url, { ...options, method: 'PATCH', body })
   }
 }

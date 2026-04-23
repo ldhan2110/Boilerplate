@@ -1,3 +1,5 @@
+import { defineStore } from 'pinia'
+
 export const useLayoutStore = defineStore('layout', () => {
   const sidebarCollapsed = ref(false)
   const sidebarMobileOpen = ref(false)

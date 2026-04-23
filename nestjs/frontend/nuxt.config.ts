@@ -1,4 +1,3 @@
-import { resolve } from 'node:path'
 import Aura from '@primeuix/themes/aura'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -27,13 +26,6 @@ export default defineNuxtConfig({
     public: {
       apiBase: 'http://localhost:3000'
     }
-  },
-
-  alias: {
-    '@stores': resolve(__dirname, 'app/stores'),
-    '@composables': resolve(__dirname, 'app/composables'),
-    '@types': resolve(__dirname, 'app/types'),
-    '@utils': resolve(__dirname, 'app/utils')
   },
 
   primevue: {

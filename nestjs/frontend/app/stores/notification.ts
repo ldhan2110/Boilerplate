@@ -1,3 +1,5 @@
+import { defineStore } from 'pinia'
+
 export interface AppNotification {
   id: string
   icon: string

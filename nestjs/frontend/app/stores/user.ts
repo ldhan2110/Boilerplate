@@ -10,7 +10,7 @@ import {
   COLOR_MAP,
   COLOR_TO_HEX
 } from '~/types'
-import { storage } from '~/utils'
+import { storage } from '~/utils/storage'
 
 const STORAGE_KEYS = {
   refreshToken: 'refresh_token',
