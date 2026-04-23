@@ -95,7 +95,7 @@ function isActive(to: string) {
     v-model:open="layoutStore.sidebarMobileOpen"
     side="left"
     class="lg:hidden"
-    :ui="{ width: 'max-w-64' }"
+    :ui="{ content: 'max-w-64' }"
   >
     <div class="flex flex-col h-full">
       <!-- Header -->

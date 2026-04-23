@@ -17,7 +17,7 @@ const open = ref(false)
           v-if="notificationStore.unreadCount > 0"
           :label="notificationStore.unreadCount"
           size="xs"
-          color="red"
+          color="error"
           class="absolute -top-1 -right-1 size-5 justify-center rounded-full p-0"
         />
       </template>
