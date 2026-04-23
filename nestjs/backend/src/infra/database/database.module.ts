@@ -1,23 +1,16 @@
-import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { QueryFactoryModule } from './query-factory';
+import { PostgresConfigModule } from './configs';
+import { ALL_ENTITIES } from './query-factory/entity-registry';
 
+@Global()
 @Module({
   imports: [
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DB_HOST'),
-        port: config.get<number>('DB_PORT'),
-        username: config.get<string>('DB_USERNAME'),
-        password: config.get<string>('DB_PASSWORD'),
-        database: config.get<string>('DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: config.get<string>('DB_SYNCHRONIZE') === 'true',
-        logging: config.get<string>('DB_LOGGING') === 'true',
-      }),
-    }),
+    PostgresConfigModule,
+    QueryFactoryModule,
+    TypeOrmModule.forFeature(ALL_ENTITIES),
   ],
+  exports: [QueryFactoryModule, TypeOrmModule],
 })
 export class DatabaseModule {}

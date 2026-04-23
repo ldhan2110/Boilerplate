@@ -9,18 +9,14 @@ import {
 } from '@nestjs/common';
 import { User } from '@infra/database/entities/administration';
 import { AuthService } from './auth.service';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { Public } from './decorators/public.decorator';
-import { LoginResponseDto } from './dto/login-response.dto';
-import { RefreshTokenRequestDto, RefreshTokenResponseDto } from './dto/refresh-token.dto';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { CurrentUser, Public } from './decorators';
+import { LoginResponseDto, RefreshTokenRequestDto, RefreshTokenResponseDto } from './dto';
+import { LocalAuthGuard } from './guards';
 
 @Controller('api/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // POST /api/auth/login
-  // Mirrors Java: POST /api/adm/auth/login
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
@@ -29,8 +25,7 @@ export class AuthController {
     return this.authService.login(user);
   }
 
-  // POST /api/auth/refresh-token
-  // Mirrors Java: POST /api/adm/auth/refresh-token — rotates both tokens
+  
   @Public()
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
@@ -40,8 +35,7 @@ export class AuthController {
     return this.authService.refreshTokens(dto.refreshToken);
   }
 
-  // POST /api/auth/logout
-  // Mirrors Java: POST /api/adm/auth/logout
+
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout(): { success: boolean } {
@@ -49,8 +43,7 @@ export class AuthController {
     return { success: true };
   }
 
-  // GET /api/auth/me
-  // Mirrors Java: GET /api/adm/auth/getUserRole — returns current user info
+
   @Get('me')
   me(@CurrentUser() user: User) {
     const { usrPwd: _, ...safeUser } = user;

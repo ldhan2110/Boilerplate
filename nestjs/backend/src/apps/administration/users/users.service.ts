@@ -4,12 +4,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { DataSource, Repository } from 'typeorm';
 import { User } from '@infra/database/entities/administration';
-import { generateId } from '@infra/common/utils/id-generator.util';
 import { SuccessDto } from '@infra/common/dtos/success.dto';
+import { QueryFactory } from '@infra/database/query-factory';
 import {
   ChangeUserInfoDto,
   SearchUserDto,
@@ -24,10 +22,8 @@ export class UsersService {
   private readonly defaultPassword: string;
 
   constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
-    private readonly dataSource: DataSource,
     private readonly config: ConfigService,
+    private readonly qf: QueryFactory,
   ) {
     this.defaultPassword = config.get<string>('DEFAULT_PASSWORD', 'Password@123');
   }
@@ -37,18 +33,27 @@ export class UsersService {
   // ---------------------------------------------------------------------------
 
   findByUsrId(usrId: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { usrId } });
+    return this.qf.findOne(User, { usrId });
   }
 
   findById(usrId: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { usrId } });
+    return this.qf.findOne(User, { usrId });
   }
 
   async create(data: Partial<User>): Promise<User> {
     const hashed = await bcrypt.hash(data.usrPwd!, 10);
-    const usrId = await generateId(this.dataSource, 'USR', 'seq_usr');
-    const user = this.usersRepository.create({ ...data, usrId, usrPwd: hashed });
-    return this.usersRepository.save(user);
+    let created: User | undefined;
+
+    await this.qf.transaction(async (tx) => {
+      const usrId = await tx.genId('USR', 'seq_usr');
+      created = await tx.insert(User).values({
+        ...data,
+        usrId,
+        usrPwd: hashed,
+      }).returning<User>().execute();
+    });
+
+    return created!;
   }
 
   // ---------------------------------------------------------------------------
@@ -57,41 +62,30 @@ export class UsersService {
 
   async getListUserInfo(dto: SearchUserDto): Promise<UserInfoListDto> {
     const { usrId, usrNm, pagination } = dto;
-    const pageSize = pagination?.pageSize ?? 10;
-    const current = pagination?.current ?? 1;
 
-    const qb = this.dataSource
-      .createQueryBuilder(User, 'u')
-      .select([
-        'u.usrId   AS "usrId"',
-        'u.usrNm   AS "usrNm"',
-        'u.usrEml  AS "usrEml"',
-        'u.usrPhn  AS "usrPhn"',
-        'u.usrAddr AS "usrAddr"',
-        'u.usrDesc AS "usrDesc"',
-        'u.usrFileId AS "usrFileId"',
-        'u.roleId  AS "roleId"',
-        'u.roleNm  AS "roleNm"',
-        'u.langVal AS "langVal"',
-        'u.sysModVal AS "sysModVal"',
-        'u.dtFmtVal  AS "dtFmtVal"',
-        'u.sysColrVal AS "sysColrVal"',
-        'u.useFlg  AS "useFlg"',
-      ])
-      .where('1=1');
+    const columns = [
+      'u.usrId   AS "usrId"',
+      'u.usrNm   AS "usrNm"',
+      'u.usrEml  AS "usrEml"',
+      'u.usrPhn  AS "usrPhn"',
+      'u.usrAddr AS "usrAddr"',
+      'u.usrDesc AS "usrDesc"',
+      'u.usrFileId AS "usrFileId"',
+      'u.roleId  AS "roleId"',
+      'u.roleNm  AS "roleNm"',
+      'u.langVal AS "langVal"',
+      'u.sysModVal AS "sysModVal"',
+      'u.dtFmtVal  AS "dtFmtVal"',
+      'u.sysColrVal AS "sysColrVal"',
+      'u.useFlg  AS "useFlg"',
+    ];
 
-    if (usrId) {
-      qb.andWhere('u.usrId ILIKE :usrId', { usrId: `%${usrId}%` });
-    }
-    if (usrNm) {
-      qb.andWhere('u.usrNm ILIKE :usrNm', { usrNm: `%${usrNm}%` });
-    }
-
-    const total = await qb.getCount();
-    const raw = await qb
-      .offset((current - 1) * pageSize)
-      .limit(pageSize)
-      .getRawMany<UserInfoDto>();
+    const [raw, total] = await this.qf
+      .select(User, 'u', columns)
+      .andWhere('u.usrId ILIKE :usrId', { usrId: usrId ? `%${usrId}%` : undefined })
+      .andWhere('u.usrNm ILIKE :usrNm', { usrNm: usrNm ? `%${usrNm}%` : undefined })
+      .paginate(pagination)
+      .getRawManyAndCount<UserInfoDto>();
 
     return { userInfo: raw, total };
   }
@@ -100,24 +94,25 @@ export class UsersService {
     const { usrId } = dto;
     if (!usrId) return null;
 
-    const raw = await this.dataSource
-      .createQueryBuilder(User, 'u')
-      .select([
-        'u.usrId   AS "usrId"',
-        'u.usrNm   AS "usrNm"',
-        'u.usrEml  AS "usrEml"',
-        'u.usrPhn  AS "usrPhn"',
-        'u.usrAddr AS "usrAddr"',
-        'u.usrDesc AS "usrDesc"',
-        'u.usrFileId AS "usrFileId"',
-        'u.roleId  AS "roleId"',
-        'u.roleNm  AS "roleNm"',
-        'u.langVal AS "langVal"',
-        'u.sysModVal AS "sysModVal"',
-        'u.dtFmtVal  AS "dtFmtVal"',
-        'u.sysColrVal AS "sysColrVal"',
-        'u.useFlg  AS "useFlg"',
-      ])
+    const columns = [
+      'u.usrId   AS "usrId"',
+      'u.usrNm   AS "usrNm"',
+      'u.usrEml  AS "usrEml"',
+      'u.usrPhn  AS "usrPhn"',
+      'u.usrAddr AS "usrAddr"',
+      'u.usrDesc AS "usrDesc"',
+      'u.usrFileId AS "usrFileId"',
+      'u.roleId  AS "roleId"',
+      'u.roleNm  AS "roleNm"',
+      'u.langVal AS "langVal"',
+      'u.sysModVal AS "sysModVal"',
+      'u.dtFmtVal  AS "dtFmtVal"',
+      'u.sysColrVal AS "sysColrVal"',
+      'u.useFlg  AS "useFlg"',
+    ];
+
+    const raw = await this.qf
+      .select(User, 'u', columns)
       .where('u.usrId = :usrId', { usrId })
       .getRawOne<UserInfoDto>();
 
@@ -130,34 +125,38 @@ export class UsersService {
 
   async createUser(dto: UserInfoDto): Promise<SuccessDto> {
     if (dto.usrId) {
-      const existing = await this.usersRepository.findOne({
-        where: { usrId: dto.usrId },
-      });
+      const existing = await this.qf.findOne(User, { usrId: dto.usrId });
       if (existing) {
         throw new BadRequestException('ADM000001');
       }
     }
 
     const hashed = await bcrypt.hash(this.defaultPassword, 10);
-    const usrId = await generateId(this.dataSource, 'USR', 'seq_usr');
 
-    const user = this.usersRepository.create({
-      ...dto,
-      usrId,
-      usrPwd: hashed,
+    await this.qf.transaction(async (tx) => {
+      const usrId = await tx.genId('USR', 'seq_usr');
+
+      await tx.insert(User).values({
+        ...dto,
+        usrId,
+        usrPwd: hashed,
+      }).execute();
     });
-    await this.usersRepository.save(user);
+
     return SuccessDto.of(true, 1);
   }
 
   async updateUser(dto: UserInfoDto): Promise<SuccessDto> {
     const { usrId, ...rest } = dto;
-    const user = await this.usersRepository.findOne({ where: { usrId } });
+    const user = await this.qf.findOne(User, { usrId });
     if (!user) {
       throw new BadRequestException('ADM000002');
     }
 
-    await this.usersRepository.update({ usrId: usrId! }, rest as Partial<User>);
+    await this.qf.transaction(async (tx) => {
+      await tx.update(User).where({ usrId: usrId! }).set(rest as Partial<User>).execute();
+    });
+
     return SuccessDto.of(true, 1);
   }
 
@@ -166,10 +165,7 @@ export class UsersService {
   // ---------------------------------------------------------------------------
 
   async changeUserInfo(dto: ChangeUserInfoDto): Promise<SuccessDto> {
-    const user = await this.usersRepository.findOne({ where: { usrId: dto.usrId } });
-    if (!user) {
-      throw new BadRequestException('ADM000002');
-    }
+    const user = await this.qf.findOneOrFail(User, { usrId: dto.usrId });
 
     const updates: Partial<User> = {};
 
@@ -205,7 +201,10 @@ export class UsersService {
     if (dto.usrAddr !== undefined) updates.usrAddr = dto.usrAddr;
     if (dto.usrDesc !== undefined) updates.usrDesc = dto.usrDesc;
 
-    await this.usersRepository.update({ usrId: dto.usrId! }, updates);
+    await this.qf.transaction(async (tx) => {
+      await tx.update(User).where({ usrId: dto.usrId! }).set(updates).execute();
+    });
+
     return SuccessDto.of(true, 1);
   }
 
@@ -220,11 +219,11 @@ export class UsersService {
 
     const hashed = await bcrypt.hash(this.defaultPassword, 10);
 
-    await Promise.all(
-      users.map(({ usrId }) =>
-        this.usersRepository.update({ usrId: usrId! }, { usrPwd: hashed }),
-      ),
-    );
+    await this.qf.transaction(async (tx) => {
+      for (const { usrId } of users) {
+        await tx.update(User).where({ usrId: usrId! }).set({ usrPwd: hashed }).execute();
+      }
+    });
 
     return SuccessDto.of(true, users.length);
   }
@@ -234,7 +233,7 @@ export class UsersService {
   // ---------------------------------------------------------------------------
 
   async saveUserSetting(dto: UserInfoDto): Promise<SuccessDto> {
-    const user = await this.usersRepository.findOne({ where: { usrId: dto.usrId } });
+    const user = await this.qf.findOne(User, { usrId: dto.usrId });
     if (!user) {
       throw new BadRequestException('ADM000002');
     }
@@ -245,7 +244,10 @@ export class UsersService {
     if (dto.dtFmtVal !== undefined) updates.dtFmtVal = dto.dtFmtVal;
     if (dto.sysColrVal !== undefined) updates.sysColrVal = dto.sysColrVal;
 
-    await this.usersRepository.update({ usrId: dto.usrId! }, updates);
+    await this.qf.transaction(async (tx) => {
+      await tx.update(User).where({ usrId: dto.usrId! }).set(updates).execute();
+    });
+
     return SuccessDto.of(true, 1);
   }
 }

@@ -1,13 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
 import {
   Permission,
   Program,
   Role,
   RoleAuth,
 } from '@infra/database/entities/administration';
-import { generateId } from '@infra/common/utils/id-generator.util';
+import { QueryFactory, TransactionContext } from '@infra/database/query-factory';
 import { PermissionDto, ProgramDto, ProgramListDto, SearchProgramDto } from './dto';
 
 // ─── Domain constants ────────────────────────────────────────────────────────
@@ -24,21 +22,7 @@ const ERR_EMPTY_LIST = 'COM000008';           // list must not be empty
 
 @Injectable()
 export class ProgramsService {
-  constructor(
-    @InjectRepository(Program)
-    private readonly programRepo: Repository<Program>,
-
-    @InjectRepository(Permission)
-    private readonly permissionRepo: Repository<Permission>,
-
-    @InjectRepository(RoleAuth)
-    private readonly roleAuthRepo: Repository<RoleAuth>,
-
-    @InjectRepository(Role)
-    private readonly roleRepo: Repository<Role>,
-
-    private readonly dataSource: DataSource,
-  ) {}
+  constructor(private readonly qf: QueryFactory) {}
 
   // ─── Queries ───────────────────────────────────────────────────────────────
 
@@ -68,35 +52,15 @@ export class ProgramsService {
       SELECT * FROM ProgramTree
     `;
 
-    const conditions: string[] = [];
-    const params: unknown[] = [];
-    let idx = 1;
-
-    if (dto.pgmId) {
-      conditions.push(`pgm_id = $${idx++}`);
-      params.push(dto.pgmId);
-    }
-    if (dto.pgmCd) {
-      conditions.push(`pgm_cd ILIKE $${idx++}`);
-      params.push(`%${dto.pgmCd}%`);
-    }
-    if (dto.pgmNm) {
-      conditions.push(`pgm_nm ILIKE $${idx++}`);
-      params.push(`%${dto.pgmNm}%`);
-    }
-    if (dto.pgmTpCd) {
-      conditions.push(`pgm_tp_cd = $${idx++}`);
-      params.push(dto.pgmTpCd);
-    }
-    if (dto.useFlg !== undefined) {
-      conditions.push(`use_flg = $${idx++}`);
-      params.push(dto.useFlg);
-    }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const sql = `${cte} ${whereClause} ORDER BY tree_path`;
-
-    const rows: Record<string, unknown>[] = await this.dataSource.query(sql, params);
+    const rows = await this.qf
+      .raw<Record<string, unknown>>(cte)
+      .andWhere('pgm_id = :pgmId', { pgmId: dto.pgmId || undefined })
+      .andWhere('pgm_cd ILIKE :pgmCd', { pgmCd: dto.pgmCd ? `%${dto.pgmCd}%` : undefined })
+      .andWhere('pgm_nm ILIKE :pgmNm', { pgmNm: dto.pgmNm ? `%${dto.pgmNm}%` : undefined })
+      .andWhere('pgm_tp_cd = :pgmTpCd', { pgmTpCd: dto.pgmTpCd || undefined })
+      .andWhere('use_flg = :useFlg', { useFlg: dto.useFlg !== undefined ? dto.useFlg : undefined })
+      .orderBy('tree_path', 'ASC')
+      .execute();
 
     const programList: ProgramDto[] = rows.map((r) => ({
       pgmId: r['pgm_id'] as string,
@@ -120,15 +84,16 @@ export class ProgramsService {
       throw new BadRequestException('pgmId or pgmCd is required');
     }
 
-    const where: Partial<Program> = {};
-    if (dto.pgmId) where.pgmId = dto.pgmId;
-    if (dto.pgmCd) where.pgmCd = dto.pgmCd;
+    const chain = this.qf.select(Program, 'pgm');
+    chain.getQueryBuilder().leftJoinAndSelect('pgm.permList', 'perm');
 
-    const program = await this.programRepo.findOne({
-      where,
-      relations: ['permList'],
-    });
+    if (dto.pgmId) {
+      chain.whereStrict('pgm.pgmId = :pgmId', { pgmId: dto.pgmId });
+    } else {
+      chain.whereStrict('pgm.pgmCd = :pgmCd', { pgmCd: dto.pgmCd });
+    }
 
+    const program = await chain.getOne();
     if (!program) return null;
 
     return this.mapProgramToDto(program);
@@ -137,50 +102,56 @@ export class ProgramsService {
   // ─── Mutations ─────────────────────────────────────────────────────────────
 
   async insertProgram(dto: ProgramDto): Promise<ProgramDto> {
-    // 1. Unique pgmCd check
-    const existing = await this.programRepo.findOne({ where: { pgmCd: dto.pgmCd } });
+    // 1. Unique pgmCd check (read outside transaction)
+    const existing = await this.qf.findOne(Program, { pgmCd: dto.pgmCd });
     if (existing) {
       throw new BadRequestException(ERR_PROGRAM_CD_DUPLICATE);
     }
 
-    // 2. Parent validation for UI type
+    // 2. Parent validation for UI type (read outside transaction)
     if (dto.pgmTpCd === 'UI') {
       await this.validateParentIsMenu(dto.prntPgmId);
     }
 
-    // 3. Generate PK
-    const pgmId = await generateId(this.dataSource, 'PGM', 'seq_pgm');
+    let pgmId!: string;
 
-    // 4. Persist program
-    const program = this.programRepo.create({
-      pgmId,
-      pgmCd: dto.pgmCd,
-      pgmNm: dto.pgmNm,
-      pgmTpCd: dto.pgmTpCd,
-      prntPgmId: dto.prntPgmId ?? undefined,
-      dspOrder: dto.dspOrder ?? 9999,
-      pgmRmk: dto.pgmRmk,
-      useFlg: dto.useFlg ?? true,
-      createdBy: 'SYSTEM',
-      updatedBy: 'SYSTEM',
+    await this.qf.transaction(async (tx) => {
+      // 3. Generate PK
+      pgmId = await tx.genId('PGM', 'seq_pgm');
+
+      // 4. Persist program
+      await tx.insert(Program).values({
+        pgmId,
+        pgmCd: dto.pgmCd,
+        pgmNm: dto.pgmNm,
+        pgmTpCd: dto.pgmTpCd,
+        prntPgmId: dto.prntPgmId ?? undefined,
+        dspOrder: dto.dspOrder ?? 9999,
+        pgmRmk: dto.pgmRmk,
+        useFlg: dto.useFlg ?? true,
+        createdBy: 'SYSTEM',
+        updatedBy: 'SYSTEM',
+      }).execute();
+
+      // 5. Auto-insert VIEW permission
+      await this.insertViewPermission(tx, pgmId);
+
+      // 6. Inherit SUPERADMIN role-auths from parent
+      await this.assignSuperAdminRoleInheritance(tx, pgmId, dto.prntPgmId);
     });
-    await this.programRepo.save(program);
 
-    // 5. Auto-insert VIEW permission
-    await this.insertViewPermission(pgmId);
+    const saved = await this.qf
+      .select(Program, 'pgm')
+      .getQueryBuilder()
+      .leftJoinAndSelect('pgm.permList', 'perm')
+      .where('pgm.pgmId = :pgmId', { pgmId })
+      .getOne();
 
-    // 6. Inherit SUPERADMIN role-auths from parent
-    await this.assignSuperAdminRoleInheritance(pgmId, dto.prntPgmId);
-
-    const saved = await this.programRepo.findOne({ where: { pgmId }, relations: ['permList'] });
     return this.mapProgramToDto(saved)!;
   }
 
   async updateProgram(dto: ProgramDto): Promise<ProgramDto> {
-    const program = await this.programRepo.findOne({ where: { pgmId: dto.pgmId } });
-    if (!program) {
-      throw new NotFoundException(ERR_PROGRAM_NOT_FOUND);
-    }
+    const program = await this.qf.findOneOrFail(Program, { pgmId: dto.pgmId });
 
     // Parent validation when changing to / staying as UI type
     const targetType = dto.pgmTpCd ?? program.pgmTpCd;
@@ -189,21 +160,26 @@ export class ProgramsService {
       await this.validateParentIsMenu(targetParent);
     }
 
-    if (dto.pgmCd !== undefined) program.pgmCd = dto.pgmCd;
-    if (dto.pgmNm !== undefined) program.pgmNm = dto.pgmNm;
-    if (dto.pgmTpCd !== undefined) program.pgmTpCd = dto.pgmTpCd;
-    if (dto.prntPgmId !== undefined) program.prntPgmId = dto.prntPgmId;
-    if (dto.dspOrder !== undefined) program.dspOrder = dto.dspOrder;
-    if (dto.pgmRmk !== undefined) program.pgmRmk = dto.pgmRmk;
-    if (dto.useFlg !== undefined) program.useFlg = dto.useFlg;
-    program.updatedBy = 'SYSTEM';
+    const updates: Partial<Program> = { updatedBy: 'SYSTEM' };
+    if (dto.pgmCd !== undefined) updates.pgmCd = dto.pgmCd;
+    if (dto.pgmNm !== undefined) updates.pgmNm = dto.pgmNm;
+    if (dto.pgmTpCd !== undefined) updates.pgmTpCd = dto.pgmTpCd;
+    if (dto.prntPgmId !== undefined) updates.prntPgmId = dto.prntPgmId;
+    if (dto.dspOrder !== undefined) updates.dspOrder = dto.dspOrder;
+    if (dto.pgmRmk !== undefined) updates.pgmRmk = dto.pgmRmk;
+    if (dto.useFlg !== undefined) updates.useFlg = dto.useFlg;
 
-    await this.programRepo.save(program);
-
-    const updated = await this.programRepo.findOne({
-      where: { pgmId: program.pgmId },
-      relations: ['permList'],
+    await this.qf.transaction(async (tx) => {
+      await tx.update(Program).where({ pgmId: program.pgmId }).set(updates as any).execute();
     });
+
+    const updated = await this.qf
+      .select(Program, 'pgm')
+      .getQueryBuilder()
+      .leftJoinAndSelect('pgm.permList', 'perm')
+      .where('pgm.pgmId = :pgmId', { pgmId: program.pgmId })
+      .getOne();
+
     return this.mapProgramToDto(updated)!;
   }
 
@@ -214,17 +190,23 @@ export class ProgramsService {
 
     for (const dto of list) {
       // Guard: any role-auth referencing this program?
-      const authCount = await this.roleAuthRepo.count({ where: { pgmId: dto.pgmId } });
-      if (authCount > 0) {
+      const authRows = await this.qf
+        .select(RoleAuth, 'ra')
+        .whereStrict('ra.pgmId = :pgmId', { pgmId: dto.pgmId })
+        .getManyAndCount();
+      if (authRows[1] > 0) {
         throw new BadRequestException(ERR_ROLE_AUTH_EXISTS);
       }
-
-      // Delete all permissions first (and their role-auths — already checked above)
-      await this.permissionRepo.delete({ pgmId: dto.pgmId });
-
-      // Delete the program
-      await this.programRepo.delete({ pgmId: dto.pgmId });
     }
+
+    await this.qf.transaction(async (tx) => {
+      for (const dto of list) {
+        // Delete all permissions first (role-auths already checked above)
+        await tx.delete(Permission).where({ pgmId: dto.pgmId }).execute();
+        // Delete the program
+        await tx.delete(Program).where({ pgmId: dto.pgmId }).execute();
+      }
+    });
   }
 
   // ─── Permission operations ─────────────────────────────────────────────────
@@ -234,7 +216,11 @@ export class ProgramsService {
       throw new BadRequestException('pgmId is required');
     }
 
-    const permissions = await this.permissionRepo.find({ where: { pgmId: dto.pgmId } });
+    const permissions = await this.qf
+      .select(Permission, 'p')
+      .whereStrict('p.pgmId = :pgmId', { pgmId: dto.pgmId })
+      .getMany();
+
     return permissions.map((p) => this.mapPermissionToDto(p));
   }
 
@@ -243,24 +229,26 @@ export class ProgramsService {
       throw new BadRequestException(ERR_EMPTY_LIST);
     }
 
-    for (const dto of list) {
-      switch (dto.procFlag) {
-        case 'D':
-          await this.deletePermission(dto.permId);
-          break;
+    await this.qf.transaction(async (tx) => {
+      for (const dto of list) {
+        switch (dto.procFlag) {
+          case 'D':
+            await this.deletePermission(tx, dto.permId);
+            break;
 
-        case 'I':
-          await this.insertPermission(dto);
-          break;
+          case 'I':
+            await this.insertPermission(tx, dto);
+            break;
 
-        case 'U':
-          await this.updatePermission(dto);
-          break;
+          case 'U':
+            await this.updatePermission(tx, dto);
+            break;
 
-        default:
-          throw new BadRequestException(`Unknown procFlag: ${dto.procFlag}`);
+          default:
+            throw new BadRequestException(`Unknown procFlag: ${dto.procFlag}`);
+        }
       }
-    }
+    });
   }
 
   // ─── Private helpers ───────────────────────────────────────────────────────
@@ -270,7 +258,7 @@ export class ProgramsService {
       throw new BadRequestException(ERR_PROGRAM_NOT_FOUND);
     }
 
-    const parent = await this.programRepo.findOne({ where: { pgmId: prntPgmId } });
+    const parent = await this.qf.findOne(Program, { pgmId: prntPgmId });
     if (!parent) {
       throw new NotFoundException(ERR_PROGRAM_NOT_FOUND);
     }
@@ -279,17 +267,16 @@ export class ProgramsService {
     }
   }
 
-  private async insertViewPermission(pgmId: string): Promise<Permission> {
-    const permId = await generateId(this.dataSource, 'PERM', 'seq_perm');
-    const viewPerm = this.permissionRepo.create({
+  private async insertViewPermission(tx: TransactionContext, pgmId: string): Promise<void> {
+    const permId = await tx.genId('PERM', 'seq_perm');
+    await tx.insert(Permission).values({
       permId,
       permCd: VIEW_PERMISSION,
       permNm: VIEW_PERMISSION_NAME,
       pgmId,
       createdBy: 'SYSTEM',
       updatedBy: 'SYSTEM',
-    });
-    return this.permissionRepo.save(viewPerm);
+    }).execute();
   }
 
   /**
@@ -297,79 +284,70 @@ export class ProgramsService {
    * on the newly created child program (using the child's VIEW permission).
    */
   private async assignSuperAdminRoleInheritance(
+    tx: TransactionContext,
     newPgmId: string,
     prntPgmId?: string | null,
   ): Promise<void> {
     if (!prntPgmId) return;
 
     // Find SUPERADMIN roles
-    const superAdminRoles = await this.roleRepo.find({
-      where: { roleCd: SUPERADMIN_ROLE },
-    });
+    const superAdminRoles = await tx.select(Role, 'r')
+      .whereStrict('r.roleCd = :roleCd', { roleCd: SUPERADMIN_ROLE })
+      .getMany();
     if (!superAdminRoles.length) return;
 
     const superAdminRoleIds = superAdminRoles.map((r) => r.roleId);
 
     // Find existing role-auths on the parent program for those SUPERADMIN roles
-    const parentAuths = await this.roleAuthRepo
-      .createQueryBuilder('ra')
-      .where('ra.pgm_id = :pgmId', { pgmId: prntPgmId })
-      .andWhere('ra.role_id IN (:...roleIds)', { roleIds: superAdminRoleIds })
+    const parentAuths = await tx.select(RoleAuth, 'ra')
+      .whereStrict('ra.pgmId = :pgmId', { pgmId: prntPgmId })
+      .whereStrict('ra.roleId IN (:...roleIds)', { roleIds: superAdminRoleIds })
       .getMany();
 
     if (!parentAuths.length) return;
 
     // Fetch the VIEW permission we just created for the new program
-    const viewPerm = await this.permissionRepo.findOne({
-      where: { pgmId: newPgmId, permCd: VIEW_PERMISSION },
-    });
+    const viewPerm = await tx.findOne(Permission, { pgmId: newPgmId, permCd: VIEW_PERMISSION });
     if (!viewPerm) return;
 
     // Deduplicate by roleId — one VIEW auth per SUPERADMIN role
     const seenRoles = new Set<string>();
-    const newAuths: RoleAuth[] = [];
 
     for (const auth of parentAuths) {
       if (seenRoles.has(auth.roleId)) continue;
       seenRoles.add(auth.roleId);
 
-      const roleAuth = this.roleAuthRepo.create({
+      await tx.insert(RoleAuth).values({
         roleId: auth.roleId,
         pgmId: newPgmId,
         permId: viewPerm.permId,
         activeYn: true,
         createdBy: 'SYSTEM',
         updatedBy: 'SYSTEM',
-      });
-      newAuths.push(roleAuth);
-    }
-
-    if (newAuths.length) {
-      await this.roleAuthRepo.save(newAuths);
+      }).execute();
     }
   }
 
-  private async deletePermission(permId: string | undefined): Promise<void> {
+  private async deletePermission(tx: TransactionContext, permId: string | undefined): Promise<void> {
     if (!permId) throw new BadRequestException('permId is required for delete');
     // Cascade: delete role-auths referencing this permission first
-    await this.roleAuthRepo.delete({ permId });
-    await this.permissionRepo.delete({ permId });
+    await tx.delete(RoleAuth).where({ permId }).execute();
+    await tx.delete(Permission).where({ permId }).execute();
   }
 
-  private async insertPermission(dto: PermissionDto): Promise<void> {
-    const permId = await generateId(this.dataSource, 'PERM', 'seq_perm');
-    const perm = this.permissionRepo.create({
+  private async insertPermission(tx: TransactionContext, dto: PermissionDto): Promise<void> {
+    const permId = await tx.genId('PERM', 'seq_perm');
+    await tx.insert(Permission).values({
       permId,
       permCd: dto.permCd,
       permNm: dto.permNm,
       pgmId: dto.pgmId,
       createdBy: 'SYSTEM',
       updatedBy: 'SYSTEM',
-    });
-    await this.permissionRepo.save(perm);
+    }).execute();
 
     // Inherit SUPERADMIN role-auth for this permission if parent program has it
-    await this.assignSuperAdminPermissionInheritance(dto.pgmId, permId);
+    await this.assignSuperAdminPermissionInheritance(tx, dto.pgmId, permId);
   }
 
   /**
@@ -377,54 +355,47 @@ export class ProgramsService {
    * SUPERADMIN role-auths, we add a matching role-auth for the new permission.
    */
   private async assignSuperAdminPermissionInheritance(
+    tx: TransactionContext,
     pgmId: string | undefined,
     newPermId: string,
   ): Promise<void> {
     if (!pgmId) return;
-    const superAdminRoles = await this.roleRepo.find({ where: { roleCd: SUPERADMIN_ROLE } });
+
+    const superAdminRoles = await tx.select(Role, 'r')
+      .whereStrict('r.roleCd = :roleCd', { roleCd: SUPERADMIN_ROLE })
+      .getMany();
     if (!superAdminRoles.length) return;
 
     const superAdminRoleIds = superAdminRoles.map((r) => r.roleId);
 
-    const existingAuths = await this.roleAuthRepo
-      .createQueryBuilder('ra')
-      .where('ra.pgm_id = :pgmId', { pgmId })
-      .andWhere('ra.role_id IN (:...roleIds)', { roleIds: superAdminRoleIds })
+    const existingAuths = await tx.select(RoleAuth, 'ra')
+      .whereStrict('ra.pgmId = :pgmId', { pgmId })
+      .whereStrict('ra.roleId IN (:...roleIds)', { roleIds: superAdminRoleIds })
       .getMany();
 
     const seenRoles = new Set<string>();
-    const newAuths: RoleAuth[] = [];
 
     for (const auth of existingAuths) {
       if (seenRoles.has(auth.roleId)) continue;
       seenRoles.add(auth.roleId);
 
-      newAuths.push(
-        this.roleAuthRepo.create({
-          roleId: auth.roleId,
-          pgmId,
-          permId: newPermId,
-          activeYn: true,
-          createdBy: 'SYSTEM',
-          updatedBy: 'SYSTEM',
-        }),
-      );
-    }
-
-    if (newAuths.length) {
-      await this.roleAuthRepo.save(newAuths);
+      await tx.insert(RoleAuth).values({
+        roleId: auth.roleId,
+        pgmId,
+        permId: newPermId,
+        activeYn: true,
+        createdBy: 'SYSTEM',
+        updatedBy: 'SYSTEM',
+      }).execute();
     }
   }
 
-  private async updatePermission(dto: PermissionDto): Promise<void> {
-    const perm = await this.permissionRepo.findOne({ where: { permId: dto.permId } });
-    if (!perm) throw new NotFoundException(`Permission ${dto.permId} not found`);
+  private async updatePermission(tx: TransactionContext, dto: PermissionDto): Promise<void> {
+    const updates: Partial<Permission> = { updatedBy: 'SYSTEM' };
+    if (dto.permCd !== undefined) updates.permCd = dto.permCd;
+    if (dto.permNm !== undefined) updates.permNm = dto.permNm;
 
-    if (dto.permCd !== undefined) perm.permCd = dto.permCd;
-    if (dto.permNm !== undefined) perm.permNm = dto.permNm;
-    perm.updatedBy = 'SYSTEM';
-
-    await this.permissionRepo.save(perm);
+    await tx.update(Permission).where({ permId: dto.permId }).set(updates as any).execute();
   }
 
   // ─── Mapping helpers ───────────────────────────────────────────────────────

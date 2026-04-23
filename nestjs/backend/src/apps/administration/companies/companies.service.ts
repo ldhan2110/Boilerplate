@@ -1,79 +1,53 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
 import { Company } from '@infra/database/entities/administration/company.entity';
-import { generateId } from '@infra/common/utils/id-generator.util';
+import { QueryFactory } from '@infra/database/query-factory';
 import { CompanyInfoDto, CompanyInfoListDto, SearchCompanyDto } from './dto';
 
 @Injectable()
 export class CompaniesService {
-  constructor(
-    @InjectRepository(Company)
-    private readonly companyRepository: Repository<Company>,
-    private readonly dataSource: DataSource,
-  ) {}
+  constructor(private readonly qf: QueryFactory) {}
 
   async getListCompanyInfo(dto: SearchCompanyDto): Promise<CompanyInfoListDto> {
     const { searchText, pagination, sort, sorts, coId, coNm, useFlg, taxCd, coTpCd, coNtn } = dto;
 
-    const qb = this.companyRepository.createQueryBuilder('co');
+    const ALLOWED_FIELDS: Record<string, string> = {
+      coId: 'co.coId',
+      coNm: 'co.coNm',
+      taxCd: 'co.taxCd',
+      coTpCd: 'co.coTpCd',
+      coNtn: 'co.coNtn',
+      createdAt: 'co.createdAt',
+      updatedAt: 'co.updatedAt',
+    };
 
-    // Full-text search across coId, coNm, taxCd
+    // Multi-sort takes precedence, then single sort
+    const appliedSorts = sorts?.length ? sorts : sort ? [sort] : undefined;
+
+    const chain = this.qf.select(Company, 'co');
+
+    // Full-text search across coId, coNm, taxCd — uses parenthesized OR so we
+    // must drop down to the escape hatch for this one condition only.
     if (searchText?.trim()) {
       const term = `%${searchText.trim()}%`;
-      qb.andWhere(
+      chain.getQueryBuilder().andWhere(
         '(co.coId ILIKE :term OR co.coNm ILIKE :term OR co.taxCd ILIKE :term)',
         { term },
       );
     }
 
-    // Exact field filters
-    if (coId) {
-      qb.andWhere('co.coId = :coId', { coId });
-    }
-    if (coNm) {
-      qb.andWhere('co.coNm ILIKE :coNm', { coNm: `%${coNm}%` });
-    }
-    if (taxCd) {
-      qb.andWhere('co.taxCd = :taxCd', { taxCd });
-    }
-    if (coTpCd) {
-      qb.andWhere('co.coTpCd = :coTpCd', { coTpCd });
-    }
-    if (coNtn) {
-      qb.andWhere('co.coNtn = :coNtn', { coNtn });
-    }
-    if (useFlg !== undefined && useFlg !== null) {
-      qb.andWhere('co.useFlg = :useFlg', { useFlg });
-    }
-
-    // Sorting — multi-sort takes precedence, then single sort
-    const appliedSorts = sorts?.length ? sorts : sort ? [sort] : [];
-    if (appliedSorts.length) {
-      const ALLOWED_FIELDS: Record<string, string> = {
-        coId: 'co.coId',
-        coNm: 'co.coNm',
-        taxCd: 'co.taxCd',
-        coTpCd: 'co.coTpCd',
-        coNtn: 'co.coNtn',
-        createdAt: 'co.createdAt',
-        updatedAt: 'co.updatedAt',
-      };
-      for (const s of appliedSorts) {
-        if (s.sortField && ALLOWED_FIELDS[s.sortField]) {
-          qb.addOrderBy(ALLOWED_FIELDS[s.sortField], s.sortType ?? 'ASC');
-        }
-      }
-    } else {
-      qb.orderBy('co.createdAt', 'DESC');
-    }
-
-    // Pagination
-    const pageSize = pagination?.pageSize ?? 10;
-    const current = pagination?.current ?? 1;
-    qb.skip((current - 1) * pageSize).take(pageSize);
-
-    const [companies, total] = await qb.getManyAndCount();
+    const [companies, total] = await chain
+      .andWhere('co.coId = :coId', { coId: coId || undefined })
+      .andWhere('co.coNm ILIKE :coNm', { coNm: coNm ? `%${coNm}%` : undefined })
+      .andWhere('co.taxCd = :taxCd', { taxCd: taxCd || undefined })
+      .andWhere('co.coTpCd = :coTpCd', { coTpCd: coTpCd || undefined })
+      .andWhere('co.coNtn = :coNtn', { coNtn: coNtn || undefined })
+      .andWhere(
+        'co.useFlg = :useFlg',
+        { useFlg: useFlg !== undefined && useFlg !== null ? useFlg : undefined },
+      )
+      .orderByMany(appliedSorts, ALLOWED_FIELDS, { default: ['co.createdAt', 'DESC'] })
+      .paginate(pagination)
+      .getManyAndCount();
 
     return {
       companyInfo: companies.map((c) => this.toDto(c)),
@@ -84,24 +58,26 @@ export class CompaniesService {
   async getCompanyInfo(dto: SearchCompanyDto): Promise<CompanyInfoDto | null> {
     const { coId, searchText } = dto;
 
-    const qb = this.companyRepository.createQueryBuilder('co');
-
-    if (coId) {
-      qb.andWhere('co.coId = :coId', { coId });
-    } else if (searchText?.trim()) {
-      qb.andWhere('co.coNm ILIKE :term', { term: `%${searchText.trim()}%` });
-    } else {
+    if (!coId && !searchText?.trim()) {
       return null;
     }
 
-    const company = await qb.getOne();
+    const chain = this.qf.select(Company, 'co');
+
+    if (coId) {
+      chain.whereStrict('co.coId = :coId', { coId });
+    } else {
+      chain.whereStrict('co.coNm ILIKE :term', { term: `%${searchText!.trim()}%` });
+    }
+
+    const company = await chain.getOne();
     return company ? this.toDto(company) : null;
   }
 
   async createCompany(dto: CompanyInfoDto): Promise<void> {
     // Validate coId uniqueness
     if (dto.coId) {
-      const existing = await this.companyRepository.findOne({ where: { coId: dto.coId } });
+      const existing = await this.qf.findOne(Company, { coId: dto.coId });
       if (existing) {
         throw new BadRequestException('ADM000016');
       }
@@ -109,52 +85,51 @@ export class CompaniesService {
 
     // Validate taxCd uniqueness if provided
     if (dto.taxCd) {
-      const existingTax = await this.companyRepository.findOne({ where: { taxCd: dto.taxCd } });
+      const existingTax = await this.qf.findOne(Company, { taxCd: dto.taxCd });
       if (existingTax) {
         throw new BadRequestException('ADM000017');
       }
     }
 
-    // Generate company ID
-    const coId = await generateId(this.dataSource, 'CO', 'seq_co');
+    await this.qf.transaction(async (tx) => {
+      const coId = await tx.genId('CO', 'seq_co');
 
-    const company = this.companyRepository.create({
-      coId,
-      coNm: dto.coNm,
-      coTpCd: dto.coTpCd,
-      coFrgnNm: dto.coFrgnNm,
-      taxCd: dto.taxCd,
-      taxOfc: dto.taxOfc,
-      coLoclNm: dto.coLoclNm,
-      coAddrVal1: dto.coAddrVal1,
-      coAddrVal2: dto.coAddrVal2,
-      coAddrVal3: dto.coAddrVal3,
-      emlAddr: dto.emlAddr,
-      faxNo: dto.faxNo,
-      phnNo: dto.phnNo,
-      slRep: dto.slRep,
-      webAddr: dto.webAddr,
-      coDesc: dto.coDesc,
-      coAnvDt: dto.coAnvDt ? new Date(dto.coAnvDt) : undefined,
-      coSz: dto.coSz,
-      coNtn: dto.coNtn,
-      empeSz: dto.empeSz,
-      currCd: dto.currCd,
-      coIndusZn: dto.coIndusZn,
-      coProd: dto.coProd,
-      tmZn: dto.tmZn ?? 'Asia/Ho_Chi_Minh',
-      bankTpCd: dto.bankTpCd,
-      bankAcctNo: dto.bankAcctNo,
-      bankNm: dto.bankNm,
-      chtrCapiVal: dto.chtrCapiVal ? Number(dto.chtrCapiVal) : undefined,
-      estbDt: dto.estbDt ? new Date(dto.estbDt) : undefined,
-      lgoFileId: dto.lgoFileId || undefined,
-      useFlg: dto.useFlg ?? true,
-      createdBy: dto.createdBy ?? 'SYSTEM',
-      updatedBy: dto.updatedBy ?? 'SYSTEM',
+      await tx.insert(Company).values({
+        coId,
+        coNm: dto.coNm,
+        coTpCd: dto.coTpCd,
+        coFrgnNm: dto.coFrgnNm,
+        taxCd: dto.taxCd,
+        taxOfc: dto.taxOfc,
+        coLoclNm: dto.coLoclNm,
+        coAddrVal1: dto.coAddrVal1,
+        coAddrVal2: dto.coAddrVal2,
+        coAddrVal3: dto.coAddrVal3,
+        emlAddr: dto.emlAddr,
+        faxNo: dto.faxNo,
+        phnNo: dto.phnNo,
+        slRep: dto.slRep,
+        webAddr: dto.webAddr,
+        coDesc: dto.coDesc,
+        coAnvDt: dto.coAnvDt ? new Date(dto.coAnvDt) : undefined,
+        coSz: dto.coSz,
+        coNtn: dto.coNtn,
+        empeSz: dto.empeSz,
+        currCd: dto.currCd,
+        coIndusZn: dto.coIndusZn,
+        coProd: dto.coProd,
+        tmZn: dto.tmZn ?? 'Asia/Ho_Chi_Minh',
+        bankTpCd: dto.bankTpCd,
+        bankAcctNo: dto.bankAcctNo,
+        bankNm: dto.bankNm,
+        chtrCapiVal: dto.chtrCapiVal ? Number(dto.chtrCapiVal) : undefined,
+        estbDt: dto.estbDt ? new Date(dto.estbDt) : undefined,
+        lgoFileId: dto.lgoFileId || undefined,
+        useFlg: dto.useFlg ?? true,
+        createdBy: dto.createdBy ?? 'SYSTEM',
+        updatedBy: dto.updatedBy ?? 'SYSTEM',
+      }).execute();
     });
-
-    await this.companyRepository.save(company);
   }
 
   async updateCompany(dto: CompanyInfoDto): Promise<void> {
@@ -162,17 +137,17 @@ export class CompaniesService {
       throw new BadRequestException('ADM000104');
     }
 
-    const existing = await this.companyRepository.findOne({ where: { coId: dto.coId } });
+    const existing = await this.qf.findOne(Company, { coId: dto.coId });
     if (!existing) {
       throw new NotFoundException('ADM000104');
     }
 
     // Validate taxCd uniqueness against other companies if taxCd is changing
     if (dto.taxCd && dto.taxCd !== existing.taxCd) {
-      const taxConflict = await this.companyRepository
-        .createQueryBuilder('co')
-        .where('co.taxCd = :taxCd', { taxCd: dto.taxCd })
-        .andWhere('co.coId != :coId', { coId: dto.coId })
+      const taxConflict = await this.qf
+        .select(Company, 'co')
+        .whereStrict('co.taxCd = :taxCd', { taxCd: dto.taxCd })
+        .whereStrict('co.coId != :coId', { coId: dto.coId })
         .getOne();
 
       if (taxConflict) {
@@ -222,7 +197,9 @@ export class CompaniesService {
       updatedBy: dto.updatedBy ?? 'SYSTEM',
     };
 
-    await this.companyRepository.save({ ...existing, ...merged });
+    await this.qf.transaction(async (tx) => {
+      await tx.update(Company).where({ coId: dto.coId }).set(merged as any).execute();
+    });
   }
 
   private toDto(company: Company): CompanyInfoDto {
