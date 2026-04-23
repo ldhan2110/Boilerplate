@@ -1,0 +1,40 @@
+{
+  "app": { "name": "Boilerplate" },
+  "login": {
+    "welcome": "Welcome back",
+    "subtitle": "Sign in to your account",
+    "email": "Email",
+    "emailPlaceholder": "you{'@'}example.com",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "rememberMe": "Remember me",
+    "signIn": "Sign in"
+  },
+  "sidebar": {
+    "main": "Main",
+    "admin": "Admin",
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "settings": "Settings",
+    "roles": "Roles",
+    "programs": "Programs"
+  },
+  "header": {
+    "notifications": "Notifications",
+    "markAllRead": "Mark all read",
+    "viewAll": "View all",
+    "noNotifications": "No new notifications",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "theme": {
+    "accentColor": "Accent color",
+    "green": "Green",
+    "blue": "Blue",
+    "purple": "Purple",
+    "orange": "Orange"
+  }
+}
