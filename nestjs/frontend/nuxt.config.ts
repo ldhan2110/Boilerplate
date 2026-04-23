@@ -47,7 +47,7 @@ export default defineNuxtConfig({
       { code: 'vi', name: 'Tiếng Việt', file: 'vi.json' }
     ],
     defaultLocale: 'en',
-    langDir: 'app/locales'
+    langDir: 'locales'
   },
 
   eslint: {
