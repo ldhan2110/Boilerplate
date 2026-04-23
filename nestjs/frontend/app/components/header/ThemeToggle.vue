@@ -1,9 +1,11 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const colorMode = useColorMode()
+const userStore = useUserStore()
 
 function toggle() {
-  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
+  const newMode = colorMode.value === 'dark' ? 'light' : 'dark'
+  userStore.updatePreference('darkMode', newMode)
 }
 </script>
 
