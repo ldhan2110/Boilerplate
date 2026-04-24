@@ -19,6 +19,7 @@
     "pinia": "^3.0.4",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.5",
+    "quill": "^2.0.3",
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {

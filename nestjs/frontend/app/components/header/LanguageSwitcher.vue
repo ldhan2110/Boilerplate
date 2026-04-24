@@ -23,14 +23,16 @@ function toggle(event: Event) {
 </script>
 
 <template>
-  <PButton
-    severity="secondary"
-    text
-    rounded
-    size="small"
-    :label="currentLocale?.code?.toUpperCase()"
-    icon="pi pi-globe"
-    @click="toggle"
-  />
-  <PMenu ref="menu" :model="localeItems" :popup="true" appendTo="body" />
+  <div>
+    <PButton
+      severity="secondary"
+      text
+      rounded
+      size="small"
+      :label="currentLocale?.code?.toUpperCase()"
+      icon="pi pi-globe"
+      @click="toggle"
+    />
+    <PMenu ref="menu" :model="localeItems" :popup="true" appendTo="body" />
+  </div>
 </template>

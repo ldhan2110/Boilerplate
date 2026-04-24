@@ -16,17 +16,18 @@ function toggle(event: Event) {
 </script>
 
 <template>
-  <PButton
-    severity="secondary"
-    text
-    rounded
-    size="small"
-    icon="pi pi-palette"
-    :title="t('theme.accentColor')"
-    @click="toggle"
-  />
+  <div>
+    <PButton
+      severity="secondary"
+      text
+      rounded
+      size="small"
+      icon="pi pi-palette"
+      :title="t('theme.accentColor')"
+      @click="toggle"
+    />
 
-  <PPopover ref="op" appendTo="body">
+    <PPopover ref="op" appendTo="body">
     <div class="p-3">
       <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
         {{ t('theme.accentColor') }}
@@ -48,4 +49,5 @@ function toggle(event: Event) {
       </div>
     </div>
   </PPopover>
+  </div>
 </template>

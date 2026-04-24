@@ -21,4 +21,5 @@ useSeoMeta({
     <NuxtPage />
   </NuxtLayout>
   <PToast />
+  <PConfirmDialog />
 </template>

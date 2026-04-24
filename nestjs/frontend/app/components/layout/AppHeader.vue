@@ -12,7 +12,7 @@ function onBurgerClick() {
 </script>
 
 <template>
-  <header class="sticky top-0 z-30 flex items-center h-14 px-4 gap-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+  <header class="sticky top-0 z-30 flex items-center h-14 px-3.25 gap-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
     <!-- Burger — collapse sidebar on desktop, open drawer on mobile -->
     <PButton
       icon="pi pi-bars"
@@ -27,8 +27,6 @@ function onBurgerClick() {
     <NuxtLink to="/" class="flex items-center">
       <LayoutAppLogo />
     </NuxtLink>
-
-    <LayoutAppBreadcrumb class="hidden md:flex" />
 
     <!-- Spacer -->
     <div class="flex-1" />

@@ -38,6 +38,19 @@
     "settings": "Settings",
     "logout": "Log out"
   },
+  "common": {
+    "save": "Save",
+    "yes": "Yes",
+    "no": "No",
+    "confirmHeader": "Confirmation",
+    "confirmSaveMessage": "Are you sure you want to save?",
+    "required": "This field is required",
+    "optional": "Optional",
+    "search": "Search...",
+    "noResults": "No results found",
+    "selectPlaceholder": "Select an option",
+    "datePlaceholder": "Select a date"
+  },
   "theme": {
     "accentColor": "Accent color",
     "green": "Green",

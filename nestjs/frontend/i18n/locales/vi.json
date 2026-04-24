@@ -38,6 +38,19 @@
     "settings": "Cài đặt",
     "logout": "Đăng xuất"
   },
+  "common": {
+    "save": "Lưu",
+    "yes": "Có",
+    "no": "Không",
+    "confirmHeader": "Xác nhận",
+    "confirmSaveMessage": "Bạn có chắc chắn muốn lưu không?",
+    "required": "Trường này là bắt buộc",
+    "optional": "Tùy chọn",
+    "search": "Tìm kiếm...",
+    "noResults": "Không tìm thấy kết quả",
+    "selectPlaceholder": "Chọn một mục",
+    "datePlaceholder": "Chọn ngày"
+  },
   "theme": {
     "accentColor": "Màu chủ đạo",
     "green": "Xanh lá",

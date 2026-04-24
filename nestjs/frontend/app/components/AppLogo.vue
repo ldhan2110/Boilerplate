@@ -13,7 +13,7 @@ defineProps<{
     </div>
     <span
       v-if="!collapsed"
-      class="text-sm font-bold text-gray-900 dark:text-white truncate"
+      class="font-bold text-gray-900 dark:text-white truncate text-2xl"
     >
       {{ t('app.name') }}
     </span>

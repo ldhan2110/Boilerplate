@@ -18,5 +18,14 @@ const breadcrumbItems = computed(() => {
 </script>
 
 <template>
-  <PBreadcrumb :home="breadcrumbHome" :model="breadcrumbItems" />
+  <PBreadcrumb
+    :home="breadcrumbHome"
+    :model="breadcrumbItems"
+    :pt="{
+      root: { style: 'background: transparent; border: none; padding: 0; font-size: 0.75rem;' },
+      separator: { style: 'font-size: 0.65rem; opacity: 0.4;' },
+      label: { style: 'font-size: 0.75rem;' },
+    }"
+    class="text-gray-400 dark:text-gray-500"
+  />
 </template>

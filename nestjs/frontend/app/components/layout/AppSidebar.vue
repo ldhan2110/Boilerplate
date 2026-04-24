@@ -173,7 +173,7 @@ watchEffect(() => {
         <!-- Hover flyout panel (children only, no parent label) -->
         <div
           v-if="item.children?.length && hoveredItem === item.id"
-          class="absolute left-full top-0 ml-2 w-44 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50"
+          class="absolute left-full top-0 ml-2 w-44 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-1.5 z-50"
           @mouseenter="onPanelMouseEnter()"
           @mouseleave="onPanelMouseLeave()"
         >
@@ -181,9 +181,9 @@ watchEffect(() => {
             v-for="child in item.children"
             :key="child.id"
             :to="child.to"
-            class="flex items-center px-3 py-2 text-sm transition-colors duration-150"
+            class="flex items-center px-3 py-2 rounded-lg text-sm transition-all duration-200"
             :class="isActive(child.to)
-              ? 'sidebar-item-active font-medium'
+              ? 'sidebar-item-active shadow-sm font-medium'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
           >
             <span class="truncate">{{ child.label }}</span>
@@ -202,7 +202,12 @@ watchEffect(() => {
     :modal="true"
   >
     <template #header>
-      <LayoutAppLogo />
+      <div class="flex items-center gap-3">
+        <i class="pi pi-prime text-2xl" style="color: var(--p-primary-color)" />
+        <span class="text-xl font-semibold text-gray-900 dark:text-white truncate">
+          {{ t('app.name') }}
+        </span>
+      </div>
     </template>
 
     <nav class="px-2 py-2">
