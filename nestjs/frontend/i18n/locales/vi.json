@@ -14,13 +14,18 @@
     "signingIn": "Đang đăng nhập..."
   },
   "sidebar": {
-    "main": "Chính",
-    "admin": "Quản trị",
     "dashboard": "Bảng điều khiển",
     "users": "Người dùng",
+    "usersList": "Tất cả người dùng",
+    "usersCreate": "Tạo người dùng",
     "settings": "Cài đặt",
+    "settingsGeneral": "Tổng quan",
+    "settingsSecurity": "Bảo mật",
+    "settingsNotifications": "Thông báo",
     "roles": "Vai trò",
-    "programs": "Chương trình"
+    "programs": "Chương trình",
+    "programsList": "Tất cả chương trình",
+    "programsCreate": "Tạo chương trình"
   },
   "header": {
     "notifications": "Thông báo",

@@ -14,13 +14,18 @@
     "signingIn": "Signing in..."
   },
   "sidebar": {
-    "main": "Main",
-    "admin": "Admin",
     "dashboard": "Dashboard",
     "users": "Users",
+    "usersList": "All Users",
+    "usersCreate": "Create User",
     "settings": "Settings",
+    "settingsGeneral": "General",
+    "settingsSecurity": "Security",
+    "settingsNotifications": "Notifications",
     "roles": "Roles",
-    "programs": "Programs"
+    "programs": "Programs",
+    "programsList": "All Programs",
+    "programsCreate": "Create Program"
   },
   "header": {
     "notifications": "Notifications",
