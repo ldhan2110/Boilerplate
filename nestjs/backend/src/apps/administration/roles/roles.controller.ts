@@ -3,7 +3,7 @@ import { SuccessDto } from '@infra/common/dto';
 import { RoleDto, RoleListDto, SearchRoleDto } from './dto';
 import { RolesService } from './roles.service';
 
-@Controller('api/adm/role')
+@Controller('/adm/role')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

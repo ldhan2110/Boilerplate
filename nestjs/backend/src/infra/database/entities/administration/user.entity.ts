@@ -39,10 +39,6 @@ export class User extends BaseEntity {
   @Expose()
   roleId: string;
 
-  @Column({ name: 'role_nm', nullable: true })
-  @Expose()
-  roleNm: string;
-
   @Column({ name: 'lang_val', default: 'en' })
   @Expose()
   langVal: string;

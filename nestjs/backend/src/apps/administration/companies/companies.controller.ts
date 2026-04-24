@@ -3,7 +3,7 @@ import { SuccessDto } from '@infra/common/dto';
 import { CompaniesService } from './companies.service';
 import { CompanyInfoDto, CompanyInfoListDto, SearchCompanyDto } from './dto';
 
-@Controller('api/adm/company')
+@Controller('/adm/company')
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 

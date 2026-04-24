@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { BizException, BizErrorType } from '../exceptions/biz.exception';
+import { BizException, BizErrorType } from '@infra/common/exceptions';
 
 interface BizErrorResponse {
   errorCode: string;

@@ -1,5 +1,5 @@
 import { DeepPartial, EntityManager, EntityTarget, ObjectLiteral, QueryRunner } from 'typeorm';
-import { generateIdExpression } from '@infra/common/utils/id-generator.util';
+import { generateIdExpression } from '@infra/common/utils';
 
 interface AutoIdConfig {
   field: string;

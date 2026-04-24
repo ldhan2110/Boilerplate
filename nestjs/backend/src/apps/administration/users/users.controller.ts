@@ -5,7 +5,7 @@ import {
   HttpStatus,
   Post,
 } from '@nestjs/common';
-import { SuccessDto } from '@infra/common/dto/success.dto';
+import { SuccessDto } from '@infra/common/dto';
 import {
   ChangeUserInfoDto,
   SearchUserDto,

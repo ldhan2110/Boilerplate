@@ -1,4 +1,4 @@
-import { BizException } from '@infra/common/exceptions/biz.exception';
+import { BizException } from '@infra/common/exceptions';
 import {
   DataSource,
   EntityTarget,
@@ -12,7 +12,7 @@ import { InsertChain } from './chains/insert-chain';
 import { UpdateChain } from './chains/update-chain';
 import { DeleteChain } from './chains/delete-chain';
 import { UpsertChain } from './chains/upsert-chain';
-import { generateIdExpression } from '@infra/common/utils/id-generator.util';
+import { generateIdExpression } from '@infra/common/utils';
 
 /**
  * Transaction-scoped context passed to the callback of `QueryFactory.transaction()`.

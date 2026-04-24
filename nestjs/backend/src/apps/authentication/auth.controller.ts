@@ -5,15 +5,17 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { User } from '@infra/database/entities/administration';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { CurrentUser, Public } from './decorators';
 import { LoginRequestDto, LoginResponseDto, RefreshTokenRequestDto, RefreshTokenResponseDto } from './dto';
 import { LocalAuthGuard } from './guards';
 
-@Controller('api/auth')
+@Controller('/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -38,8 +40,15 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(): { success: boolean } {
-    // Token invalidation via Redis/blacklist can be added here later
+  async logout(
+    @Req() req: Request,
+    @CurrentUser() user: User,
+  ): Promise<{ success: boolean }> {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      await this.authService.logout(token, user.usrId);
+    }
     return { success: true };
   }
 

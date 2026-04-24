@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { BizException } from '@infra/common/exceptions/biz.exception';
+import { BizException } from '@infra/common/exceptions';
 import { DataSource, EntityTarget, FindOptionsWhere, ObjectLiteral, Repository } from 'typeorm';
 import { QueryChain } from './query-chain';
 import { RawQueryChain } from './raw-query-chain';
 import { TransactionContext } from './transaction-context';
-import { generateIdExpression } from '@infra/common/utils/id-generator.util';
+import { generateIdExpression } from '@infra/common/utils';
 
 @Injectable()
 export class QueryFactory {

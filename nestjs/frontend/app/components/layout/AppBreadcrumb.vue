@@ -2,11 +2,10 @@
 const route = useRoute()
 const { t } = useI18n()
 
-const breadcrumbs = computed(() => {
+const breadcrumbHome = { icon: 'pi pi-home', to: '/' }
+
+const breadcrumbItems = computed(() => {
   const segments = route.path.split('/').filter(Boolean)
-  if (segments.length === 0) {
-    return [{ label: t('sidebar.dashboard'), to: '/' }]
-  }
   return segments.map((segment, index) => {
     const to = '/' + segments.slice(0, index + 1).join('/')
     const key = `sidebar.${segment}`
@@ -19,5 +18,5 @@ const breadcrumbs = computed(() => {
 </script>
 
 <template>
-  <UBreadcrumb :items="breadcrumbs" />
+  <PBreadcrumb :home="breadcrumbHome" :model="breadcrumbItems" />
 </template>

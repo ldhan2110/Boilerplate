@@ -1,0 +1,17 @@
+[
+  {
+    "section": "sidebar.main",
+    "items": [
+      { "id": "dashboard", "label": "sidebar.dashboard", "icon": "dashboard", "to": "/" },
+      { "id": "users", "label": "sidebar.users", "icon": "users", "to": "/users" },
+      { "id": "settings", "label": "sidebar.settings", "icon": "settings", "to": "/settings" }
+    ]
+  },
+  {
+    "section": "sidebar.admin",
+    "items": [
+      { "id": "roles", "label": "sidebar.roles", "icon": "shield", "to": "/roles" },
+      { "id": "programs", "label": "sidebar.programs", "icon": "clipboard", "to": "/programs" }
+    ]
+  }
+]

@@ -1,9 +1,11 @@
-import { Company } from '@infra/database/entities/administration/company.entity';
-import { User } from '@infra/database/entities/administration/user.entity';
-import { Program } from '@infra/database/entities/administration/program.entity';
-import { Permission } from '@infra/database/entities/administration/permission.entity';
-import { Role } from '@infra/database/entities/administration/role.entity';
-import { RoleAuth } from '@infra/database/entities/administration/role-auth.entity';
+import {
+  Company,
+  User,
+  Program,
+  Permission,
+  Role,
+  RoleAuth,
+} from '@infra/database/entities/administration';
 
 /**
  * Central registry of all TypeORM entities.

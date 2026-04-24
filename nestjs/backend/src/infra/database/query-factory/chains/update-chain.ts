@@ -1,4 +1,4 @@
-import { BizException } from '@infra/common/exceptions/biz.exception';
+import { BizException } from '@infra/common/exceptions';
 import { DeepPartial, EntityManager, EntityTarget, FindOptionsWhere, ObjectLiteral } from 'typeorm';
 
 /**

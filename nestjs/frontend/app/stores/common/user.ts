@@ -11,6 +11,7 @@ import {
   COLOR_TO_HEX
 } from '~/types'
 import { storage } from '~/utils/storage'
+import { apiClient } from '~/services/apiClient'
 
 const STORAGE_KEYS = {
   refreshToken: 'refresh_token',
@@ -83,13 +84,8 @@ export const useUserStore = defineStore('user', () => {
 
   // --- Actions ---
   async function login(username: string, password: string): Promise<boolean> {
-    const config = useRuntimeConfig()
     try {
-      const data = await $fetch<LoginResponse>('/api/auth/login', {
-        baseURL: config.public.apiBase as string,
-        method: 'POST',
-        body: { username, password }
-      })
+      const data = await apiClient.post<LoginResponse>('/api/auth/login', { username, password })
 
       accessToken.value = data.accessToken
       accessExpireIn.value = data.accessExpireIn
@@ -104,9 +100,8 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function fetchProfile(): Promise<void> {
-    const api = useApi()
     try {
-      const me = await api.get<UserMeResponse>('/api/auth/me')
+      const me = await apiClient.get<UserMeResponse>('/api/auth/me')
       profile.value = mapProfileFromBackend(me)
       persistProfile()
 
@@ -143,8 +138,7 @@ export const useUserStore = defineStore('user', () => {
 
   async function logout(): Promise<void> {
     try {
-      const api = useApi()
-      await api.post('/api/auth/logout')
+      await apiClient.post('/api/auth/logout')
     } catch {
       // Best effort — clear state regardless
     }
@@ -180,8 +174,7 @@ export const useUserStore = defineStore('user', () => {
     if (!isAuthenticated.value) return
     syncTimer = setTimeout(async () => {
       try {
-        const api = useApi()
-        await api.patch('/api/auth/preferences', {
+        await apiClient.patch('/api/auth/preferences', {
           langVal: preferences.value.locale,
           sysModVal: preferences.value.darkMode,
           sysColrVal: COLOR_TO_HEX[preferences.value.accentColor] || preferences.value.accentColor,

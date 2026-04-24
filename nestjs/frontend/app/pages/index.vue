@@ -15,34 +15,34 @@ const { t } = useI18n()
 
     <!-- Stat cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-      <UCard>
-        <div>
+      <PCard>
+        <template #content>
           <p class="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
           <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">1,234</p>
-        </div>
-      </UCard>
-      <UCard>
-        <div>
+        </template>
+      </PCard>
+      <PCard>
+        <template #content>
           <p class="text-sm text-gray-500 dark:text-gray-400">Active Now</p>
           <p class="text-2xl font-bold text-primary-500 mt-1">56</p>
-        </div>
-      </UCard>
-      <UCard>
-        <div>
+        </template>
+      </PCard>
+      <PCard>
+        <template #content>
           <p class="text-sm text-gray-500 dark:text-gray-400">Programs</p>
           <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">12</p>
-        </div>
-      </UCard>
+        </template>
+      </PCard>
     </div>
 
     <!-- Placeholder content -->
-    <UCard>
-      <div>
+    <PCard>
+      <template #content>
         <p class="text-sm text-gray-500 dark:text-gray-400">Recent Activity</p>
         <p class="text-sm text-gray-400 dark:text-gray-500 mt-4">
           Activity feed will be displayed here.
         </p>
-      </div>
-    </UCard>
+      </template>
+    </PCard>
   </div>
 </template>

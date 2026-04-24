@@ -7,6 +7,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PermissionDto } from './permission.dto';
 import { BaseDto } from '@infra/common/dto';
 
@@ -42,8 +43,13 @@ export class ProgramDto extends BaseDto {
   pgmRmk?: string;
 
   // Computed tree fields (read-only, populated from CTE)
+  @ApiPropertyOptional()
   level?: number;
+
+  @ApiPropertyOptional()
   treeKey?: string;
+
+  @ApiPropertyOptional()
   treePath?: string;
 
   @IsOptional()

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { BizException } from '@infra/common/exceptions/biz.exception';
-import { Company } from '@infra/database/entities/administration/company.entity';
+import { BizException } from '@infra/common/exceptions';
+import { Company } from '@infra/database/entities/administration';
 import { QueryFactory } from '@infra/database/query-factory';
 import { CompanyInfoDto, CompanyInfoListDto, SearchCompanyDto } from './dto';
 

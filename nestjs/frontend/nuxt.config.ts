@@ -1,10 +1,10 @@
 import Aura from '@primeuix/themes/aura'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui',
     '@primevue/nuxt-module',
     '@pinia/nuxt',
     '@nuxtjs/i18n'
@@ -12,6 +12,10 @@ export default defineNuxtConfig({
 
   devtools: {
     enabled: true
+  },
+
+  vite: {
+    plugins: [tailwindcss()]
   },
 
   css: ['~/assets/css/main.css', 'primeicons/primeicons.css'],
@@ -53,6 +57,7 @@ export default defineNuxtConfig({
       { code: 'vi', name: 'Tiếng Việt', file: 'vi.json' }
     ],
     defaultLocale: 'en',
+    strategy: 'no_prefix',
     langDir: 'locales'
   },
 

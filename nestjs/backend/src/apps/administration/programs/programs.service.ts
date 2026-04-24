@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BizException } from '@infra/common/exceptions/biz.exception';
+import { BizException } from '@infra/common/exceptions';
 import {
   Permission,
   Program,

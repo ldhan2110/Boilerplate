@@ -12,21 +12,21 @@ export const useNotificationStore = defineStore('notification', () => {
   const notifications = ref<AppNotification[]>([
     {
       id: '1',
-      icon: 'i-lucide-user-plus',
+      icon: 'pi pi-user-plus',
       message: 'New user registered: John Doe',
       time: '5 min ago',
       read: false
     },
     {
       id: '2',
-      icon: 'i-lucide-shield-check',
+      icon: 'pi pi-shield',
       message: 'Role "Editor" was updated',
       time: '1 hour ago',
       read: false
     },
     {
       id: '3',
-      icon: 'i-lucide-settings',
+      icon: 'pi pi-cog',
       message: 'System settings changed',
       time: '3 hours ago',
       read: true

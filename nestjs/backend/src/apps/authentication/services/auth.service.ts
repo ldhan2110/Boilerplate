@@ -1,12 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { BizException } from '@infra/common/exceptions/biz.exception';
+import { Injectable, Optional } from '@nestjs/common';
+import { BizException } from '@infra/common/exceptions';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User } from '@infra/database/entities/administration';
 import { UsersService } from '@module/administration/users/users.service';
-import { JwtPayload } from './strategies/jwt.strategy';
-import { LoginRequestDto, LoginResponseDto, RefreshTokenResponseDto, } from './dto';
+import { JwtPayload } from '../strategies/jwt.strategy';
+import { LoginRequestDto, LoginResponseDto, RefreshTokenResponseDto, } from '../dto';
+import { AuthCacheService } from './auth-cache.service';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    @Optional() private readonly authCacheService?: AuthCacheService,
   ) {
     this.accessExpireMs = config.getOrThrow<number>('JWT_ACCESS_EXPIRE_MS');
     this.refreshExpireMs = config.getOrThrow<number>('JWT_REFRESH_EXPIRE_MS');
@@ -38,12 +40,26 @@ export class AuthService {
       throw new BizException('AUT000001', 'ERROR', 'Invalid credentials');
     }
 
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken(user);
+
+    // Register token in Redis cache if available
+    if (this.authCacheService) {
+      await this.authCacheService.registerUserToken(req.username, accessToken);
+    }
+
     return {
-      accessToken: this.generateAccessToken(user),
+      accessToken,
       accessExpireIn: this.accessExpireMs,
-      refreshToken: this.generateRefreshToken(user),
+      refreshToken,
       refreshExpireIn: this.refreshExpireMs,
     };
+  }
+
+  async logout(token: string, username: string): Promise<void> {
+    if (this.authCacheService) {
+      await this.authCacheService.logout(token, username);
+    }
   }
 
   async refreshTokens(refreshToken: string): Promise<RefreshTokenResponseDto> {

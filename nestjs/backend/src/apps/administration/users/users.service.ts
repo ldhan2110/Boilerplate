@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { BizException } from '@infra/common/exceptions/biz.exception';
+import { BizException } from '@infra/common/exceptions';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { User } from '@infra/database/entities/administration';
-import { SuccessDto } from '@infra/common/dto/success.dto';
+import { SuccessDto } from '@infra/common/dto';
 import { QueryFactory } from '@infra/database/query-factory';
 import {
   ChangeUserInfoDto,

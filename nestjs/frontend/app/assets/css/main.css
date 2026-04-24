@@ -1,29 +1,7 @@
 @import "tailwindcss";
-@import "@nuxt/ui";
 
-@theme static {
-  --font-sans: 'Public Sans', sans-serif;
-
-  --color-green-50: #EFFDF5;
-  --color-green-100: #D9FBE8;
-  --color-green-200: #B3F5D1;
-  --color-green-300: #75EDAE;
-  --color-green-400: #00DC82;
-  --color-green-500: #00C16A;
-  --color-green-600: #00A155;
-  --color-green-700: #007F45;
-  --color-green-800: #016538;
-  --color-green-900: #0A5331;
-  --color-green-950: #052E16;
-}
-
-/* Sidebar transitions */
-.sidebar-enter-active,
-.sidebar-leave-active {
-  transition: transform 0.3s ease;
-}
-
-.sidebar-enter-from,
-.sidebar-leave-to {
-  transform: translateX(-100%);
+/* Sidebar active item — uses PrimeVue runtime design tokens */
+.sidebar-item-active {
+  background-color: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
 }

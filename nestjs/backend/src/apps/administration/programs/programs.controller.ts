@@ -3,7 +3,7 @@ import { SuccessDto } from '@infra/common/dto';
 import { PermissionDto, ProgramDto, ProgramListDto, SearchProgramDto } from './dto';
 import { ProgramsService } from './programs.service';
 
-@Controller('api/sys/program')
+@Controller('/adm/program')
 export class ProgramsController {
   constructor(private readonly programsService: ProgramsService) {}
 

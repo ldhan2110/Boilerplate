@@ -1,5 +1,10 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class SuccessDto {
+  @ApiProperty()
   success: boolean;
+
+  @ApiProperty({ required: false })
   rows?: number;
 
   static of(success: boolean, rows?: number): SuccessDto {

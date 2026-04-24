@@ -11,3 +11,5 @@ export {
   COLOR_MAP,
   COLOR_TO_HEX
 } from './user'
+
+export type { AppMenuItem } from './menu'

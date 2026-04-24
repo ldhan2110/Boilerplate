@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { locale, locales, setLocale } = useI18n()
 const userStore = useUserStore()
+const menu = ref()
 
 const currentLocale = computed(() =>
   (locales.value as any[]).find((l: any) => l.code === locale.value)
@@ -9,23 +10,27 @@ const currentLocale = computed(() =>
 const localeItems = computed(() =>
   (locales.value as any[]).map(l => ({
     label: l.name,
-    onSelect: () => {
+    command: () => {
       setLocale(l.code)
       userStore.updatePreference('locale', l.code)
     }
   }))
 )
+
+function toggle(event: Event) {
+  menu.value.toggle(event)
+}
 </script>
 
 <template>
-  <UDropdownMenu :items="localeItems">
-    <UButton
-      color="neutral"
-      variant="ghost"
-      size="sm"
-      :label="currentLocale?.code?.toUpperCase()"
-      icon="i-lucide-globe"
-      trailing-icon="i-lucide-chevron-down"
-    />
-  </UDropdownMenu>
+  <PButton
+    severity="secondary"
+    text
+    rounded
+    size="small"
+    :label="currentLocale?.code?.toUpperCase()"
+    icon="pi pi-globe"
+    @click="toggle"
+  />
+  <PMenu ref="menu" :model="localeItems" :popup="true" appendTo="body" />
 </template>

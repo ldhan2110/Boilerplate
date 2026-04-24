@@ -1,4 +1,4 @@
-import { BizException } from '@infra/common/exceptions/biz.exception';
+import { BizException } from '@infra/common/exceptions';
 import { QueryFactory } from '../query-factory.service';
 
 describe('QueryFactory CRUD extensions', () => {

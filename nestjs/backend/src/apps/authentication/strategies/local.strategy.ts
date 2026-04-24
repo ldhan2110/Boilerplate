@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { BizException } from '@infra/common/exceptions/biz.exception';
+import { BizException } from '@infra/common/exceptions';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
-import { AuthService } from '../auth.service';
+import { AuthService } from '@module/authentication/services/auth.service';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy, 'local') {

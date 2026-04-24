@@ -1,15 +1,15 @@
-import { IsNumber, IsString } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginResponseDto {
-  @IsString()
+  @ApiProperty()
   accessToken!: string;
 
-  @IsNumber()
+  @ApiProperty()
   accessExpireIn!: number;
 
-  @IsString()
+  @ApiProperty()
   refreshToken!: string;
 
-  @IsNumber()
+  @ApiProperty()
   refreshExpireIn!: number;
 }

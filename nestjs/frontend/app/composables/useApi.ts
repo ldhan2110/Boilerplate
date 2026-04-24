@@ -1,56 +1,54 @@
-import type { LoginResponse, RefreshTokenResponse, UserMeResponse } from '~/types'
+import { apiClient } from '~/services'
 
-export function useApi() {
-  const config = useRuntimeConfig()
-  const baseURL = config.public.apiBase as string
+interface UseApiOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  body?: Record<string, any> | null
+  headers?: Record<string, string>
+  immediate?: boolean
+}
 
-  function getAccessToken(): string | null {
-    const userStore = useUserStore()
-    return userStore.accessToken
-  }
+export function useApi<T>(url: string, options: UseApiOptions = {}) {
+  const data = ref<T | null>(null) as Ref<T | null>
+  const error = ref<Error | null>(null)
+  const loading = ref(false)
 
-  async function request<T>(url: string, options: Parameters<typeof $fetch>[1] = {}): Promise<T> {
-    const token = getAccessToken()
-    const headers: Record<string, string> = {
-      ...(options.headers as Record<string, string> || {})
-    }
-    if (token) {
-      headers.Authorization = `Bearer ${token}`
-    }
-
+  async function execute(overrideBody?: Record<string, any> | null): Promise<T | null> {
+    loading.value = true
+    error.value = null
     try {
-      return await $fetch<T>(url, {
-        baseURL,
-        ...options,
-        headers
-      })
-    } catch (error: any) {
-      if (error?.statusCode === 401 && token) {
-        const userStore = useUserStore()
-        const refreshed = await userStore.refreshTokens()
-        if (refreshed) {
-          headers.Authorization = `Bearer ${userStore.accessToken}`
-          return await $fetch<T>(url, {
-            baseURL,
-            ...options,
-            headers
-          })
-        }
-        await userStore.logout()
-        navigateTo('/login')
+      const method = options.method || 'GET'
+      const fetchOptions: Parameters<typeof $fetch>[1] = {
+        headers: options.headers
       }
-      throw error
+      const body = overrideBody !== undefined ? overrideBody : options.body
+
+      let result: T
+      switch (method) {
+        case 'POST':
+          result = await apiClient.post<T>(url, body, fetchOptions)
+          break
+        case 'PUT':
+          result = await apiClient.put<T>(url, body, fetchOptions)
+          break
+        case 'PATCH':
+          result = await apiClient.patch<T>(url, body, fetchOptions)
+          break
+        case 'DELETE':
+          result = await apiClient.delete<T>(url, fetchOptions)
+          break
+        default:
+          result = await apiClient.get<T>(url, fetchOptions)
+      }
+
+      data.value = result
+      return result
+    } catch (e: any) {
+      error.value = e
+      return null
+    } finally {
+      loading.value = false
     }
   }
 
-  return {
-    get: <T>(url: string, options?: Parameters<typeof $fetch>[1]) =>
-      request<T>(url, { ...options, method: 'GET' }),
-
-    post: <T>(url: string, body?: Record<string, any> | null, options?: Parameters<typeof $fetch>[1]) =>
-      request<T>(url, { ...options, method: 'POST', body }),
-
-    patch: <T>(url: string, body?: Record<string, any> | null, options?: Parameters<typeof $fetch>[1]) =>
-      request<T>(url, { ...options, method: 'PATCH', body })
-  }
+  return { data, error, loading, execute }
 }

@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import { BizExceptionFilter } from '@infra/common/filters/biz-exception.filter';
+import { BizExceptionFilter } from '@infra/common/filters';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
