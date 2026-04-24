@@ -46,7 +46,9 @@ const formSchema = z.object({
   content: z.string().optional(),
   age: z.number().min(1, 'Age must be at least 1').max(150, 'Age must be at most 150').nullable().optional(),
   price: z.number().min(0, 'Price must be positive').nullable().optional(),
-  quantity: z.number().int().min(0).nullable().optional()
+  quantity: z.number().int().min(0).nullable().optional(),
+  priority: z.string().nullable().optional(),
+  status: z.string().nullable().optional()
 })
 
 const lastSubmitted = ref<Record<string, unknown> | null>(null)
@@ -61,14 +63,16 @@ const { formProps, formRef, field, values, isDirty, isSubmitting, resetForm } = 
     role: null,
     country: null,
     tags: [],
-    agreeTerms: false,
+    agreeTerms: 'yes',
     newsletter: false,
     startDate: null,
     dateRange: null,
     content: '',
     age: null,
     price: null,
-    quantity: 0
+    quantity: 0,
+    priority: null,
+    status: null
   },
   onSubmit: async (vals) => {
     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -83,6 +87,18 @@ const roles = [
   { label: 'Admin', value: 'admin' },
   { label: 'Editor', value: 'editor' },
   { label: 'Viewer', value: 'viewer' }
+]
+
+const priorities = [
+  { label: 'Low', value: 'low' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'High', value: 'high' }
+]
+
+const statuses = [
+  { label: 'Draft', value: 'draft' },
+  { label: 'Published', value: 'published' },
+  { label: 'Archived', value: 'archived' }
 ]
 
 const countries = [
@@ -180,6 +196,7 @@ const countries = [
                   label="Price"
                   mode="currency"
                   currency="USD"
+                  postfix="USD"
                   :min-fraction-digits="2"
                   placeholder="0.00"
                 />
@@ -202,6 +219,7 @@ const countries = [
                   option-label="label"
                   option-value="value"
                   required
+                  filterable
                 />
                 <Select
                   v-bind="field('country')"
@@ -232,11 +250,34 @@ const countries = [
                   v-bind="field('agreeTerms')"
                   label="I agree to the Terms and Conditions"
                   required
+                  true-value="yes"
+                  false-value="no"
                 />
                 <CheckBox
                   v-bind="field('newsletter')"
                   label="Subscribe to newsletter"
                   hint="We'll send you updates once a week"
+                />
+              </div>
+
+              <!-- RadioGroup -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <RadioGroup
+                  v-bind="field('priority')"
+                  label="Priority"
+                  :options="priorities"
+                  option-label="label"
+                  option-value="value"
+                  required
+                />
+                <RadioGroup
+                  v-bind="field('status')"
+                  label="Status"
+                  :options="statuses"
+                  option-label="label"
+                  option-value="value"
+                  direction="horizontal"
+                  hint="Choose the publication status"
                 />
               </div>
 

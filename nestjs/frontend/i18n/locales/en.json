@@ -53,6 +53,15 @@
     "unsavedChanges": "Unsaved Changes",
     "unsavedChangesMessage": "You have unsaved changes. Do you want to discard them?",
     "discard": "Discard",
+    "cancel": "Cancel",
+    "ok": "OK"
+  },
+  "dialog": {
+    "success": "Success",
+    "info": "Information",
+    "warning": "Warning",
+    "error": "Error",
+    "ok": "OK",
     "cancel": "Cancel"
   },
   "theme": {

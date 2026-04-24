@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { useConfirm } from 'primevue/useconfirm'
 
 interface SaveButtonProps {
   /** Show confirmation dialog before triggering click */
@@ -33,7 +32,7 @@ const emit = defineEmits<{
 }>()
 
 const { t, te } = useI18n()
-const confirm = useConfirm()
+const dialog = useAppDialog()
 
 function resolveText(value: string | undefined, fallbackKey: string): string {
   if (!value) return te(fallbackKey) ? t(fallbackKey) : fallbackKey
@@ -46,14 +45,12 @@ function onClick(event: MouseEvent) {
     return
   }
 
-  confirm.require({
+  dialog.confirm({
     header: resolveText(props.header, 'common.confirmHeader'),
     message: resolveText(props.message, 'common.confirmSaveMessage'),
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: resolveText(props.acceptLabel, 'common.yes'),
-    rejectLabel: resolveText(props.rejectLabel, 'common.no'),
-    rejectProps: { severity: 'secondary', outlined: true },
-    accept: () => emit('click', event),
+    acceptButton: { label: resolveText(props.acceptLabel, 'common.yes') },
+    rejectButton: { label: resolveText(props.rejectLabel, 'common.no') },
+    onAccept: () => emit('click', event),
   })
 }
 </script>

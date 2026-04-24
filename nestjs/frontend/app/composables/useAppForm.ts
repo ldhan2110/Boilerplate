@@ -1,4 +1,3 @@
-import { useConfirm } from 'primevue/useconfirm'
 import type { ZodObject, ZodRawShape, z } from 'zod'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 
@@ -25,6 +24,7 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
   const rawInitial = options.initialValues ?? ({} as Partial<z.infer<T>>)
 
   const { t } = useI18n()
+  const dialog = useAppDialog()
 
   // --- Resolver ---
   const resolver = zodResolver(schema)
@@ -106,21 +106,27 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
     formRef.value?.$form?.reset?.()
   }
 
+  // --- Imperative field setter (e.g. for async data) ---
+  function setFieldValue(name: string, value: unknown) {
+    values[name] = value
+
+    // sync to PrimeVue Form
+    formRef.value?.$form?.setFieldValue?.(name, value)
+  }
+
+  function setFieldsValues(newValues: Record<string, unknown>) {
+    Object.entries(newValues).forEach(([key, value]) => {
+      setFieldValue(key, value)
+    })
+  }
+
   // --- Confirm dialog helper ---
   function showDiscardConfirm(): Promise<boolean> {
-    const confirm = useConfirm()
-    return new Promise((resolve) => {
-      confirm.require({
-        header: t('common.unsavedChanges'),
-        message: t('common.unsavedChangesMessage'),
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: t('common.discard'),
-        rejectLabel: t('common.cancel'),
-        rejectProps: { severity: 'secondary', outlined: true },
-        accept: () => resolve(true),
-        reject: () => resolve(false),
-        onHide: () => resolve(false)
-      })
+    return dialog.confirmAsync({
+      header: t('common.unsavedChanges'),
+      message: t('common.unsavedChangesMessage'),
+      acceptButton: { label: t('common.discard') },
+      rejectButton: { label: t('common.cancel') },
     })
   }
 
@@ -167,6 +173,8 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
     isDirty,
     isSubmitting,
     resetForm,
-    guardClose
+    guardClose,
+    setFieldValue,
+    setFieldsValues
   }
 }

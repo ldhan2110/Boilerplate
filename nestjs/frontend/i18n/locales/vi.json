@@ -53,6 +53,15 @@
     "unsavedChanges": "Thay đổi chưa lưu",
     "unsavedChangesMessage": "Bạn có thay đổi chưa được lưu. Bạn có muốn bỏ thay đổi không?",
     "discard": "Bỏ qua",
+    "cancel": "Hủy",
+    "ok": "OK"
+  },
+  "dialog": {
+    "success": "Thành công",
+    "info": "Thông tin",
+    "warning": "Cảnh báo",
+    "error": "Lỗi",
+    "ok": "OK",
     "cancel": "Hủy"
   },
   "theme": {

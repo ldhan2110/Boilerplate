@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 interface CheckBoxProps {
   /** v-model binding */
-  modelValue?: boolean | unknown[]
+  modelValue?: boolean | unknown[] | unknown
   /** Label text — i18n key or raw text */
   label?: string
   /** Error message */
@@ -14,6 +14,10 @@ interface CheckBoxProps {
   value?: unknown
   /** Binary mode (true/false toggle) — default true */
   binary?: boolean
+  /** Value when checked in binary mode (default: true) */
+  trueValue?: unknown
+  /** Value when unchecked in binary mode (default: false) */
+  falseValue?: unknown
   /** Disabled state */
   disabled?: boolean
   /** HTML id */
@@ -27,7 +31,7 @@ const props = withDefaults(defineProps<CheckBoxProps>(), {
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean | unknown[]]
+  'update:modelValue': [value: unknown]
 }>()
 
 const { t, te } = useI18n()
@@ -71,6 +75,8 @@ const hasError = computed(() => !!resolvedError.value)
         :model-value="modelValue"
         :value="value"
         :binary="binary"
+        :true-value="trueValue"
+        :false-value="falseValue"
         :disabled="disabled"
         :invalid="hasError"
         @update:model-value="emit('update:modelValue', $event)"

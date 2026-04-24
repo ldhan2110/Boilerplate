@@ -21,5 +21,5 @@ useSeoMeta({
     <NuxtPage />
   </NuxtLayout>
   <PToast />
-  <PConfirmDialog />
+  <PConfirmDialog group="app-dialog" />
 </template>
