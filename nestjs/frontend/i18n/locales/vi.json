@@ -49,7 +49,11 @@
     "search": "Tìm kiếm...",
     "noResults": "Không tìm thấy kết quả",
     "selectPlaceholder": "Chọn một mục",
-    "datePlaceholder": "Chọn ngày"
+    "datePlaceholder": "Chọn ngày",
+    "unsavedChanges": "Thay đổi chưa lưu",
+    "unsavedChangesMessage": "Bạn có thay đổi chưa được lưu. Bạn có muốn bỏ thay đổi không?",
+    "discard": "Bỏ qua",
+    "cancel": "Hủy"
   },
   "theme": {
     "accentColor": "Màu chủ đạo",

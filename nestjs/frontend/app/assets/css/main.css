@@ -7,3 +7,24 @@
   background-color: var(--p-primary-color);
   color: var(--p-primary-contrast-color);
 }
+
+/* Compact PrimeVue overlay panels (select dropdowns, datepicker popups) */
+.p-select-overlay,
+.p-multiselect-overlay,
+.p-datepicker-panel {
+  font-size: 0.75rem;
+}
+
+.p-select-option,
+.p-multiselect-option {
+  padding: 0.375rem 0.75rem;
+}
+
+.p-datepicker-panel .p-datepicker-day-cell,
+.p-datepicker-panel .p-datepicker-weekday-cell {
+  font-size: 0.75rem;
+}
+
+.p-datepicker-panel button {
+  font-size: 0.75rem;
+}

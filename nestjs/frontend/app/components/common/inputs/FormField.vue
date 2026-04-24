@@ -10,6 +10,8 @@ interface FormFieldProps {
   required?: boolean
   /** HTML id for the input (for label association) */
   inputId?: string
+  /** PrimeVue Form field name — enables automatic validation integration */
+  name?: string
 }
 
 const props = defineProps<FormFieldProps>()
@@ -23,8 +25,28 @@ function resolve(value: string | undefined): string | undefined {
 }
 
 const resolvedLabel = computed(() => resolve(props.label))
-const resolvedError = computed(() => resolve(props.error))
 const resolvedHint = computed(() => resolve(props.hint))
+
+// --- PrimeVue Form integration ---
+const $pcForm = inject('$pcForm', null) as any
+
+// Register field with PrimeVue Form when name is provided
+if ($pcForm) {
+  watch(() => props.name, (name) => {
+    if (name) {
+      $pcForm.register(name, { name })
+    }
+  }, { immediate: true })
+}
+
+// Read error from PrimeVue Form, fallback to explicit error prop
+const resolvedError = computed(() => {
+  if (props.name && $pcForm) {
+    const formError = $pcForm.fields?.[props.name]?.states?.error
+    if (formError) return formError.message
+  }
+  return resolve(props.error)
+})
 </script>
 
 <template>
@@ -32,7 +54,7 @@ const resolvedHint = computed(() => resolve(props.hint))
     <label
       v-if="resolvedLabel"
       :for="inputId"
-      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      class="text-xs font-medium text-gray-700 dark:text-gray-300"
     >
       {{ resolvedLabel }}
       <span v-if="required" class="text-red-500 ml-0.5">*</span>

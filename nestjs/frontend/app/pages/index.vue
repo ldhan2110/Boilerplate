@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { z } from 'zod'
+import { Form } from '@primevue/forms'
+
 const { t } = useI18n()
 const toast = useAppToast()
 const loading = ref(false)
@@ -27,25 +30,53 @@ function handleWarn() {
   toast.showWarning('Proceed with caution')
 }
 
-// --- Input demo state ---
-const form = reactive({
-  name: '',
-  email: '',
-  password: '',
-  bio: '',
-  role: null as string | null,
-  country: null as string | null,
-  agreeTerms: false,
-  newsletter: false,
-  startDate: null as Date | null,
-  dateRange: null as Date[] | null,
-  content: '',
+// --- Form schema ---
+const formSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email format'),
+  password: z.string().optional(),
+  bio: z.string().optional(),
+  role: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  tags: z.array(z.string()).optional(),
+  agreeTerms: z.boolean().optional(),
+  newsletter: z.boolean().optional(),
+  startDate: z.any().nullable().optional(),
+  dateRange: z.any().nullable().optional(),
+  content: z.string().optional()
+})
+
+const lastSubmitted = ref<Record<string, unknown> | null>(null)
+
+const { formProps, formRef, field, values, isDirty, isSubmitting, resetForm } = useAppForm({
+  schema: formSchema,
+  initialValues: {
+    name: '',
+    email: '',
+    password: '',
+    bio: '',
+    role: null,
+    country: null,
+    tags: [],
+    agreeTerms: false,
+    newsletter: false,
+    startDate: null,
+    dateRange: null,
+    content: ''
+  },
+  onSubmit: async (vals) => {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    lastSubmitted.value = { ...vals }
+    toast.showSuccess('Form submitted successfully!')
+    console.log('Submitted values:', vals)
+  },
+  guard: { router: true, unload: true }
 })
 
 const roles = [
   { label: 'Admin', value: 'admin' },
   { label: 'Editor', value: 'editor' },
-  { label: 'Viewer', value: 'viewer' },
+  { label: 'Viewer', value: 'viewer' }
 ]
 
 const countries = [
@@ -55,38 +86,8 @@ const countries = [
   { name: 'South Korea', code: 'KR' },
   { name: 'Germany', code: 'DE' },
   { name: 'France', code: 'FR' },
-  { name: 'United Kingdom', code: 'GB' },
+  { name: 'United Kingdom', code: 'GB' }
 ]
-
-// Simulated validation errors
-const errors = reactive({
-  email: '',
-  name: '',
-})
-
-function validateEmail() {
-  if (!form.email) {
-    errors.email = 'common.required'
-  } else if (!form.email.includes('@')) {
-    errors.email = 'Invalid email format'
-  } else {
-    errors.email = ''
-  }
-}
-
-function validateName() {
-  errors.name = form.name.length < 2 ? 'Name must be at least 2 characters' : ''
-}
-
-function submitForm() {
-  validateEmail()
-  validateName()
-  if (!errors.email && !errors.name) {
-    toast.showSuccess('Form submitted successfully!')
-  } else {
-    toast.showError('Please fix the errors above')
-  }
-}
 </script>
 
 <template>
@@ -102,165 +103,166 @@ function submitForm() {
 
     <!-- Input Components Showcase -->
     <div class="flex flex-col gap-4">
-      <!-- Text Inputs -->
+      <!-- useAppForm Demo -->
       <PCard>
         <template #title>
-          <span class="text-base">Input</span>
+          <div class="flex items-center justify-between">
+            <span class="text-base">Form Demo (useAppForm + Zod)</span>
+            <span
+              v-if="isDirty"
+              class="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded"
+            >
+              Unsaved changes
+            </span>
+          </div>
         </template>
         <template #content>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              v-model="form.name"
-              label="Full Name"
-              placeholder="Enter your name"
-              required
-              :error="errors.name"
-              hint="At least 2 characters"
-              @update:model-value="validateName"
-            />
-            <Input
-              v-model="form.email"
-              label="Email"
-              type="email"
-              placeholder="you@example.com"
-              required
-              :error="errors.email"
-              @update:model-value="validateEmail"
-            />
-            <Input
-              v-model="form.password"
-              label="Password"
-              type="password"
-              placeholder="Enter password"
-              hint="Must be at least 8 characters"
-            />
-            <Input
-              v-model="form.name"
-              label="Disabled Input"
-              disabled
-            />
-          </div>
+          <ClientOnly>
+            <Form ref="formRef" v-bind="formProps" v-slot="$form" class="flex flex-col gap-4">
+              <!-- Text Inputs -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  v-bind="field('name')"
+                  label="Full Name"
+                  placeholder="Enter your name"
+                  required
+                  hint="At least 2 characters"
+                />
+                <Input
+                  v-bind="field('email')"
+                  label="Email"
+                  type="email"
+                  placeholder="you@example.com"
+                  required
+                />
+                <Input
+                  v-bind="field('password')"
+                  label="Password"
+                  type="password"
+                  placeholder="Enter password"
+                  hint="Must be at least 8 characters"
+                />
+                <Input
+                  model-value=""
+                  label="Disabled Input"
+                  disabled
+                />
+              </div>
 
-          <div class="mt-4">
-            <Input
-              v-model="form.bio"
-              label="Bio"
-              variant="textarea"
-              placeholder="Tell us about yourself..."
-              hint="Max 500 characters"
-              :rows="4"
-            />
-          </div>
-        </template>
-      </PCard>
+              <Input
+                v-bind="field('bio')"
+                label="Bio"
+                variant="textarea"
+                placeholder="Tell us about yourself..."
+                hint="Max 500 characters"
+                :rows="4"
+                :autoResize="true"
+              />
 
-      <!-- Select -->
-      <PCard>
-        <template #title>
-          <span class="text-base">Select</span>
-        </template>
-        <template #content>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select
-              v-model="form.role"
-              label="Role"
-              :options="roles"
-              option-label="label"
-              option-value="value"
-              required
-            />
-            <Select
-              v-model="form.country"
-              label="Country"
-              :options="countries"
-              option-label="name"
-              option-value="code"
-              filterable
-              show-clear
-              hint="Type to search countries"
-            />
-          </div>
-        </template>
-      </PCard>
+              <!-- Select -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  v-bind="field('role')"
+                  label="Role"
+                  :options="roles"
+                  option-label="label"
+                  option-value="value"
+                  required
+                />
+                <Select
+                  v-bind="field('country')"
+                  label="Country"
+                  :options="countries"
+                  option-label="name"
+                  option-value="code"
+                  filterable
+                  show-clear
+                  hint="Type to search countries"
+                />
+                <Select
+                  v-bind="field('tags')"
+                  label="Tags (Multi)"
+                  :options="roles"
+                  option-label="label"
+                  option-value="value"
+                  multiple
+                  filterable
+                  show-clear
+                  hint="Select multiple options"
+                />
+              </div>
 
-      <!-- CheckBox -->
-      <PCard>
-        <template #title>
-          <span class="text-base">CheckBox</span>
-        </template>
-        <template #content>
-          <div class="flex flex-col gap-3">
-            <CheckBox
-              v-model="form.agreeTerms"
-              label="I agree to the Terms and Conditions"
-              required
-            />
-            <CheckBox
-              v-model="form.newsletter"
-              label="Subscribe to newsletter"
-              hint="We'll send you updates once a week"
-            />
-            <CheckBox
-              :model-value="false"
-              label="Disabled option"
-              disabled
-            />
-          </div>
-        </template>
-      </PCard>
+              <!-- CheckBox -->
+              <div class="flex flex-col gap-3">
+                <CheckBox
+                  v-bind="field('agreeTerms')"
+                  label="I agree to the Terms and Conditions"
+                  required
+                />
+                <CheckBox
+                  v-bind="field('newsletter')"
+                  label="Subscribe to newsletter"
+                  hint="We'll send you updates once a week"
+                />
+              </div>
 
-      <!-- DatePicker -->
-      <PCard>
-        <template #title>
-          <span class="text-base">DatePicker</span>
-        </template>
-        <template #content>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DatePicker
-              v-model="form.startDate"
-              label="Start Date"
-              required
-            />
-            <DatePicker
-              v-model="form.dateRange"
-              label="Date Range"
-              range
-              hint="Select start and end dates"
-            />
-          </div>
-        </template>
-      </PCard>
+              <!-- DatePicker -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DatePicker
+                  v-bind="field('startDate')"
+                  label="Start Date"
+                  required
+                />
+                <DatePicker
+                  v-bind="field('dateRange')"
+                  label="Date Range"
+                  range
+                  hint="Select start and end dates"
+                />
+              </div>
 
-      <!-- RichEditor -->
-      <PCard>
-        <template #title>
-          <span class="text-base">Rich Editor</span>
-        </template>
-        <template #content>
-          <RichEditor
-            v-model="form.content"
-            label="Content"
-            hint="Format your text with the toolbar above"
-            :height="200"
-          />
-        </template>
-      </PCard>
+              <!-- RichEditor -->
+              <RichEditor
+                v-bind="field('content')"
+                label="Content"
+                hint="Format your text with the toolbar above"
+                :height="200"
+              />
 
-      <!-- Form Submit Demo -->
-      <PCard>
-        <template #title>
-          <span class="text-base">Form Actions</span>
-        </template>
-        <template #content>
-          <div class="flex flex-wrap items-center gap-2">
-            <Button label="Submit Form" icon="pi pi-check" @click="submitForm" />
-            <SaveButton show-confirm @click="handleSave" />
-          </div>
+              <!-- Form Actions -->
+              <div class="flex flex-wrap items-center gap-2">
+                <SaveButton type="submit" :loading="isSubmitting" />
+                <Button
+                  label="Reset"
+                  variant="secondary"
+                  outlined
+                  icon="pi pi-refresh"
+                  @click="resetForm"
+                />
+              </div>
 
-          <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <p class="text-xs font-mono text-gray-500 dark:text-gray-400 mb-1">Form State (reactive)</p>
-            <pre class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ JSON.stringify(form, null, 2) }}</pre>
-          </div>
+              <!-- Form State Debug -->
+              <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                <p class="text-xs font-mono text-gray-500 dark:text-gray-400">
+                  dirty: <span :class="isDirty ? 'text-amber-600' : 'text-green-600'">{{ isDirty }}</span>
+                  &nbsp;|&nbsp;
+                  valid: <span :class="$form.valid ? 'text-green-600' : 'text-red-500'">{{ $form.valid }}</span>
+                </p>
+                <details>
+                  <summary class="text-xs font-mono text-gray-500 dark:text-gray-400 cursor-pointer">
+                    Current values
+                  </summary>
+                  <pre class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{{ JSON.stringify(values, null, 2) }}</pre>
+                </details>
+                <details v-if="lastSubmitted">
+                  <summary class="text-xs font-mono text-green-600 dark:text-green-400 cursor-pointer">
+                    Last submitted values
+                  </summary>
+                  <pre class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{{ JSON.stringify(lastSubmitted, null, 2) }}</pre>
+                </details>
+              </div>
+            </Form>
+          </ClientOnly>
         </template>
       </PCard>
 

@@ -30,6 +30,8 @@ interface SelectProps {
   fluid?: boolean
   /** HTML id */
   id?: string
+  /** Enable multiselect mode */
+  multiple?: boolean
 }
 
 const props = withDefaults(defineProps<SelectProps>(), {
@@ -67,7 +69,8 @@ const hasError = computed(() => !!props.error)
     :required="required"
     :input-id="inputId"
   >
-    <PSelect
+    <PMultiSelect
+      v-if="multiple"
       :id="inputId"
       :model-value="modelValue"
       :options="options"
@@ -80,6 +83,25 @@ const hasError = computed(() => !!props.error)
       :show-clear="showClear"
       :fluid="fluid"
       :invalid="hasError"
+      size="small"
+      display="chip"
+      @update:model-value="emit('update:modelValue', $event)"
+    />
+    <PSelect
+      v-else
+      :id="inputId"
+      :model-value="modelValue"
+      :options="options"
+      :option-label="optionLabel"
+      :option-value="optionValue"
+      :placeholder="resolvedPlaceholder"
+      :filter="filterable"
+      :filter-placeholder="resolvedFilterPlaceholder"
+      :disabled="disabled"
+      :show-clear="showClear"
+      :fluid="fluid"
+      :invalid="hasError"
+      size="small"
       @update:model-value="emit('update:modelValue', $event)"
     />
   </FormField>

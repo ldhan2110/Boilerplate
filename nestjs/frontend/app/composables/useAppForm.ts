@@ -1,0 +1,172 @@
+import { useConfirm } from 'primevue/useconfirm'
+import type { ZodObject, ZodRawShape, z } from 'zod'
+import { zodResolver } from '@primevue/forms/resolvers/zod'
+
+interface GuardConfig {
+  /** Guard in-app navigation via Vue Router (default: true) */
+  router?: boolean
+  /** Guard tab close/refresh via beforeunload (default: true) */
+  unload?: boolean
+}
+
+interface UseAppFormOptions<T extends ZodObject<ZodRawShape>> {
+  /** Zod schema for validation */
+  schema: T
+  /** Initial form values — plain object or ref/computed (watched for async data) */
+  initialValues?: MaybeRef<Partial<z.infer<T>>>
+  /** Called with validated values on successful submit */
+  onSubmit: (values: z.infer<T>) => Promise<void> | void
+  /** Leave guard configuration. Set to false to disable all guards. */
+  guard?: GuardConfig | false
+}
+
+export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppFormOptions<T>) {
+  const { schema, onSubmit, guard: guardConfig = { router: true, unload: true } } = options
+  const rawInitial = options.initialValues ?? ({} as Partial<z.infer<T>>)
+
+  const { t } = useI18n()
+
+  // --- Resolver ---
+  const resolver = zodResolver(schema)
+
+  // --- Template ref for <Form> component ---
+  const formRef = shallowRef<any>(null)
+
+  // --- Dirty tracking via mirrored values ---
+  const snapshot = ref(JSON.stringify(toRaw(unref(rawInitial)))) as Ref<string>
+  const values = reactive<Record<string, unknown>>({ ...toRaw(unref(rawInitial)) })
+
+  // Watch reactive initialValues (e.g. from API)
+  if (isRef(rawInitial)) {
+    watch(rawInitial, (newVal) => {
+      if (newVal) {
+        const raw = toRaw(newVal)
+        snapshot.value = JSON.stringify(raw)
+        Object.assign(values, raw)
+      }
+    }, { deep: true })
+  }
+
+  // isDirty: compare current values against snapshot (no toRaw — must trigger reactivity)
+  const isDirty = computed(() => JSON.stringify(values) !== snapshot.value)
+
+  // --- Submit handling ---
+  const isSubmitting = ref(false)
+
+  function handleSubmit(e: { valid: boolean; values: Record<string, unknown> }) {
+    if (!e.valid) return
+
+    const result = onSubmit(e.values as z.infer<T>)
+    if (result instanceof Promise) {
+      isSubmitting.value = true
+      result
+        .then(() => {
+          snapshot.value = JSON.stringify(values)
+        })
+        .finally(() => {
+          isSubmitting.value = false
+        })
+    } else {
+      snapshot.value = JSON.stringify(values)
+    }
+  }
+
+  // --- Props to spread onto <Form> ---
+  const formProps = computed(() => ({
+    resolver,
+    initialValues: JSON.parse(snapshot.value),
+    onSubmit: handleSubmit
+  }))
+
+  /**
+   * Field binding helper — returns props for custom Input/Select/etc components.
+   * The `name` prop falls through to the internal FormField.vue which auto-registers
+   * with PrimeVue Form for validation.
+   *
+   * Usage:
+   *   <Input v-bind="field('email')" label="Email" />
+   */
+  function field(name: string) {
+    return {
+      modelValue: values[name],
+      'onUpdate:modelValue': (value: unknown) => {
+        values[name] = value
+        // Sync value to PrimeVue Form's internal state for validation
+        formRef.value?.$form?.setFieldValue?.(name, value)
+      },
+      name
+    }
+  }
+
+  // --- Reset ---
+  function resetForm() {
+    const initial = JSON.parse(snapshot.value)
+    Object.assign(values, initial)
+    // Also reset PrimeVue Form's internal state
+    formRef.value?.$form?.reset?.()
+  }
+
+  // --- Confirm dialog helper ---
+  function showDiscardConfirm(): Promise<boolean> {
+    const confirm = useConfirm()
+    return new Promise((resolve) => {
+      confirm.require({
+        header: t('common.unsavedChanges'),
+        message: t('common.unsavedChangesMessage'),
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: t('common.discard'),
+        rejectLabel: t('common.cancel'),
+        rejectProps: { severity: 'secondary', outlined: true },
+        accept: () => resolve(true),
+        reject: () => resolve(false),
+        onHide: () => resolve(false)
+      })
+    })
+  }
+
+  // --- Guard: Vue Router ---
+  const guardEnabled = guardConfig !== false
+  const routerGuard = guardEnabled && (guardConfig as GuardConfig).router !== false
+  const unloadGuard = guardEnabled && (guardConfig as GuardConfig).unload !== false
+
+  if (routerGuard) {
+    onBeforeRouteLeave(async () => {
+      if (!isDirty.value) return true
+      return await showDiscardConfirm()
+    })
+  }
+
+  // --- Guard: beforeunload ---
+  if (unloadGuard) {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty.value) {
+        e.preventDefault()
+      }
+    }
+
+    onMounted(() => {
+      window.addEventListener('beforeunload', onBeforeUnload)
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('beforeunload', onBeforeUnload)
+    })
+  }
+
+  // --- Guard: drawer/dialog close ---
+  async function guardClose(): Promise<boolean> {
+    if (!isDirty.value) return true
+    return showDiscardConfirm()
+  }
+
+  return {
+    formProps,
+    formRef,
+    field,
+    values,
+    isDirty,
+    isSubmitting,
+    resetForm,
+    guardClose
+  }
+}

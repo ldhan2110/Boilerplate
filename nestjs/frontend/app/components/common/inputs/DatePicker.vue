@@ -91,6 +91,7 @@ const selectionMode = computed(() => {
       :show-icon="showIcon"
       :icon-display="iconDisplay"
       :invalid="hasError"
+      size="small"
       @update:model-value="emit('update:modelValue', $event)"
     />
   </FormField>

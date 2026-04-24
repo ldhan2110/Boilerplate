@@ -27,6 +27,8 @@ interface InputProps {
   fluid?: boolean
   /** HTML id */
   id?: string
+  /** Auto-resize textarea */
+  autoResize?: boolean
 }
 
 const props = withDefaults(defineProps<InputProps>(), {
@@ -50,6 +52,12 @@ const resolvedPlaceholder = computed(() => {
 })
 
 const hasError = computed(() => !!props.error)
+
+const showPassword = ref(false)
+const computedType = computed(() => {
+  if (props.type === 'password') return showPassword.value ? 'text' : 'password'
+  return props.type
+})
 </script>
 
 <template>
@@ -69,9 +77,32 @@ const hasError = computed(() => !!props.error)
       :disabled="disabled"
       :fluid="fluid"
       :invalid="hasError"
-      auto-resize
+      :maxRow="rows"
+      :auto-resize="autoResize"
+      size="small"
       @update:model-value="emit('update:modelValue', $event)"
     />
+    <div v-else-if="type === 'password'" class="relative" :class="{ 'w-full': fluid }">
+      <PInputText
+        :id="inputId"
+        :model-value="modelValue"
+        :type="computedType"
+        :placeholder="resolvedPlaceholder"
+        :disabled="disabled"
+        :fluid="fluid"
+        :invalid="hasError"
+        size="small"
+        @update:model-value="emit('update:modelValue', $event)"
+      />
+      <button
+        type="button"
+        tabindex="-1"
+        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        @click="showPassword = !showPassword"
+      >
+        <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm" />
+      </button>
+    </div>
     <PInputText
       v-else
       :id="inputId"
@@ -81,6 +112,7 @@ const hasError = computed(() => !!props.error)
       :disabled="disabled"
       :fluid="fluid"
       :invalid="hasError"
+      size="small"
       @update:model-value="emit('update:modelValue', $event)"
     />
   </FormField>

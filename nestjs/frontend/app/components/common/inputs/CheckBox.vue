@@ -18,6 +18,8 @@ interface CheckBoxProps {
   disabled?: boolean
   /** HTML id */
   id?: string
+  /** PrimeVue Form field name — enables automatic validation integration */
+  name?: string
 }
 
 const props = withDefaults(defineProps<CheckBoxProps>(), {
@@ -37,7 +39,28 @@ const resolvedLabel = computed(() => {
   return te(props.label) ? t(props.label) : props.label
 })
 
-const hasError = computed(() => !!props.error)
+// --- PrimeVue Form integration ---
+const $pcForm = inject('$pcForm', null) as any
+
+if ($pcForm) {
+  watch(() => props.name, (name) => {
+    if (name) {
+      $pcForm.register(name, { name })
+    }
+  }, { immediate: true })
+}
+
+const resolvedError = computed(() => {
+  if (props.name && $pcForm) {
+    const formError = $pcForm.fields?.[props.name]?.states?.error
+    if (formError) return formError.message
+  }
+  const e = props.error
+  if (!e) return undefined
+  return te(e) ? t(e) : e
+})
+
+const hasError = computed(() => !!resolvedError.value)
 </script>
 
 <template>
@@ -62,8 +85,8 @@ const hasError = computed(() => !!props.error)
       </label>
     </div>
 
-    <small v-if="error" class="text-red-500 text-xs">
-      {{ te(error) ? t(error) : error }}
+    <small v-if="resolvedError" class="text-red-500 text-xs">
+      {{ resolvedError }}
     </small>
     <small
       v-else-if="hint"
