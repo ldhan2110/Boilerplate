@@ -4,7 +4,7 @@ const layoutStore = useLayoutStore()
 
 <template>
   <header class="sticky top-0 z-30 flex items-center h-14 px-4 gap-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-    <!-- Mobile burger only -->
+    <!-- Burger — always visible -->
     <PButton
       icon="pi pi-bars"
       severity="secondary"
@@ -14,6 +14,20 @@ const layoutStore = useLayoutStore()
       class="lg:hidden"
       @click="layoutStore.toggleMobileSidebar()"
     />
+    <PButton
+      icon="pi pi-bars"
+      severity="secondary"
+      text
+      rounded
+      size="small"
+      class="hidden lg:flex"
+      @click="layoutStore.toggleSidebar()"
+    />
+
+    <!-- Logo -->
+    <NuxtLink to="/" class="flex items-center">
+      <LayoutAppLogo />
+    </NuxtLink>
 
     <LayoutAppBreadcrumb class="hidden md:flex" />
 
