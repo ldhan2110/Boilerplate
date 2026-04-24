@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Sidebar active item — uses PrimeVue runtime design tokens */
 .sidebar-item-active {
   background-color: var(--p-primary-color);

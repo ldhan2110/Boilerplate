@@ -24,4 +24,7 @@ declare module 'vue' {
     PPopover: typeof import('primevue/popover')['default']
     PToast: typeof import('primevue/toast')['default']
   }
+  export interface ComponentCustomProperties {
+    Tooltip: typeof import('primevue/tooltip')['default']
+  }
 }

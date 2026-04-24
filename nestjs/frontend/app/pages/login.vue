@@ -39,7 +39,9 @@ async function handleLogin() {
         <template #header>
           <div class="text-center pt-6 px-6">
             <div class="flex justify-center mb-4">
-              <AppLogo />
+              <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-primary">
+                <i class="pi pi-prime text-9xl" />
+              </div>
             </div>
             <h1 class="text-xl font-bold text-gray-900 dark:text-white">
               {{ t('login.welcome') }}

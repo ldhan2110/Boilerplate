@@ -6,10 +6,10 @@ const { t } = useI18n()
   <div>
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-        {{ t('sidebar.settings') }}
+        {{ t('sidebar.settingsGeneral') }}
       </h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        Configure application settings
+        General application settings
       </p>
     </div>
 
@@ -18,7 +18,7 @@ const { t } = useI18n()
         <div class="flex flex-col items-center py-8 text-center">
           <i class="pi pi-cog text-4xl text-gray-300 dark:text-gray-600 mb-4" />
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            Application settings will be available here.
+            General settings will be displayed here.
           </p>
         </div>
       </template>

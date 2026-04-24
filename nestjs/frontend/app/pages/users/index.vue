@@ -6,19 +6,19 @@ const { t } = useI18n()
   <div>
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-        {{ t('sidebar.programs') }}
+        {{ t('sidebar.usersList') }}
       </h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        Manage programs and curricula
+        Manage user accounts and permissions
       </p>
     </div>
 
     <PCard>
       <template #content>
         <div class="flex flex-col items-center py-8 text-center">
-          <i class="pi pi-clipboard text-4xl text-gray-300 dark:text-gray-600 mb-4" />
+          <i class="pi pi-users text-4xl text-gray-300 dark:text-gray-600 mb-4" />
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            Program management will be available here.
+            User list will be displayed here.
           </p>
         </div>
       </template>
