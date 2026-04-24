@@ -36,6 +36,8 @@ interface DatePickerProps {
   iconDisplay?: 'input' | 'button'
   /** HTML id */
   id?: string
+  /** Use FloatLabel instead of stacked label */
+  floatLabel?: boolean
 }
 
 const props = withDefaults(defineProps<DatePickerProps>(), {
@@ -74,6 +76,7 @@ const selectionMode = computed(() => {
     :hint="hint"
     :required="required"
     :input-id="inputId"
+    :float-label="floatLabel"
   >
     <PDatePicker
       :id="inputId"

@@ -32,6 +32,8 @@ interface SelectProps {
   id?: string
   /** Enable multiselect mode */
   multiple?: boolean
+  /** Use FloatLabel instead of stacked label */
+  floatLabel?: boolean
 }
 
 const props = withDefaults(defineProps<SelectProps>(), {
@@ -68,6 +70,7 @@ const hasError = computed(() => !!props.error)
     :hint="hint"
     :required="required"
     :input-id="inputId"
+    :float-label="floatLabel"
   >
     <PMultiSelect
       v-if="multiple"

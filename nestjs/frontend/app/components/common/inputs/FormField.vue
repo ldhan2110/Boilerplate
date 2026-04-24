@@ -12,6 +12,8 @@ interface FormFieldProps {
   inputId?: string
   /** PrimeVue Form field name — enables automatic validation integration */
   name?: string
+  /** Use PrimeVue FloatLabel instead of stacked label — saves vertical space */
+  floatLabel?: boolean
 }
 
 const props = defineProps<FormFieldProps>()
@@ -51,16 +53,29 @@ const resolvedError = computed(() => {
 
 <template>
   <div class="flex flex-col gap-1">
-    <label
-      v-if="resolvedLabel"
-      :for="inputId"
-      class="text-xs font-medium text-gray-700 dark:text-gray-300"
-    >
-      {{ resolvedLabel }}
-      <span v-if="required" class="text-red-500 ml-0.5">*</span>
-    </label>
+    <!-- Float label mode -->
+    <template v-if="floatLabel && resolvedLabel">
+      <PFloatLabel variant="on">
+        <slot />
+        <label :for="inputId">
+          {{ resolvedLabel }}
+          <span v-if="required" class="text-red-500 ml-0.5">*</span>
+        </label>
+      </PFloatLabel>
+    </template>
 
-    <slot />
+    <!-- Stacked label mode (default) -->
+    <template v-else>
+      <label
+        v-if="resolvedLabel"
+        :for="inputId"
+        class="text-xs font-medium text-gray-700 dark:text-gray-300"
+      >
+        {{ resolvedLabel }}
+        <span v-if="required" class="text-red-500 ml-0.5">*</span>
+      </label>
+      <slot />
+    </template>
 
     <small
       v-if="resolvedError"

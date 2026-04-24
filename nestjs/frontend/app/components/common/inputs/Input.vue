@@ -29,6 +29,8 @@ interface InputProps {
   id?: string
   /** Auto-resize textarea */
   autoResize?: boolean
+  /** Use FloatLabel instead of stacked label */
+  floatLabel?: boolean
 }
 
 const props = withDefaults(defineProps<InputProps>(), {
@@ -67,6 +69,7 @@ const computedType = computed(() => {
     :hint="hint"
     :required="required"
     :input-id="inputId"
+    :float-label="floatLabel"
   >
     <PTextarea
       v-if="variant === 'textarea'"

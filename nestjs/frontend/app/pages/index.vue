@@ -43,7 +43,10 @@ const formSchema = z.object({
   newsletter: z.boolean().optional(),
   startDate: z.any().nullable().optional(),
   dateRange: z.any().nullable().optional(),
-  content: z.string().optional()
+  content: z.string().optional(),
+  age: z.number().min(1, 'Age must be at least 1').max(150, 'Age must be at most 150').nullable().optional(),
+  price: z.number().min(0, 'Price must be positive').nullable().optional(),
+  quantity: z.number().int().min(0).nullable().optional()
 })
 
 const lastSubmitted = ref<Record<string, unknown> | null>(null)
@@ -62,7 +65,10 @@ const { formProps, formRef, field, values, isDirty, isSubmitting, resetForm } = 
     newsletter: false,
     startDate: null,
     dateRange: null,
-    content: ''
+    content: '',
+    age: null,
+    price: null,
+    quantity: 0
   },
   onSubmit: async (vals) => {
     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -158,6 +164,34 @@ const countries = [
                 :rows="4"
                 :autoResize="true"
               />
+
+              <!-- InputNumber -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <InputNumber
+                  v-bind="field('age')"
+                  label="Age"
+                  :min="1"
+                  :max="150"
+                  placeholder="Enter age"
+                  hint="1–150"
+                />
+                <InputNumber
+                  v-bind="field('price')"
+                  label="Price"
+                  mode="currency"
+                  currency="USD"
+                  :min-fraction-digits="2"
+                  placeholder="0.00"
+                />
+                <InputNumber
+                  v-bind="field('quantity')"
+                  label="Quantity"
+                  show-buttons
+                  :min="0"
+                  :max="100"
+                  suffix=" pcs"
+                />
+              </div>
 
               <!-- Select -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
