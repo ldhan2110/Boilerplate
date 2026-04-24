@@ -2,16 +2,29 @@
 import { resolveMenuIcon } from '~/utils/constants/menuIcons'
 import menuData from '~/data/menu.json'
 
+interface MenuItem {
+  id: string
+  label: string
+  icon?: string
+  to?: string
+  children?: { id: string; label: string; to: string }[]
+}
+
 const { t } = useI18n()
 const layoutStore = useLayoutStore()
 const route = useRoute()
-const userStore = useUserStore()
 
-const menuSections = computed(() =>
-  menuData.map(section => ({
-    items: section.items.map(item => ({
-      ...item,
-      label: t(item.label)
+const expandedMenus = ref<Set<string>>(new Set())
+const hoveredItem = ref<string | null>(null)
+let hoverTimeout: ReturnType<typeof setTimeout> | null = null
+
+const menuItems = computed(() =>
+  (menuData as MenuItem[]).map(item => ({
+    ...item,
+    label: t(item.label),
+    children: item.children?.map(child => ({
+      ...child,
+      label: t(child.label)
     }))
   }))
 )
@@ -19,66 +32,165 @@ const menuSections = computed(() =>
 function isActive(to?: string) {
   return to ? route.path === to : false
 }
+
+function isParentActive(item: MenuItem) {
+  return item.children?.some(child => route.path === child.to) ?? false
+}
+
+function toggleMenu(id: string) {
+  if (expandedMenus.value.has(id)) {
+    expandedMenus.value.delete(id)
+  } else {
+    expandedMenus.value.add(id)
+  }
+}
+
+function isExpanded(id: string) {
+  return expandedMenus.value.has(id)
+}
+
+function onIconMouseEnter(id: string) {
+  if (hoverTimeout) clearTimeout(hoverTimeout)
+  hoveredItem.value = id
+}
+
+function onIconMouseLeave() {
+  hoverTimeout = setTimeout(() => {
+    hoveredItem.value = null
+  }, 200)
+}
+
+function onPanelMouseEnter() {
+  if (hoverTimeout) clearTimeout(hoverTimeout)
+}
+
+function onPanelMouseLeave() {
+  hoveredItem.value = null
+}
+
+// Auto-expand parent menus when a child route is active
+watchEffect(() => {
+  for (const item of menuData as MenuItem[]) {
+    if (item.children?.some(child => route.path === child.to)) {
+      expandedMenus.value.add(item.id)
+    }
+  }
+})
 </script>
 
 <template>
   <!-- Desktop sidebar -->
   <aside
-    class="hidden lg:flex flex-col shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300 h-screen sticky top-0"
-    :class="layoutStore.sidebarCollapsed ? 'w-[4.5rem]' : 'w-64'"
+    class="hidden lg:flex flex-col shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300 overflow-visible"
+    :class="layoutStore.sidebarCollapsed ? 'w-14' : 'w-56'"
   >
-    <!-- Logo area -->
-    <div class="flex items-center justify-between h-14 px-3 border-b border-gray-200 dark:border-gray-800">
-      <NuxtLink to="/" class="flex items-center">
-        <AppLogo :collapsed="layoutStore.sidebarCollapsed" />
-      </NuxtLink>
-    </div>
-
-    <!-- Menu -->
-    <nav class="flex-1 overflow-y-auto px-3 py-4">
-      <div v-for="(section, sIdx) in menuSections" :key="section.title" :class="sIdx > 0 ? 'mt-6' : ''">
-        <p
-          v-if="!layoutStore.sidebarCollapsed"
-          class="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 select-none"
-        >
-          {{ section.title }}
-        </p>
-        <div v-else class="mb-2 mx-2 border-b border-gray-200 dark:border-gray-800" />
-
-        <ul class="flex flex-col gap-1">
-          <li v-for="item in section.items" :key="item.id">
-            <NuxtLink
-              :to="item.to || '/'"
-              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-              :class="[
-                isActive(item.to)
-                  ? 'sidebar-item-active shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100',
-                layoutStore.sidebarCollapsed ? 'justify-center px-0' : ''
-              ]"
-              :title="layoutStore.sidebarCollapsed ? item.label : undefined"
+    <!-- Expanded menu -->
+    <nav v-if="!layoutStore.sidebarCollapsed" class="flex-1 overflow-y-auto px-3 py-4">
+      <ul class="flex flex-col gap-1">
+        <li v-for="item in menuItems" :key="item.id">
+          <!-- Parent with children -->
+          <template v-if="item.children?.length">
+            <button
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+              :class="isParentActive(item as MenuItem)
+                ? 'sidebar-item-active shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
+              @click="toggleMenu(item.id)"
             >
+              <i :class="resolveMenuIcon(item.icon)" class="text-lg shrink-0 w-5 text-center" />
+              <span class="truncate flex-1 text-left">{{ item.label }}</span>
               <i
-                :class="resolveMenuIcon(item.icon)"
-                class="text-lg shrink-0 w-5 text-center"
+                class="pi text-xs transition-transform duration-200"
+                :class="isExpanded(item.id) ? 'pi-chevron-down' : 'pi-chevron-right'"
               />
-              <span v-if="!layoutStore.sidebarCollapsed" class="truncate">{{ item.label }}</span>
-            </NuxtLink>
-          </li>
-        </ul>
-      </div>
+            </button>
+
+            <!-- Children -->
+            <ul v-if="isExpanded(item.id)" class="mt-1 ml-5 pl-3 border-l border-gray-200 dark:border-gray-700 flex flex-col gap-1">
+              <li v-for="child in item.children" :key="child.id">
+                <NuxtLink
+                  :to="child.to"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200"
+                  :class="isActive(child.to)
+                    ? 'sidebar-item-active shadow-sm font-medium'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
+                >
+                  <span class="truncate">{{ child.label }}</span>
+                </NuxtLink>
+              </li>
+            </ul>
+          </template>
+
+          <!-- Simple link (no children) -->
+          <NuxtLink
+            v-else
+            :to="item.to || '/'"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="isActive(item.to)
+              ? 'sidebar-item-active shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
+          >
+            <i :class="resolveMenuIcon(item.icon)" class="text-lg shrink-0 w-5 text-center" />
+            <span class="truncate">{{ item.label }}</span>
+          </NuxtLink>
+        </li>
+      </ul>
     </nav>
 
-    <!-- Collapse toggle -->
-    <div class="border-t border-gray-200 dark:border-gray-800 p-2">
-      <button
-        class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-        @click="layoutStore.toggleSidebar()"
+    <!-- Collapsed icon rail -->
+    <nav v-else class="flex-1 overflow-visible py-4 flex flex-col items-center gap-1 relative">
+      <div
+        v-for="item in menuItems"
+        :key="item.id"
+        class="relative"
+        @mouseenter="onIconMouseEnter(item.id)"
+        @mouseleave="onIconMouseLeave()"
       >
-        <i :class="layoutStore.sidebarCollapsed ? 'pi pi-angle-double-right' : 'pi pi-angle-double-left'" class="text-base" />
-        <span v-if="!layoutStore.sidebarCollapsed" class="text-xs font-medium">Collapse</span>
-      </button>
-    </div>
+        <!-- Icon button — simple link (no children) -->
+        <NuxtLink
+          v-if="!item.children?.length"
+          :to="item.to || '/'"
+          class="flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200"
+          :class="isActive(item.to)
+            ? 'sidebar-item-active shadow-sm'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
+          v-tooltip.right="item.label"
+        >
+          <i :class="resolveMenuIcon(item.icon)" class="text-lg" />
+        </NuxtLink>
+
+        <!-- Icon button — has children -->
+        <button
+          v-else
+          class="flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200"
+          :class="isParentActive(item as MenuItem)
+            ? 'sidebar-item-active shadow-sm'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
+        >
+          <i :class="resolveMenuIcon(item.icon)" class="text-lg" />
+        </button>
+
+        <!-- Hover flyout panel (children only, no parent label) -->
+        <div
+          v-if="item.children?.length && hoveredItem === item.id"
+          class="absolute left-full top-0 ml-2 w-44 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50"
+          @mouseenter="onPanelMouseEnter()"
+          @mouseleave="onPanelMouseLeave()"
+        >
+          <NuxtLink
+            v-for="child in item.children"
+            :key="child.id"
+            :to="child.to"
+            class="flex items-center px-3 py-2 text-sm transition-colors duration-150"
+            :class="isActive(child.to)
+              ? 'sidebar-item-active font-medium'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
+          >
+            <span class="truncate">{{ child.label }}</span>
+          </NuxtLink>
+        </div>
+      </div>
+    </nav>
   </aside>
 
   <!-- Mobile sidebar overlay -->
@@ -90,30 +202,60 @@ function isActive(to?: string) {
     :modal="true"
   >
     <template #header>
-      <AppLogo />
+      <LayoutAppLogo />
     </template>
 
     <nav class="px-2 py-2">
-      <div v-for="(section, sIdx) in menuSections" :key="section.title" :class="sIdx > 0 ? 'mt-5' : ''">
-        <p class="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 select-none">
-          {{ section.title }}
-        </p>
-        <ul class="flex flex-col gap-1">
-          <li v-for="item in section.items" :key="item.id">
-            <NuxtLink
-              :to="item.to || '/'"
-              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-              :class="isActive(item.to)
+      <ul class="flex flex-col gap-1">
+        <li v-for="item in menuItems" :key="item.id">
+          <!-- Parent with children (mobile) -->
+          <template v-if="item.children?.length">
+            <button
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+              :class="isParentActive(item as MenuItem)
                 ? 'sidebar-item-active shadow-sm'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
-              @click="layoutStore.closeMobileSidebar()"
+              @click="toggleMenu(item.id)"
             >
               <i :class="resolveMenuIcon(item.icon)" class="text-lg shrink-0 w-5 text-center" />
-              <span class="truncate">{{ item.label }}</span>
-            </NuxtLink>
-          </li>
-        </ul>
-      </div>
+              <span class="truncate flex-1 text-left">{{ item.label }}</span>
+              <i
+                class="pi text-xs transition-transform duration-200"
+                :class="isExpanded(item.id) ? 'pi-chevron-down' : 'pi-chevron-right'"
+              />
+            </button>
+
+            <ul v-if="isExpanded(item.id)" class="mt-1 ml-5 pl-3 border-l border-gray-200 dark:border-gray-700 flex flex-col gap-1">
+              <li v-for="child in item.children" :key="child.id">
+                <NuxtLink
+                  :to="child.to"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200"
+                  :class="isActive(child.to)
+                    ? 'sidebar-item-active shadow-sm font-medium'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
+                  @click="layoutStore.closeMobileSidebar()"
+                >
+                  <span class="truncate">{{ child.label }}</span>
+                </NuxtLink>
+              </li>
+            </ul>
+          </template>
+
+          <!-- Simple link (mobile) -->
+          <NuxtLink
+            v-else
+            :to="item.to || '/'"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="isActive(item.to)
+              ? 'sidebar-item-active shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'"
+            @click="layoutStore.closeMobileSidebar()"
+          >
+            <i :class="resolveMenuIcon(item.icon)" class="text-lg shrink-0 w-5 text-center" />
+            <span class="truncate">{{ item.label }}</span>
+          </NuxtLink>
+        </li>
+      </ul>
     </nav>
   </PDrawer>
 </template>
