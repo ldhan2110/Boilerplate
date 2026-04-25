@@ -28,9 +28,9 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     defaultColumnWidth = ref(150),
   } = options
 
-  const initialSnapshot = JSON.parse(JSON.stringify(columns.value)) as ColumnDef[]
+  const initialSnapshot = columns.value.map(col => ({ ...col }))
   const columnState = shallowReactive<ColumnDef[]>(
-    JSON.parse(JSON.stringify(columns.value)) as ColumnDef[]
+    columns.value.map(col => ({ ...col }))
   )
 
   for (const col of columnState) {
@@ -87,7 +87,7 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
   }
 
   function resetColumns() {
-    const restored = JSON.parse(JSON.stringify(initialSnapshot)) as ColumnDef[]
+    const restored = initialSnapshot.map(col => ({ ...col }))
     columnState.length = 0
     columnState.push(...restored)
     frozenFields.value = new Set(frozenColumns?.value ?? [])

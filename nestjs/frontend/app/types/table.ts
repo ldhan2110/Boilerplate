@@ -1,3 +1,5 @@
+import type { VNode } from 'vue'
+
 export type DataMode = 'pagination' | 'infiniteScroll'
 export type BackendMode = 'client' | 'server'
 export type SortMode = 'single' | 'multiple' | 'none'
@@ -26,6 +28,7 @@ export interface ColumnDef {
   frozen?: boolean
   hidden?: boolean
   align?: 'left' | 'center' | 'right'
+  render?: (val: any, row: any, col: ColumnDef) => VNode | VNode[]
   format?: (val: any, row: any) => string
   aggregation?: AggregationType
   excelProps?: ExcelProps

@@ -349,7 +349,8 @@ defineExpose({
               />
               <slot :name="`body-${col.field}`" :data="data" :column="col" :index="index">
                 <span :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
-                  {{ edit.getCellDisplayValue(data[col.field], data, col) }}
+                  <component v-if="col.render" :is="() => col.render!(data[col.field], data, col)" />
+                  <template v-else>{{ edit.getCellDisplayValue(data[col.field], data, col) }}</template>
                 </span>
               </slot>
             </div>
@@ -370,7 +371,8 @@ defineExpose({
             </template>
             <template v-else>
               <span :class="{ 'opacity-50': edit.isCellDisabled(data, field) }">
-                {{ edit.getCellDisplayValue(data[field], data, col) }}
+                <component v-if="col.render" :is="() => col.render!(data[field], data, col)" />
+                <template v-else>{{ edit.getCellDisplayValue(data[field], data, col) }}</template>
               </span>
             </template>
             </div>

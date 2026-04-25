@@ -416,20 +416,7 @@ const tableCellConfig = (row: any, field: string) => {
             @row-edit-save="logTableEvent('edit-save', { field: $event.field })"
             @selection-change="logTableEvent('selection', { count: $event.length })"
             @refresh="logTableEvent('refresh', {})"
-          >
-            <template #body-status="{ data }">
-              <span
-                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                :class="{
-                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400': data.status === 'active',
-                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400': data.status === 'inactive',
-                  'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400': data.status === 'probation',
-                }"
-              >
-                {{ data.status?.charAt(0).toUpperCase() + data.status?.slice(1) }}
-              </span>
-            </template>
-          </AppDataTable>
+          />
 
           <div v-if="tableEventLog.length > 0" class="mt-4">
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Event Log</p>
