@@ -248,22 +248,8 @@ defineExpose({
     @keydown="edit.handleKeyDown"
   >
     <!-- Toolbar slot -->
-    <div v-if="$slots.toolbar || sort.sortChips.value.length > 0" class="mb-2 flex items-center gap-2 flex-wrap">
+    <div v-if="$slots.toolbar" class="mb-2 flex items-center gap-2 flex-wrap">
       <slot name="toolbar" />
-      <!-- Sort chips (server mode) -->
-      <template v-if="sortBackend === 'server' && sort.sortChips.value.length > 0">
-        <span
-          v-for="chip in sort.sortChips.value"
-          :key="chip.field"
-          class="inline-flex items-center gap-1 rounded-full bg-primary-100 dark:bg-primary-900 px-2 py-0.5 text-xs"
-        >
-          {{ chip.label }}
-          <button class="pi pi-times text-xs cursor-pointer" @click="sort.removeFromSort(chip.field)" />
-        </span>
-        <button class="text-xs text-surface-500 hover:text-surface-700 cursor-pointer" @click="sort.clearSort()">
-          {{ $t('table.clearAllSorts') }}
-        </button>
-      </template>
     </div>
 
     <!-- Loading overlay for refresh -->
@@ -330,7 +316,7 @@ defineExpose({
           <!-- Header with context menu trigger -->
           <template #header>
             <div
-              class="flex items-center gap-1 w-full"
+              class="flex items-center gap-1 w-full font-bold"
               @contextmenu.prevent="menus.onHeaderContextMenu($event, col)"
             >
               <slot :name="`header-${col.field}`" :column="col">
@@ -341,14 +327,14 @@ defineExpose({
 
           <!-- Body -->
           <template #body="{ data, index }">
-            <div :data-field="col.field" class="relative">
+            <div :data-field="col.field" class="cell-content relative">
               <!-- Dirty indicator (first visible column only) -->
               <span
                 v-if="col === columns.visibleColumns.value[0] && edit.dirtyRows.value.has(data[rowKey])"
                 class="absolute top-1 left-0 w-1.5 h-1.5 rounded-full bg-amber-500"
               />
               <slot :name="`body-${col.field}`" :data="data" :column="col" :index="index">
-                <span :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
+                <span class="cell-text" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
                   <component v-if="col.render" :is="() => col.render!(data[col.field], data, col)" />
                   <template v-else>{{ edit.getCellDisplayValue(data[col.field], data, col) }}</template>
                 </span>
@@ -358,7 +344,7 @@ defineExpose({
 
           <!-- Cell editor -->
           <template v-if="editable && editMode === 'cell'" #editor="{ data, field, index }">
-            <div :data-field="field" @keydown.tab.prevent.stop="edit.handleKeyDown($event)">
+            <div :data-field="field" class="cell-editor" @keydown.tab.prevent.stop="edit.handleKeyDown($event)">
             <template v-if="edit.isCellEditable(data, field) && !edit.isCellDisabled(data, field)">
               <TableCellEditor
                 :value="data[field]"
@@ -370,7 +356,7 @@ defineExpose({
               />
             </template>
             <template v-else>
-              <span :class="{ 'opacity-50': edit.isCellDisabled(data, field) }">
+              <span class="cell-text" :class="{ 'opacity-50': edit.isCellDisabled(data, field) }">
                 <component v-if="col.render" :is="() => col.render!(data[field], data, col)" />
                 <template v-else>{{ edit.getCellDisplayValue(data[field], data, col) }}</template>
               </span>
@@ -463,6 +449,40 @@ defineExpose({
 
 :deep(.dark) .app-data-table.is-fullscreen {
   background: var(--p-surface-900);
+}
+
+/* Slightly reduced cell padding */
+:deep(.p-datatable-tbody > tr > td),
+:deep(.p-datatable-thead > tr > th) {
+  padding: 0.5rem 0.75rem;
+}
+
+/* Force cells to respect column width and truncate overflow */
+:deep(.p-datatable-tbody > tr > td) {
+  max-width: 0;
+}
+
+.cell-content {
+  overflow: hidden;
+}
+
+.cell-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Editor container: constrain width so inputs don't overflow */
+.cell-editor {
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Truncate text inside editor inputs */
+:deep(.cell-editor input) {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Compact paginator styling */

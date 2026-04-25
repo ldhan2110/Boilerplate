@@ -81,6 +81,9 @@ onMounted(() => {
     ref="inputRef"
     v-model="localValue"
     :options="editOptions"
+    filter
+    showClear
+    resetFilterOnClear
     v-bind="editProps"
     class="w-full"
   />
@@ -89,6 +92,9 @@ onMounted(() => {
     ref="inputRef"
     v-model="localValue"
     :options="editOptions"
+    filter
+    showClear
+    resetFilterOnClear
     v-bind="editProps"
     class="w-full"
   />
