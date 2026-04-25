@@ -37,7 +37,7 @@ const props = withDefaults(defineProps<AppDataTableProps>(), {
   selectionMode: 'multiple',
   tableHeight: undefined,
   showGridlines: true,
-  stripedRows: true,
+  stripedRows: false,
   resizableColumns: true,
   reorderableColumns: true,
   stickyHeader: true,
@@ -303,7 +303,6 @@ defineExpose({
           :frozen="true"
           :style="{
             width: '50px',
-            background: 'white',
             borderRight: '0.5px solid #E2E8F0',
             zIndex: 1,
           }"
@@ -452,6 +451,10 @@ defineExpose({
   background: var(--p-surface-0);
 }
 
+:deep(td) {
+  padding: 0px;
+}
+
 :deep(.dark) .app-data-table.is-fullscreen {
   background: var(--p-surface-900);
 }
@@ -483,6 +486,11 @@ defineExpose({
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Remove td padding when cell editor is active */
+:deep(td[data-p-cell-editing='true']) {
+  padding: 0px !important;
 }
 
 /* Editor container: constrain width so inputs don't overflow */
