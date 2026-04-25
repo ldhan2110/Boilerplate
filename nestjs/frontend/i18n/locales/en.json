@@ -70,5 +70,31 @@
     "blue": "Blue",
     "purple": "Purple",
     "orange": "Orange"
+  },
+  "table": {
+    "sortAscending": "Sort ascending",
+    "sortDescending": "Sort descending",
+    "addToSort": "Add to sort",
+    "removeFromSort": "Remove from sort",
+    "clearAllSorts": "Clear all sorts",
+    "freezeColumn": "Freeze column",
+    "unfreezeColumn": "Unfreeze column",
+    "columns": "Columns",
+    "showAllColumns": "Show all columns",
+    "resetToDefault": "Reset to default",
+    "copyRow": "Copy row",
+    "copySelected": "Copy selected rows",
+    "refresh": "Refresh",
+    "exportVisible": "Export visible",
+    "fullScreen": "Full screen",
+    "exitFullScreen": "Exit full screen",
+    "insertAbove": "Insert row above",
+    "insertBelow": "Insert row below",
+    "duplicateRow": "Duplicate row",
+    "deleteRow": "Delete row",
+    "deleteSelected": "Delete selected",
+    "deleteConfirmMessage": "Are you sure you want to delete?",
+    "totals": "Totals",
+    "noData": "No data found"
   }
 }

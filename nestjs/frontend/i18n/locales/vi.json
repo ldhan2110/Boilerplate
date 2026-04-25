@@ -70,5 +70,31 @@
     "blue": "Xanh dương",
     "purple": "Tím",
     "orange": "Cam"
+  },
+  "table": {
+    "sortAscending": "Sắp xếp tăng dần",
+    "sortDescending": "Sắp xếp giảm dần",
+    "addToSort": "Thêm vào sắp xếp",
+    "removeFromSort": "Bỏ khỏi sắp xếp",
+    "clearAllSorts": "Xóa tất cả sắp xếp",
+    "freezeColumn": "Cố định cột",
+    "unfreezeColumn": "Bỏ cố định cột",
+    "columns": "Các cột",
+    "showAllColumns": "Hiện tất cả cột",
+    "resetToDefault": "Đặt lại mặc định",
+    "copyRow": "Sao chép dòng",
+    "copySelected": "Sao chép các dòng đã chọn",
+    "refresh": "Làm mới",
+    "exportVisible": "Xuất dữ liệu hiện tại",
+    "fullScreen": "Toàn màn hình",
+    "exitFullScreen": "Thoát toàn màn hình",
+    "insertAbove": "Thêm dòng phía trên",
+    "insertBelow": "Thêm dòng phía dưới",
+    "duplicateRow": "Nhân bản dòng",
+    "deleteRow": "Xóa dòng",
+    "deleteSelected": "Xóa các dòng đã chọn",
+    "deleteConfirmMessage": "Bạn có chắc chắn muốn xóa?",
+    "totals": "Tổng cộng",
+    "noData": "Không có dữ liệu"
   }
 }

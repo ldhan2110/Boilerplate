@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { z } from 'zod'
 import { Form } from '@primevue/forms'
+import type { ColumnDef, EditSaveEvent, PageEvent, SortEvent } from '~/types/table'
 
 const { t } = useI18n()
 const toast = useAppToast()
@@ -110,6 +111,44 @@ const countries = [
   { name: 'France', code: 'FR' },
   { name: 'United Kingdom', code: 'GB' }
 ]
+
+// --- AppDataTable demo ---
+const tableRef = ref()
+const tableEventLog = ref<string[]>([])
+
+function logTableEvent(event: string, data: any) {
+  tableEventLog.value.unshift(`[${new Date().toLocaleTimeString()}] ${event}: ${JSON.stringify(data)}`)
+  if (tableEventLog.value.length > 10) tableEventLog.value.pop()
+}
+
+const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance']
+const employeeStatuses = ['active', 'inactive', 'probation']
+
+const employees = ref(
+  Array.from({ length: 50 }, (_, i) => ({
+    id: i + 1,
+    name: `Employee ${i + 1}`,
+    department: departments[i % departments.length],
+    salary: Math.round(40000 + Math.random() * 60000),
+    status: employeeStatuses[i % employeeStatuses.length],
+    hireDate: new Date(2020 + Math.floor(Math.random() * 5), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0],
+  }))
+)
+
+const tableColumns: ColumnDef[] = [
+  { field: 'id', header: 'ID', width: 70, frozen: true, editable: false, sortable: true, align: 'center' },
+  { field: 'name', header: 'Name', width: 180, editable: true, editType: 'input', sortable: true },
+  { field: 'department', header: 'Department', width: 150, editable: true, editType: 'select', editOptions: departments, sortable: true },
+  { field: 'salary', header: 'Salary', width: 130, editable: true, editType: 'number', align: 'right', sortable: true, aggregation: 'sum', format: (val) => val != null ? `$${Number(val).toLocaleString()}` : '' },
+  { field: 'status', header: 'Status', width: 120, editable: true, editType: 'select', editOptions: employeeStatuses, sortable: true, format: (val) => val ? val.charAt(0).toUpperCase() + val.slice(1) : '' },
+  { field: 'hireDate', header: 'Hire Date', width: 130, editable: false, sortable: true },
+]
+
+const tableCellConfig = (row: any, field: string) => {
+  if (field === 'salary' && row.status === 'inactive') {
+    return { disabled: true, editable: false, render: () => 'N/A' }
+  }
+}
 </script>
 
 <template>
@@ -338,6 +377,68 @@ const countries = [
               </div>
             </Form>
           </ClientOnly>
+        </template>
+      </PCard>
+
+      <!-- AppDataTable Demo -->
+      <PCard>
+        <template #title>
+          <span class="text-base">AppDataTable Demo</span>
+        </template>
+        <template #content>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <Button label="Export CSV" icon="pi pi-file" variant="secondary" size="sm" @click="tableRef?.exportTable('csv', 'all')" />
+            <Button label="Export XLSX" icon="pi pi-file-excel" variant="success" size="sm" @click="tableRef?.exportTable('xlsx', 'all')" />
+            <Button label="Clear Selection" icon="pi pi-times" variant="secondary" size="sm" outlined @click="tableRef?.clearSelection()" />
+          </div>
+
+          <AppDataTable
+            ref="tableRef"
+            :rows="employees"
+            :columns="tableColumns"
+            table-height="400px"
+            data-mode="pagination"
+            :page-size="10"
+            pagination-mode="client"
+            sort-mode="multiple"
+            sort-backend="client"
+            :editable="true"
+            edit-mode="cell"
+            :selectable="true"
+            selection-mode="checkbox"
+            :show-footer="true"
+            :header-context-menu="true"
+            :row-context-menu="true"
+            export-filename="employees"
+            :cell-config="tableCellConfig"
+            @page="logTableEvent('page', $event)"
+            @sort="logTableEvent('sort', $event)"
+            @row-edit-save="logTableEvent('edit-save', { field: $event.field })"
+            @selection-change="logTableEvent('selection', { count: $event.length })"
+            @refresh="logTableEvent('refresh', {})"
+          >
+            <template #body-status="{ data }">
+              <span
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                :class="{
+                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400': data.status === 'active',
+                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400': data.status === 'inactive',
+                  'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400': data.status === 'probation',
+                }"
+              >
+                {{ data.status?.charAt(0).toUpperCase() + data.status?.slice(1) }}
+              </span>
+            </template>
+          </AppDataTable>
+
+          <div v-if="tableEventLog.length > 0" class="mt-4">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Event Log</p>
+            <div class="bg-gray-50 dark:bg-gray-800 rounded p-3 text-xs font-mono max-h-32 overflow-y-auto">
+              <div v-for="(entry, i) in tableEventLog" :key="i" class="py-0.5 text-gray-600 dark:text-gray-300">
+                {{ entry }}
+              </div>
+            </div>
+          </div>
         </template>
       </PCard>
 

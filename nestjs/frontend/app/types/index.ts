@@ -13,3 +13,24 @@ export {
 } from './user'
 
 export type { AppMenuItem } from './menu'
+
+export type {
+  DataMode,
+  BackendMode,
+  SortMode,
+  EditMode,
+  SelectionMode,
+  EditType,
+  AggregationType,
+  ExportFormat,
+  ExportScope,
+  ExcelProps,
+  ColumnDef,
+  FooterAgg,
+  CellConfig,
+  PageEvent,
+  SortEvent,
+  EditSaveEvent,
+  AppDataTableProps,
+  AppDataTableEmits
+} from './table'
