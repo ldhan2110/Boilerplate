@@ -414,15 +414,24 @@ defineExpose({
       />
     </div>
 
-    <!-- Paginator -->
-    <PPaginator
-      v-if="pagination.showPaginator.value"
-      :first="pagination.first.value"
-      :rows="pagination.currentPageSize.value"
-      :total-records="pagination.totalCount.value"
-      :rows-per-page-options="pageSizeOptions"
-      @page="pagination.onPageChange"
-    />
+    <!-- Paginator with total rows display -->
+    <div v-if="pagination.showPaginator.value" class="flex items-center justify-between gap-4 mt-2 min-h-8">
+      <!-- Paginator in center -->
+      <div class="flex-1 flex justify-center">
+        <PPaginator
+          :first="pagination.first.value"
+          :rows="pagination.currentPageSize.value"
+          :total-records="pagination.totalCount.value"
+          :rows-per-page-options="pageSizeOptions"
+          @page="pagination.onPageChange"
+          class="app-paginator-compact"
+        />
+      </div>
+      <!-- Total rows display (fixed on right) -->
+      <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-[5px]">
+        Total: {{ pagination.totalCount.value }} row(s)
+      </span>
+    </div>
 
     <!-- Context menus -->
     <PContextMenu
@@ -452,5 +461,69 @@ defineExpose({
 
 :deep(.dark) .app-data-table.is-fullscreen {
   background: var(--p-surface-900);
+}
+
+/* Compact paginator styling */
+:deep(.p-paginator) {
+  padding: 0 !important;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+}
+
+:deep(.p-paginator .p-paginator-content) {
+  gap: 0.25rem;
+}
+
+:deep(.p-paginator .p-paginator-current) {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+}
+
+/* Rows-per-page Select */
+:deep(.p-paginator .p-paginator-rpp-dropdown) {
+  font-size: 0.75rem;
+  height: 1.625rem;
+}
+
+:deep(.p-paginator .p-paginator-rpp-dropdown .p-select-label) {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+:deep(.p-paginator .p-paginator-rpp-dropdown .p-select-dropdown) {
+  width: 1.375rem;
+}
+
+:deep(.p-paginator .p-paginator-rpp-dropdown .p-select-dropdown .p-icon) {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+/* Navigation buttons */
+:deep(.p-paginator .p-paginator-pages) {
+  gap: 0.125rem;
+}
+
+:deep(.p-paginator .p-paginator-page),
+:deep(.p-paginator .p-paginator-next),
+:deep(.p-paginator .p-paginator-prev),
+:deep(.p-paginator .p-paginator-first),
+:deep(.p-paginator .p-paginator-last) {
+  font-size: 0.75rem;
+  min-width: 1.625rem;
+  height: 1.625rem;
+  padding: 0;
+}
+
+:deep(.p-paginator .p-paginator-first .p-icon),
+:deep(.p-paginator .p-paginator-prev .p-icon),
+:deep(.p-paginator .p-paginator-next .p-icon),
+:deep(.p-paginator .p-paginator-last .p-icon) {
+  width: 0.65rem;
+  height: 0.65rem;
 }
 </style>
