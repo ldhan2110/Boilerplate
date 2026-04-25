@@ -26,7 +26,29 @@ const localValue = computed({
 
 onMounted(() => {
   nextTick(() => {
-    const el = inputRef.value?.$el?.querySelector('input') ?? inputRef.value?.$el
+    const root = inputRef.value?.$el
+    if (!root) return
+
+    // PSelect / PMultiSelect: focus the combobox span
+    const combobox = root.querySelector?.('[role="combobox"]') ?? (root.getAttribute?.('role') === 'combobox' ? root : null)
+    if (combobox) {
+      combobox.focus()
+      return
+    }
+
+    // PDatePicker: focus input without opening popup
+    if (editType.value === 'date') {
+      const dateInput: HTMLInputElement | null = root.querySelector?.('input') ?? root
+      if (dateInput?.focus) {
+        const blocker = (e: FocusEvent) => e.stopImmediatePropagation()
+        dateInput.addEventListener('focus', blocker, { capture: true, once: true })
+        dateInput.focus()
+      }
+      return
+    }
+
+    // Standard inputs
+    const el = root.querySelector?.('input') ?? root
     el?.focus()
   })
 })

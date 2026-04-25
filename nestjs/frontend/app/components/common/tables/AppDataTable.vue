@@ -50,7 +50,7 @@ const props = withDefaults(defineProps<AppDataTableProps>(), {
   footerAggregations: () => [],
   exportFormats: () => ['csv', 'xlsx'] as ExportFormat[],
   frozenColumns: () => [],
-  editableColumns: () => [],
+  editableColumns: undefined,
 })
 
 const emit = defineEmits<{
@@ -296,6 +296,7 @@ defineExpose({
         :lazy="paginationMode === 'server'"
         @sort="sort.onSort"
 
+        @cell-edit-init="edit.onCellEditInit"
         @cell-edit-complete="edit.onCellEditComplete"
         @row-edit-save="edit.onRowEditSave"
         @row-contextmenu="menus.onRowContextMenu"
@@ -355,7 +356,8 @@ defineExpose({
           </template>
 
           <!-- Cell editor -->
-          <template v-if="editable && editMode === 'cell'" #editor="{ data, field }">
+          <template v-if="editable && editMode === 'cell'" #editor="{ data, field, index }">
+            <div :data-field="field" @keydown.tab.prevent.stop="edit.handleKeyDown($event)">
             <template v-if="edit.isCellEditable(data, field) && !edit.isCellDisabled(data, field)">
               <TableCellEditor
                 :value="data[field]"
@@ -371,6 +373,7 @@ defineExpose({
                 {{ edit.getCellDisplayValue(data[field], data, col) }}
               </span>
             </template>
+            </div>
           </template>
 
           <!-- Footer -->

@@ -141,7 +141,7 @@ const tableColumns: ColumnDef[] = [
   { field: 'department', header: 'Department', width: 150, editable: true, editType: 'select', editOptions: departments, sortable: true },
   { field: 'salary', header: 'Salary', width: 130, editable: true, editType: 'number', align: 'right', sortable: true, aggregation: 'sum', format: (val) => val != null ? `$${Number(val).toLocaleString()}` : '' },
   { field: 'status', header: 'Status', width: 120, editable: true, editType: 'select', editOptions: employeeStatuses, sortable: true, format: (val) => val ? val.charAt(0).toUpperCase() + val.slice(1) : '' },
-  { field: 'hireDate', header: 'Hire Date', width: 130, editable: false, sortable: true },
+  { field: 'hireDate', header: 'Hire Date', width: 130, editable: true, editType: 'date', sortable: true },
 ]
 
 const tableCellConfig = (row: any, field: string) => {

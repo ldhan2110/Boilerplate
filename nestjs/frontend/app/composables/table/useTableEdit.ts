@@ -23,6 +23,7 @@ export interface UseTableEditReturn {
   editingRows: Ref<any[]>
   cellConfigs: Ref<Map<string | number, Record<string, CellConfig>>>
   handleKeyDown: (e: KeyboardEvent) => void
+  onCellEditInit: (event: any) => void
   onCellEditComplete: (event: any) => void
   onRowEditSave: (event: any) => void
   activateCell: (rowIndex: number, field: string) => void
@@ -83,7 +84,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     const config = getCellConfig(row, field)
     if (config?.editable === false) return false
     if (config?.disabled) return false
-    if (editableColumns.value && !editableColumns.value.includes(field)) return false
+    if (editableColumns.value?.length && !editableColumns.value.includes(field)) return false
     const col = columnState.find(c => c.field === field)
     if (col?.editable === false) return false
     return true
@@ -181,6 +182,13 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     activateCell(row, targetField)
   }
 
+  function onCellEditInit(event: any) {
+    const { index, field } = event
+    if (typeof index === 'number' && field) {
+      activeCell.value = { rowIndex: index, field }
+    }
+  }
+
   function handleKeyDown(e: KeyboardEvent) {
     if (!editable.value || !activeCell.value) return
 
@@ -219,19 +227,67 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     }
   }
 
+  function focusEditorElement(container: Element) {
+    // PSelect / PMultiSelect: focusable element is a span[role="combobox"], not an input
+    const combobox = container.querySelector<HTMLElement>('[role="combobox"]')
+    if (combobox) {
+      combobox.focus()
+      return
+    }
+
+    // PDatePicker: focusing the input opens the popup overlay via onFocus→showOnFocus.
+    // Prevent the popup by intercepting the focus event on the input, then focusing.
+    const datePicker = container.querySelector<HTMLElement>('[data-pc-name="datepicker"]')
+    if (datePicker) {
+      const dateInput = datePicker.querySelector<HTMLInputElement>('input')
+      if (dateInput) {
+        // Temporarily block the focus event from reaching DatePicker's onFocus handler
+        const blocker = (e: FocusEvent) => e.stopImmediatePropagation()
+        dateInput.addEventListener('focus', blocker, { capture: true, once: true })
+        dateInput.focus()
+      }
+      return
+    }
+
+    // PInputText, PInputNumber: standard input element
+    const input = container.querySelector<HTMLElement>('input, .p-inputtext')
+    if (input) {
+      input.focus()
+    }
+  }
+
   function activateCell(rowIndex: number, field: string) {
     activeCell.value = { rowIndex, field }
     nextTick(() => {
       const table = dataTableRef.value?.$el
       if (!table) return
-      const rows = table.querySelectorAll('.p-datatable-tbody > tr')
-      const row = rows[rowIndex]
-      if (!row) return
-      const input = row.querySelector(`[data-field="${field}"] input, [data-field="${field}"] select, [data-field="${field}"] .p-inputtext`)
-      input?.focus()
 
       if (dataTableRef.value?.virtualScroller) {
         dataTableRef.value.virtualScroller.scrollToIndex(rowIndex)
+      }
+
+      const rows = table.querySelectorAll('.p-datatable-tbody > tr')
+      const row = rows[rowIndex]
+      if (!row) return
+
+      // Find the target cell TD by data-field attribute (present in both #body and #editor)
+      const cell = row.querySelector(`[data-field="${field}"]`)?.closest('td')
+        ?? row.querySelector(`td[data-p-cell-editing]`)
+
+      // Dispatch mousedown first — PrimeVue's BodyCell uses a document mousedown
+      // listener to detect "outside click" and complete the previous cell's edit.
+      // Without this, the old cell's editor never closes.
+      if (cell) {
+        cell.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
+        cell.click()
+        // PrimeVue needs one tick to switch to #editor, then another for the component to mount
+        nextTick(() => {
+          nextTick(() => {
+            const container = row.querySelector(`[data-field="${field}"]`)
+            if (!container) return
+            focusEditorElement(container)
+          })
+        })
       }
     })
   }
@@ -287,6 +343,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     editingRows,
     cellConfigs,
     handleKeyDown,
+    onCellEditInit,
     onCellEditComplete,
     onRowEditSave,
     activateCell,
