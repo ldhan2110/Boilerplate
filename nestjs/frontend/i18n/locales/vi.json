@@ -95,6 +95,7 @@
     "deleteSelected": "Xóa các dòng đã chọn",
     "deleteConfirmMessage": "Bạn có chắc chắn muốn xóa?",
     "totals": "Tổng cộng",
-    "noData": "Không có dữ liệu"
+    "noData": "Không có dữ liệu",
+    "totalRecords": "Tổng: {total} dòng"
   }
 }

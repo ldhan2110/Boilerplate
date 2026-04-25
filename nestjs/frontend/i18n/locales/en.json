@@ -95,6 +95,7 @@
     "deleteSelected": "Delete selected",
     "deleteConfirmMessage": "Are you sure you want to delete?",
     "totals": "Totals",
-    "noData": "No data found"
+    "noData": "No data found",
+    "totalRecords": "Total: {total} row(s)"
   }
 }
