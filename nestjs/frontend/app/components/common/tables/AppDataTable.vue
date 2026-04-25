@@ -301,7 +301,12 @@ defineExpose({
           v-if="selectable && selectionMode === 'checkbox'"
           selection-mode="multiple"
           :frozen="true"
-          style="width: 3rem"
+          :style="{
+            width: '50px',
+            background: 'white',
+            borderRight: '0.5px solid #E2E8F0',
+            zIndex: 1,
+          }"
         />
 
         <!-- Data columns -->
@@ -455,6 +460,13 @@ defineExpose({
 :deep(.p-datatable-tbody > tr > td),
 :deep(.p-datatable-thead > tr > th) {
   padding: 0.5rem 0.75rem;
+}
+
+/* Frozen columns need an opaque background so content doesn't bleed through on horizontal scroll */
+:deep(.p-datatable-thead > tr > th[data-p-frozen-column="true"]),
+:deep(.p-datatable-tbody > tr > td[data-p-frozen-column="true"]),
+:deep(.p-datatable-tfoot > tr > td[data-p-frozen-column="true"]) {
+  background: white;
 }
 
 /* Force cells to respect column width and truncate overflow */
