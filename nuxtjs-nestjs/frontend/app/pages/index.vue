@@ -122,7 +122,7 @@ const countries = [
 ]
 
 // --- AppDataTable demo ---
-const tableRef = ref()
+const { tableRef, insertRow, insertRows, deleteRow, deleteRows, getRows, hasChanges, clearChanges } = useAppDataTable<typeof employees.value[0]>()
 const tableEventLog = ref<string[]>([])
 
 function logTableEvent(event: string, data: any) {
@@ -166,6 +166,62 @@ const tableCellConfig = (row: any, field: string) => {
   if (field === 'salary' && row.status === 'inactive') {
     return { disabled: true, editable: false, render: () => 'N/A' }
   }
+}
+
+// --- procFlag demo handlers ---
+function handleInsertRow() {
+  const row = insertRow({ name: 'New Employee', status: 'active', department: 'Engineering', salary: 50000 })
+  logTableEvent('insertRow', { key: row?.id, name: row?.name })
+}
+
+function handleBatchInsert() {
+  const rows = insertRows([
+    { name: 'Alice Johnson', department: 'HR', status: 'active', salary: 55000 },
+    { name: 'Bob Smith', department: 'IT', status: 'active', salary: 62000 },
+    { name: 'Carol Davis', department: 'Finance', status: 'probation', salary: 48000 },
+  ])
+  logTableEvent('insertRows', { count: rows.length })
+}
+
+function handleGetChanges() {
+  const changed = getRows(['I', 'U', 'D'])
+  console.log('Changed rows:', changed)
+  logTableEvent('getRows([I,U,D])', {
+    total: changed.length,
+    inserted: changed.filter(r => r.procFlag === 'I').length,
+    updated: changed.filter(r => r.procFlag === 'U').length,
+    deleted: changed.filter(r => r.procFlag === 'D').length,
+  })
+}
+
+function handleGetAll() {
+  const all = getRows()
+  console.log('All rows with flags:', all)
+  logTableEvent('getRows()', {
+    total: all.length,
+    S: all.filter(r => r.procFlag === 'S').length,
+    I: all.filter(r => r.procFlag === 'I').length,
+    U: all.filter(r => r.procFlag === 'U').length,
+    D: all.filter(r => r.procFlag === 'D').length,
+  })
+}
+
+function handleClearChanges() {
+  clearChanges()
+  logTableEvent('clearChanges', { hasChanges: hasChanges() })
+}
+
+function handleSaveToBackend() {
+  const changed = getRows(['I', 'U', 'D'])
+  if (changed.length === 0) {
+    logTableEvent('save', { message: 'No changes to save' })
+    return
+  }
+  console.log('Payload for backend:', JSON.stringify(changed, null, 2))
+  logTableEvent('save', {
+    message: `Would send ${changed.length} rows to backend`,
+    payload: changed.map(r => ({ procFlag: r.procFlag, key: (r.data as any).id, name: (r.data as any).name })),
+  })
 }
 </script>
 
@@ -436,9 +492,19 @@ const tableCellConfig = (row: any, field: string) => {
         </template>
         <template #content>
           <div class="flex flex-wrap gap-2 mb-4">
+            <!-- procFlag Operations -->
+            <Button label="Insert Row" icon="pi pi-plus" variant="info" size="sm" @click="handleInsertRow" />
+            <Button label="Batch Insert (3)" icon="pi pi-plus-circle" variant="info" size="sm" outlined @click="handleBatchInsert" />
+            <Button label="Get Changes" icon="pi pi-sync" variant="warn" size="sm" @click="handleGetChanges" />
+            <Button label="Get All" icon="pi pi-list" variant="secondary" size="sm" @click="handleGetAll" />
+            <Button label="Save to Backend" icon="pi pi-cloud-upload" variant="success" size="sm" @click="handleSaveToBackend" />
+            <Button label="Clear Changes" icon="pi pi-undo" variant="secondary" size="sm" outlined @click="handleClearChanges" />
+            <span v-if="hasChanges()" class="inline-flex items-center text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded">
+              Unsaved Changes
+            </span>
+            <!-- Existing -->
             <Button label="Export CSV" icon="pi pi-file" variant="secondary" size="sm" @click="tableRef?.exportTable('csv', 'all')" />
             <Button label="Export XLSX" icon="pi pi-file-excel" variant="success" size="sm" @click="tableRef?.exportTable('xlsx', 'all')" />
-            <Button label="Clear Selection" icon="pi pi-times" variant="secondary" size="sm" outlined @click="tableRef?.clearSelection()" />
           </div>
 
           <AppDataTable
