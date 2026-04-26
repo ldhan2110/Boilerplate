@@ -114,7 +114,8 @@ function onPickerUpdate(val: Date | Date[] | (Date | null)[] | null | undefined)
 const pickerRef = ref<any>(null)
 
 /** Workaround: PrimeVue bug — manualInput + showTime/timeOnly reverts on blur.
- *  Attach native blur on actual <input>, use nextTick to override after PrimeVue reverts. */
+ *  Track typed text via input event, then re-apply parsed value after PrimeVue reverts.
+ *  Uses setTimeout(0) instead of nextTick — PrimeVue's blur handler can fire after nextTick. */
 onMounted(() => {
   if (props.variant !== 'datetime' && props.variant !== 'time') return
 
@@ -123,16 +124,24 @@ onMounted(() => {
     const inputEl: HTMLInputElement | null = root?.querySelector?.('input')
     if (!inputEl) return
 
+    let lastTyped = ''
+
+    inputEl.addEventListener('input', () => {
+      lastTyped = inputEl.value ?? ''
+    })
+
     inputEl.addEventListener('blur', () => {
-      const text = inputEl.value?.trim()
+      const text = (lastTyped || inputEl.value)?.trim()
       if (!text) return
 
-      nextTick(() => {
+      setTimeout(() => {
         const parsed = fromDateString(text, props.variant)
         if (parsed) {
-          emit('update:modelValue', toDateString(parsed, props.variant))
+          const formatted = toDateString(parsed, props.variant)
+          emit('update:modelValue', formatted)
+          inputEl.value = formatted
         }
-      })
+      }, 0)
     })
   })
 })
