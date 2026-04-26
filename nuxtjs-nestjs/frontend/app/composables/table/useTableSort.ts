@@ -1,7 +1,6 @@
-import type { SortMode, BackendMode, SortEvent } from '~/types/table'
+import type { BackendMode, SortEvent } from '~/types/table'
 
 export interface UseTableSortOptions {
-  sortMode: Ref<SortMode>
   sortBackend: Ref<BackendMode>
   defaultSortField?: Ref<string | undefined>
   defaultSortOrder?: Ref<1 | -1 | undefined>
@@ -16,14 +15,12 @@ export interface UseTableSortReturn {
   onSort: (event: any) => void
   setSortAsc: (field: string) => void
   setSortDesc: (field: string) => void
-  addToSort: (field: string) => void
-  removeFromSort: (field: string) => void
   clearSort: () => void
   isFieldSorted: (field: string) => boolean
 }
 
 export function useTableSort(options: UseTableSortOptions): UseTableSortReturn {
-  const { sortMode, sortBackend, defaultSortField, defaultSortOrder, emit } = options
+  const { sortBackend, defaultSortField, defaultSortOrder, emit } = options
 
   const sortField = ref<string | undefined>(defaultSortField?.value)
   const sortOrder = ref<1 | -1>(defaultSortOrder?.value ?? 1)
@@ -33,83 +30,43 @@ export function useTableSort(options: UseTableSortOptions): UseTableSortReturn {
       : []
   )
 
-  const sortChips = computed(() => {
-    if (sortMode.value === 'multiple') {
-      return multiSortMeta.value.map(m => ({
-        field: m.field,
-        order: m.order,
-        label: `${m.field} ${m.order === 1 ? '↑' : '↓'}`,
-      }))
-    }
-    if (sortField.value) {
-      return [{
-        field: sortField.value,
-        order: sortOrder.value,
-        label: `${sortField.value} ${sortOrder.value === 1 ? '↑' : '↓'}`,
-      }]
-    }
-    return []
-  })
+  const sortChips = computed(() =>
+    multiSortMeta.value.map(m => ({
+      field: m.field,
+      order: m.order,
+      label: `${m.field} ${m.order === 1 ? '↑' : '↓'}`,
+    }))
+  )
 
   function emitSort() {
     if (sortBackend.value !== 'server') return
     emit('sort', {
       field: sortField.value ?? '',
       order: sortOrder.value,
-      multiSortMeta: sortMode.value === 'multiple' ? multiSortMeta.value : undefined,
+      multiSortMeta: multiSortMeta.value,
     })
   }
 
   function onSort(event: any) {
-    if (sortMode.value === 'multiple') {
-      multiSortMeta.value = event.multiSortMeta ?? []
-      if (multiSortMeta.value.length > 0) {
-        sortField.value = multiSortMeta.value[0].field
-        sortOrder.value = multiSortMeta.value[0].order
-      }
-    } else {
-      sortField.value = event.sortField
-      sortOrder.value = event.sortOrder
+    multiSortMeta.value = event.multiSortMeta ?? []
+    if (multiSortMeta.value.length > 0) {
+      sortField.value = multiSortMeta.value[0].field
+      sortOrder.value = multiSortMeta.value[0].order
     }
     emitSort()
   }
 
   function setSortAsc(field: string) {
-    if (sortMode.value === 'multiple') {
-      multiSortMeta.value = [{ field, order: 1 }]
-    }
+    multiSortMeta.value = [{ field, order: 1 }]
     sortField.value = field
     sortOrder.value = 1
     emitSort()
   }
 
   function setSortDesc(field: string) {
-    if (sortMode.value === 'multiple') {
-      multiSortMeta.value = [{ field, order: -1 }]
-    }
+    multiSortMeta.value = [{ field, order: -1 }]
     sortField.value = field
     sortOrder.value = -1
-    emitSort()
-  }
-
-  function addToSort(field: string) {
-    if (sortMode.value !== 'multiple') return
-    const existing = multiSortMeta.value.find(m => m.field === field)
-    if (existing) return
-    if (multiSortMeta.value.length >= 5) return
-    multiSortMeta.value = [...multiSortMeta.value, { field, order: 1 }]
-    emitSort()
-  }
-
-  function removeFromSort(field: string) {
-    multiSortMeta.value = multiSortMeta.value.filter(m => m.field !== field)
-    if (multiSortMeta.value.length > 0) {
-      sortField.value = multiSortMeta.value[0].field
-      sortOrder.value = multiSortMeta.value[0].order
-    } else {
-      sortField.value = undefined
-      sortOrder.value = 1
-    }
     emitSort()
   }
 
@@ -121,10 +78,7 @@ export function useTableSort(options: UseTableSortOptions): UseTableSortReturn {
   }
 
   function isFieldSorted(field: string): boolean {
-    if (sortMode.value === 'multiple') {
-      return multiSortMeta.value.some(m => m.field === field)
-    }
-    return sortField.value === field
+    return multiSortMeta.value.some(m => m.field === field)
   }
 
   return {
@@ -135,8 +89,6 @@ export function useTableSort(options: UseTableSortOptions): UseTableSortReturn {
     onSort,
     setSortAsc,
     setSortDesc,
-    addToSort,
-    removeFromSort,
     clearSort,
     isFieldSorted,
   }

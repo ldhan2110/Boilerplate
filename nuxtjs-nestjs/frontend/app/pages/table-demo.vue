@@ -2,9 +2,9 @@
   AppDataTable Demo Page
   Demonstrates all features of the AppDataTable component:
   - 500 mock employees with 7 columns
-  - sortMode='multiple', sortBackend='client' (toggleable to server)
+  - multi-sort (Shift+click), sortBackend toggleable client/server
   - dataMode='pagination', pageSize=25
-  - editable=true, editMode='cell' (toggleable to row)
+  - editable=true, cell edit mode
   - selectable=true, selectionMode='multiple'
   - showFooter=true
   - headerContextMenu, rowContextMenu
@@ -20,7 +20,6 @@ definePageMeta({ layout: 'default' })
 // --- Toggle states ---
 const serverMode = ref(false)
 const virtualScroll = ref(false)
-const editModeToggle = ref<'cell' | 'row'>('cell')
 const eventLog = ref<string[]>([])
 
 function log(event: string, data: any) {
@@ -158,10 +157,6 @@ const tableRef = ref()
         <PCheckbox v-model="virtualScroll" :binary="true" />
         Virtual scroll
       </label>
-      <label class="flex items-center gap-2 text-sm">
-        Edit mode:
-        <PSelect v-model="editModeToggle" :options="['cell', 'row']" class="w-24" />
-      </label>
       <PButton label="Export CSV" icon="pi pi-file" severity="secondary" size="small" @click="tableRef?.exportTable('csv', 'all')" />
       <PButton label="Export XLSX" icon="pi pi-file-excel" severity="success" size="small" @click="tableRef?.exportTable('xlsx', 'all')" />
     </div>
@@ -175,10 +170,8 @@ const tableRef = ref()
       :page-size="25"
       :pagination-mode="serverMode ? 'server' : 'client'"
       :total-records="serverMode ? employees.length : undefined"
-      :sort-mode="'multiple'"
       :sort-backend="serverMode ? 'server' : 'client'"
       :editable="true"
-      :edit-mode="editModeToggle"
       :selectable="true"
       :selection-mode="'multiple'"
       :show-footer="true"

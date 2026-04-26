@@ -1,8 +1,7 @@
-import type { ColumnDef, EditMode, CellConfig, EditSaveEvent } from '~/types/table'
+import type { ColumnDef, CellConfig, EditSaveEvent } from '~/types/table'
 
 export interface UseTableEditOptions {
   editable: Ref<boolean | undefined>
-  editMode: Ref<EditMode>
   editableColumns: Ref<string[] | undefined>
   columnState: ColumnDef[]
   visibleColumns: Ref<ColumnDef[]>
@@ -13,7 +12,6 @@ export interface UseTableEditOptions {
   dataTableRef: Ref<any>
   emit: {
     editSave: (payload: EditSaveEvent) => void
-    editCancel: (payload: { row: any }) => void
   }
 }
 
@@ -25,7 +23,6 @@ export interface UseTableEditReturn {
   handleKeyDown: (e: KeyboardEvent) => void
   onCellEditInit: (event: any) => void
   onCellEditComplete: (event: any) => void
-  onRowEditSave: (event: any) => void
   activateCell: (rowIndex: number, field: string) => void
   deactivateCell: () => void
   getDirtyRows: () => any[]
@@ -40,7 +37,6 @@ export interface UseTableEditReturn {
 export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
   const {
     editable,
-    editMode,
     editableColumns,
     columnState,
     visibleColumns,
@@ -198,16 +194,12 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
         move(e.shiftKey ? 'prev' : 'next')
         break
       case 'ArrowRight':
-        if (editMode.value === 'cell') {
-          e.preventDefault()
-          move('right')
-        }
+        e.preventDefault()
+        move('right')
         break
       case 'ArrowLeft':
-        if (editMode.value === 'cell') {
-          e.preventDefault()
-          move('left')
-        }
+        e.preventDefault()
+        move('left')
         break
       case 'ArrowDown':
         e.preventDefault()
@@ -311,20 +303,6 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     })
   }
 
-  function onRowEditSave(event: any) {
-    const { data, newData } = event
-    const oldRow = JSON.parse(JSON.stringify(data))
-    const key = data[rowKey.value]
-
-    Object.assign(data, newData)
-    dirtyRows.value.add(key)
-
-    emit.editSave({
-      oldRow,
-      newRow: { ...data },
-    })
-  }
-
   function getDirtyRows(): any[] {
     return rows.value.filter(row => dirtyRows.value.has(row[rowKey.value]))
   }
@@ -345,7 +323,6 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     handleKeyDown,
     onCellEditInit,
     onCellEditComplete,
-    onRowEditSave,
     activateCell,
     deactivateCell,
     getDirtyRows,

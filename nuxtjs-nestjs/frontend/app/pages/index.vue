@@ -42,6 +42,8 @@ const formSchema = z.object({
   tags: z.array(z.string()).optional(),
   agreeTerms: z.boolean().optional(),
   newsletter: z.boolean().optional(),
+  darkMode: z.boolean().optional(),
+  notifications: z.boolean().optional(),
   startDate: z.any().nullable().optional(),
   dateRange: z.any().nullable().optional(),
   content: z.string().optional(),
@@ -66,6 +68,8 @@ const { formProps, formRef, field, values, isDirty, isSubmitting, resetForm } = 
     tags: [],
     agreeTerms: 'yes',
     newsletter: false,
+    darkMode: false,
+    notifications: true,
     startDate: null,
     dateRange: null,
     content: '',
@@ -299,6 +303,25 @@ const tableCellConfig = (row: any, field: string) => {
                 />
               </div>
 
+              <!-- Toggle -->
+              <div class="flex flex-col gap-3">
+                <Toggle
+                  v-bind="field('darkMode')"
+                  label="Enable dark mode"
+                />
+                <Toggle
+                  v-bind="field('notifications')"
+                  label="Email notifications"
+                  hint="Receive updates about account activity"
+                  required
+                />
+                <Toggle
+                  :model-value="false"
+                  label="Disabled toggle"
+                  disabled
+                />
+              </div>
+
               <!-- RadioGroup -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <RadioGroup
@@ -400,10 +423,8 @@ const tableCellConfig = (row: any, field: string) => {
             data-mode="pagination"
             :page-size="10"
             pagination-mode="client"
-            sort-mode="multiple"
             sort-backend="client"
             :editable="true"
-            edit-mode="cell"
             :selectable="true"
             selection-mode="checkbox"
             :show-footer="true"

@@ -28,11 +28,9 @@ const props = withDefaults(defineProps<AppDataTableProps>(), {
   paginationMode: 'server',
   virtualRowHeight: 46,
   scrollHeight: '600px',
-  sortMode: 'single',
   sortBackend: 'server',
   defaultSortOrder: 1,
   editable: false,
-  editMode: 'cell',
   selectable: false,
   selectionMode: 'multiple',
   tableHeight: undefined,
@@ -57,7 +55,6 @@ const emit = defineEmits<{
   (e: 'page', payload: PageEvent): void
   (e: 'sort', payload: SortEvent): void
   (e: 'row-edit-save', payload: EditSaveEvent): void
-  (e: 'row-edit-cancel', payload: { row: any }): void
   (e: 'load-more'): void
   (e: 'full-screen-change', isFullscreen: boolean): void
   (e: 'selection-change', selected: any[]): void
@@ -76,7 +73,6 @@ const totalRecordsRef = computed(() => props.totalRecords)
 const frozenColumnsRef = computed(() => props.frozenColumns)
 const maxFrozenColumnsRef = computed(() => props.maxFrozenColumns)
 const defaultColumnWidthRef = computed(() => props.defaultColumnWidth)
-const sortModeRef = computed(() => props.sortMode)
 const sortBackendRef = computed(() => props.sortBackend)
 const defaultSortFieldRef = computed(() => props.defaultSortField)
 const defaultSortOrderRef = computed(() => props.defaultSortOrder)
@@ -89,7 +85,6 @@ const onLoadMoreRef = computed(() => props.onLoadMore)
 const selectableRef = computed(() => props.selectable)
 const selectionModeRef = computed(() => props.selectionMode)
 const editableRef = computed(() => props.editable)
-const editModeRef = computed(() => props.editMode)
 const editableColumnsRef = computed(() => props.editableColumns)
 const rowKeyRef = computed(() => props.rowKey)
 const showFooterRef = computed(() => props.showFooter)
@@ -108,7 +103,6 @@ const columns = useTableColumns({
 })
 
 const sort = useTableSort({
-  sortMode: sortModeRef,
   sortBackend: sortBackendRef,
   defaultSortField: defaultSortFieldRef,
   defaultSortOrder: defaultSortOrderRef,
@@ -141,7 +135,6 @@ const selectedRowsModel = selection.selectedRows
 
 const edit = useTableEdit({
   editable: editableRef,
-  editMode: editModeRef,
   editableColumns: editableColumnsRef,
   columnState: columns.columnState,
   visibleColumns: columns.visibleColumns,
@@ -152,7 +145,6 @@ const edit = useTableEdit({
   dataTableRef,
   emit: {
     editSave: (payload) => emit('row-edit-save', payload),
-    editCancel: (payload) => emit('row-edit-cancel', payload),
   },
 })
 
@@ -175,7 +167,6 @@ const { confirmAsync } = useAppDialog()
 
 const menus = useTableMenus({
   editable: editableRef,
-  sortMode: sortModeRef,
   headerContextMenu: headerContextMenuRef,
   rowContextMenu: rowContextMenuRef,
   columns,
@@ -273,18 +264,18 @@ defineExpose({
         :virtual-scroller-options="virtualScrollerOptions"
         :sort-field="sort.sortField.value"
         :sort-order="sort.sortOrder.value"
-        :multi-sort-meta="sortMode === 'multiple' ? sort.multiSortMeta.value : undefined"
-        :sort-mode="sortMode === 'none' ? undefined : sortMode"
+        :multi-sort-meta="sort.multiSortMeta.value"
+        sort-mode="multiple"
         :removable-sort="true"
         v-model:selection="selectedRowsModel"
         :selection-mode="selectable ? (selectionMode === 'checkbox' ? undefined : selectionMode) : undefined"
-        :edit-mode="editable ? editMode : undefined"
+        :edit-mode="editable ? 'cell' : undefined"
         :lazy="paginationMode === 'server'"
         @sort="sort.onSort"
 
+        @column-resize-end="() => columns.onColumnResizeEnd(dataTableRef)"
         @cell-edit-init="edit.onCellEditInit"
         @cell-edit-complete="edit.onCellEditComplete"
-        @row-edit-save="edit.onRowEditSave"
         @row-contextmenu="menus.onRowContextMenu"
       >
         <!-- Empty slot -->
@@ -313,7 +304,7 @@ defineExpose({
           v-for="col in columns.visibleColumns.value"
           :key="col.field"
           :field="col.field"
-          :sortable="col.sortable !== false && sortMode !== 'none'"
+          :sortable="col.sortable !== false"
           :frozen="col.frozen"
           :style="{ width: (col.width ?? defaultColumnWidth) + 'px', minWidth: (col.minWidth ?? 80) + 'px', textAlign: col.align ?? 'left' }"
         >
@@ -347,7 +338,7 @@ defineExpose({
           </template>
 
           <!-- Cell editor -->
-          <template v-if="editable && editMode === 'cell'" #editor="{ data, field, index }">
+          <template v-if="editable" #editor="{ data, field, index }">
             <div :data-field="field" class="cell-editor" @keydown.tab.prevent.stop="edit.handleKeyDown($event)">
             <template v-if="edit.isCellEditable(data, field) && !edit.isCellDisabled(data, field)">
               <TableCellEditor
@@ -383,14 +374,6 @@ defineExpose({
           </template>
         </PColumn>
 
-        <!-- Row editor column for row edit mode -->
-        <PColumn
-          v-if="editable && editMode === 'row'"
-          :row-editor="true"
-          style="width: 7rem"
-          :frozen="true"
-          align-frozen="right"
-        />
       </PDataTable>
     </div>
 
@@ -510,6 +493,7 @@ defineExpose({
   padding: 0 !important;
   gap: 0.25rem;
   font-size: 0.75rem;
+  background-color: transparent !important;
 }
 
 :deep(.p-paginator .p-paginator-content) {

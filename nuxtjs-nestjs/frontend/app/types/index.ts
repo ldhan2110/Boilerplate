@@ -17,8 +17,6 @@ export type { AppMenuItem } from './menu'
 export type {
   DataMode,
   BackendMode,
-  SortMode,
-  EditMode,
   SelectionMode,
   EditType,
   AggregationType,

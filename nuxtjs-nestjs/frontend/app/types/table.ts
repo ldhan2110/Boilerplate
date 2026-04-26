@@ -2,8 +2,6 @@ import type { VNode } from 'vue'
 
 export type DataMode = 'pagination' | 'infiniteScroll'
 export type BackendMode = 'client' | 'server'
-export type SortMode = 'single' | 'multiple' | 'none'
-export type EditMode = 'cell' | 'row'
 export type SelectionMode = 'single' | 'multiple' | 'checkbox'
 export type EditType = 'input' | 'number' | 'date' | 'select' | 'multiselect'
 export type AggregationType = 'sum' | 'avg' | 'min' | 'max' | 'count'
@@ -78,12 +76,10 @@ export interface AppDataTableProps<T = any> {
   virtualRowHeight?: number
   scrollHeight?: string
   onLoadMore?: (params: PageEvent) => Promise<void>
-  sortMode?: SortMode
   sortBackend?: BackendMode
   defaultSortField?: string
   defaultSortOrder?: 1 | -1
   editable?: boolean
-  editMode?: EditMode
   editableColumns?: string[]
   selectable?: boolean
   selectionMode?: SelectionMode
@@ -109,7 +105,6 @@ export interface AppDataTableEmits<T = any> {
   (e: 'page', payload: PageEvent): void
   (e: 'sort', payload: SortEvent): void
   (e: 'row-edit-save', payload: EditSaveEvent<T>): void
-  (e: 'row-edit-cancel', payload: { row: T }): void
   (e: 'load-more'): void
   (e: 'full-screen-change', isFullscreen: boolean): void
   (e: 'selection-change', selected: T[]): void

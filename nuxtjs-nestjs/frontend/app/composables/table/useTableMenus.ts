@@ -1,4 +1,4 @@
-import type { ColumnDef, SortMode, EditSaveEvent, ExportFormat } from '~/types/table'
+import type { ColumnDef, EditSaveEvent, ExportFormat } from '~/types/table'
 import type { UseTableColumnsReturn } from './useTableColumns'
 import type { UseTableSortReturn } from './useTableSort'
 import type { UseTableSelectionReturn } from './useTableSelection'
@@ -6,7 +6,6 @@ import type { UseTableExportReturn } from './useTableExport'
 
 export interface UseTableMenusOptions {
   editable: Ref<boolean | undefined>
-  sortMode: Ref<SortMode>
   headerContextMenu: Ref<boolean | undefined>
   rowContextMenu: Ref<boolean | undefined>
   columns: UseTableColumnsReturn
@@ -39,7 +38,6 @@ export interface UseTableMenusReturn {
 export function useTableMenus(options: UseTableMenusOptions): UseTableMenusReturn {
   const {
     editable,
-    sortMode,
     headerContextMenu,
     rowContextMenu,
     columns,
@@ -79,23 +77,6 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
           command: () => sort.setSortDesc(col.field),
         },
       )
-
-      if (sortMode.value === 'multiple') {
-        items.push(
-          {
-            label: t('table.addToSort'),
-            icon: 'pi pi-plus',
-            command: () => sort.addToSort(col.field),
-            disabled: sort.isFieldSorted(col.field),
-          },
-          {
-            label: t('table.removeFromSort'),
-            icon: 'pi pi-minus',
-            command: () => sort.removeFromSort(col.field),
-            disabled: !sort.isFieldSorted(col.field),
-          },
-        )
-      }
 
       items.push(
         { separator: true },

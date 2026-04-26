@@ -18,6 +18,7 @@ export interface UseTableColumnsReturn {
   unfreezeColumn: (field: string) => void
   isColumnFrozen: (field: string) => boolean
   canFreezeMore: Ref<boolean>
+  onColumnResizeEnd: (dataTableInstance: any) => void
 }
 
 export function useTableColumns(options: UseTableColumnsOptions): UseTableColumnsReturn {
@@ -86,6 +87,67 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     return frozenFields.value.has(field)
   }
 
+  function onColumnResizeEnd(dataTableInstance: any) {
+    const el = dataTableInstance.$el as HTMLElement
+    const table = dataTableInstance.$refs.table as HTMLElement | undefined
+    if (!el || !table) return
+
+    // Read actual widths from all th elements (includes checkbox column)
+    const ths = Array.from(
+      table.querySelectorAll<HTMLElement>('thead[data-pc-section="thead"] > tr > th')
+    )
+    if (!ths.length) return
+
+    const widths = ths.map(th => th.getBoundingClientRect().width)
+    const totalWidth = widths.reduce((sum, w) => sum + w, 0)
+
+    // Find container width
+    const container = el.querySelector<HTMLElement>('[data-pc-section="tablecontainer"]')
+    if (!container) return
+    const containerWidth = container.clientWidth
+
+    // Only redistribute when columns don't fill the container
+    if (totalWidth >= containerWidth) return
+
+    const gap = containerWidth - totalWidth
+    const newWidths = widths.map(w => Math.round(w + gap * (w / totalWidth)))
+
+    // Overwrite PrimeVue's style element with redistributed widths
+    const attrSelector = dataTableInstance.$attrSelector
+    const vScrollPart = dataTableInstance.virtualScrollerDisabled
+      ? ''
+      : '> [data-pc-name="virtualscroller"]'
+    const selector = `[data-pc-name="datatable"][${attrSelector}] > [data-pc-section="tablecontainer"] ${vScrollPart} > table[data-pc-section="table"]`
+
+    let innerHTML = ''
+    newWidths.forEach((w, i) => {
+      innerHTML += `
+        ${selector} > thead[data-pc-section="thead"] > tr > th:nth-child(${i + 1}),
+        ${selector} > tbody[data-pc-section="tbody"] > tr > td:nth-child(${i + 1}),
+        ${selector} > tfoot[data-pc-section="tfoot"] > tr > td:nth-child(${i + 1}) {
+          width: ${w}px !important; max-width: ${w}px !important;
+        }
+      `
+    })
+
+    if (dataTableInstance.styleElement) {
+      dataTableInstance.styleElement.innerHTML = innerHTML
+    }
+
+    // Update table width to fill container
+    table.style.width = table.style.minWidth = containerWidth + 'px'
+
+    // Sync widths back to columnState (skip checkbox column)
+    const hasCheckbox = ths[0]?.hasAttribute('data-p-selection-column')
+    const offset = hasCheckbox ? 1 : 0
+    const cols = visibleColumns.value
+    for (let i = 0; i < cols.length; i++) {
+      cols[i].width = newWidths[i + offset]
+    }
+
+    triggerRef(columnState as any)
+  }
+
   function resetColumns() {
     const restored = initialSnapshot.map(col => ({ ...col }))
     columnState.length = 0
@@ -105,5 +167,6 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     unfreezeColumn,
     isColumnFrozen,
     canFreezeMore,
+    onColumnResizeEnd,
   }
 }
