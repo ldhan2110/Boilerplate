@@ -1,4 +1,4 @@
-import type { ProcFlag, ProcRow } from '~/types/table'
+import type { ProcFlag } from '~/types/table'
 
 export interface UseTableProcFlagOptions {
   rows: Ref<any[]>
@@ -7,15 +7,14 @@ export interface UseTableProcFlagOptions {
 }
 
 export interface UseTableProcFlagReturn {
-  procMap: Ref<Map<string | number, ProcFlag>>
-  deletedRows: Ref<Map<string | number, any>>
+  deletedRows: Ref<any[]>
   initFlags: () => void
   markInsert: (key: string | number) => void
   markUpdate: (key: string | number) => void
   markDelete: (key: string | number) => void
   getFlag: (key: string | number) => ProcFlag
-  getRowsByFlag: <T = any>(flags?: ProcFlag[]) => ProcRow<T>[]
-  getRowByKey: <T = any>(key: string | number) => ProcRow<T> | undefined
+  getRowsByFlag: (flags?: ProcFlag[]) => any[]
+  getRowByKey: (key: string | number) => any | undefined
   hasChanges: () => boolean
   clearProcFlags: () => void
 }
@@ -29,23 +28,15 @@ export function generateTempKey(): string {
 export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProcFlagReturn {
   const { rows, rowKey, dirtyRows } = options
 
-  const procMap = ref(new Map<string | number, ProcFlag>()) as Ref<Map<string | number, ProcFlag>>
-  const deletedRows = ref(new Map<string | number, any>()) as Ref<Map<string | number, any>>
+  // Stash for D-flagged rows (removed from visible rows array)
+  const deletedRows = ref<any[]>([])
 
   function initFlags() {
-    const newMap = new Map<string | number, ProcFlag>()
     for (const row of rows.value) {
-      const key = row[rowKey.value]
-      // Preserve existing flags for keys already tracked (e.g. inserted rows)
-      newMap.set(key, procMap.value.get(key) ?? 'S')
-    }
-    // Also preserve D-flagged rows (they are not in rows.value)
-    for (const [key, flag] of procMap.value) {
-      if (flag === 'D' && !newMap.has(key)) {
-        newMap.set(key, 'D')
+      if (!row.procFlag) {
+        row.procFlag = 'S'
       }
     }
-    procMap.value = newMap
   }
 
   // Initialize on mount and when rows change
@@ -53,127 +44,107 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
 
   // Watch dirtyRows — mark S rows as U when edited
   watch(dirtyRows, (dirty) => {
-    let changed = false
     for (const key of dirty) {
-      if (procMap.value.get(key) === 'S') {
-        procMap.value.set(key, 'U')
-        changed = true
+      const row = rows.value.find((r: any) => r[rowKey.value] === key)
+      if (row && row.procFlag === 'S') {
+        row.procFlag = 'U'
       }
     }
-    if (changed) procMap.value = new Map(procMap.value)
   }, { deep: true })
 
   function markInsert(key: string | number) {
-    procMap.value.set(key, 'I')
-    procMap.value = new Map(procMap.value)
+    const row = rows.value.find((r: any) => r[rowKey.value] === key)
+    if (row) row.procFlag = 'I'
   }
 
   function markUpdate(key: string | number) {
-    const current = procMap.value.get(key)
+    const row = rows.value.find((r: any) => r[rowKey.value] === key)
     // Only S -> U. I stays I, U stays U.
-    if (current === 'S') {
-      procMap.value.set(key, 'U')
-      procMap.value = new Map(procMap.value)
+    if (row && row.procFlag === 'S') {
+      row.procFlag = 'U'
     }
   }
 
   function markDelete(key: string | number) {
-    const current = procMap.value.get(key)
-    if (current === 'I') {
+    const row = rows.value.find((r: any) => r[rowKey.value] === key)
+    if (!row) return
+
+    if (row.procFlag === 'I') {
       // Never-persisted row: remove entirely
-      procMap.value.delete(key)
-      procMap.value = new Map(procMap.value)
-      const idx = rows.value.findIndex(r => r[rowKey.value] === key)
+      const idx = rows.value.indexOf(row)
       if (idx !== -1) {
         rows.value.splice(idx, 1)
         triggerRef(rows)
       }
     } else {
       // Stash row data, mark D, remove from visible rows
-      const idx = rows.value.findIndex(r => r[rowKey.value] === key)
+      row.procFlag = 'D'
+      const idx = rows.value.indexOf(row)
       if (idx !== -1) {
-        const row = rows.value[idx]
-        deletedRows.value.set(key, JSON.parse(JSON.stringify(row)))
-        deletedRows.value = new Map(deletedRows.value)
+        deletedRows.value.push(JSON.parse(JSON.stringify(row)))
         rows.value.splice(idx, 1)
         triggerRef(rows)
       }
-      procMap.value.set(key, 'D')
-      procMap.value = new Map(procMap.value)
     }
   }
 
   function getFlag(key: string | number): ProcFlag {
-    return procMap.value.get(key) ?? 'S'
+    const row = rows.value.find((r: any) => r[rowKey.value] === key)
+    return row?.procFlag ?? 'S'
   }
 
-  function getRowsByFlag<T = any>(flags?: ProcFlag[]): ProcRow<T>[] {
-    const result: ProcRow<T>[] = []
+  function getRowsByFlag(flags?: ProcFlag[]): any[] {
+    const result: any[] = []
 
     // Active rows (S, I, U)
     for (const row of rows.value) {
-      const key = row[rowKey.value]
-      const flag = procMap.value.get(key) ?? 'S'
-      if (!flags || flags.includes(flag)) {
-        result.push({ data: row as T, procFlag: flag })
+      if (!flags || flags.includes(row.procFlag)) {
+        result.push(row)
       }
     }
 
     // Deleted rows (D) — from stash
     if (!flags || flags.includes('D')) {
-      for (const [key, row] of deletedRows.value) {
-        result.push({ data: row as T, procFlag: 'D' })
+      for (const row of deletedRows.value) {
+        result.push(row)
       }
     }
 
     return result
   }
 
-  function getRowByKey<T = any>(key: string | number): ProcRow<T> | undefined {
+  function getRowByKey(key: string | number): any | undefined {
     // Check active rows
     const row = rows.value.find((r: any) => r[rowKey.value] === key)
-    if (row) {
-      const flag = procMap.value.get(key) ?? 'S'
-      return { data: row as T, procFlag: flag }
-    }
+    if (row) return row
     // Check deleted stash
-    const deleted = deletedRows.value.get(key)
-    if (deleted) {
-      return { data: deleted as T, procFlag: 'D' }
-    }
-    return undefined
+    return deletedRows.value.find((r: any) => r[rowKey.value] === key)
   }
 
   function hasChanges(): boolean {
-    for (const flag of procMap.value.values()) {
-      if (flag !== 'S') return true
-    }
-    return false
+    if (deletedRows.value.length > 0) return true
+    return rows.value.some((r: any) => r.procFlag !== 'S')
   }
 
   function clearProcFlags() {
     // Restore D-flagged rows back into rows array
-    for (const [, row] of deletedRows.value) {
+    for (const row of deletedRows.value) {
+      row.procFlag = 'S'
       rows.value.push(row)
     }
-    deletedRows.value = new Map()
+    deletedRows.value = []
 
     // Remove I-flagged rows (never persisted)
-    const keysToRemove: (string | number)[] = []
-    for (const [key, flag] of procMap.value) {
-      if (flag === 'I') keysToRemove.push(key)
-    }
-    for (const key of keysToRemove) {
-      const idx = rows.value.findIndex((r: any) => r[rowKey.value] === key)
-      if (idx !== -1) rows.value.splice(idx, 1)
+    for (let i = rows.value.length - 1; i >= 0; i--) {
+      if (rows.value[i].procFlag === 'I') {
+        rows.value.splice(i, 1)
+      }
     }
 
-    // Reset all flags to S
-    const newMap = new Map<string | number, ProcFlag>()
+    // Reset all remaining to S
     for (const row of rows.value) {
-      newMap.set(row[rowKey.value], 'S')
+      row.procFlag = 'S'
     }
-    procMap.value = newMap
 
     // Clear dirty tracking
     dirtyRows.value.clear()
@@ -183,7 +154,6 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
   }
 
   return {
-    procMap,
     deletedRows,
     initFlags,
     markInsert,

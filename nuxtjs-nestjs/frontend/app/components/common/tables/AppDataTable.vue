@@ -8,7 +8,6 @@ import type {
   ExportFormat,
   ExportScope,
   ProcFlag,
-  ProcRow,
 } from '~/types/table'
 import {
   useTableColumns,
@@ -165,10 +164,12 @@ function insertRow(defaultValues?: Partial<any>): any {
   }
   const key = generateTempKey()
   blank[props.rowKey] = key
+  blank.procFlag = 'I'
   if (defaultValues) {
     Object.assign(blank, defaultValues)
-    // Ensure rowKey is not overwritten by defaultValues
+    // Ensure rowKey and procFlag are not overwritten by defaultValues
     blank[props.rowKey] = key
+    blank.procFlag = 'I'
   }
   rowsRef.value.push(blank)
   triggerRef(rowsRef)
@@ -190,12 +191,12 @@ function deleteRows(keys: (string | number)[]): void {
   }
 }
 
-function getRow<T = any>(key: string | number): ProcRow<T> | undefined {
-  return procFlag.getRowByKey<T>(key)
+function getRow(key: string | number): any | undefined {
+  return procFlag.getRowByKey(key)
 }
 
-function getRows<T = any>(flags?: ProcFlag[]): ProcRow<T>[] {
-  return procFlag.getRowsByFlag<T>(flags)
+function getRows(flags?: ProcFlag[]): any[] {
+  return procFlag.getRowsByFlag(flags)
 }
 
 function hasChanges(): boolean {
@@ -401,15 +402,15 @@ defineExpose({
           <!-- Body -->
           <template #body="{ data, index }">
             <div :data-field="col.field" class="cell-content relative">
-              <!-- Dirty indicator (first visible column only) -->
+              <!-- ProcFlag indicator (first visible column only) -->
               <span
-                v-if="col === columns.visibleColumns.value[0] && procFlag.getFlag(data[rowKey]) !== 'S'"
+                v-if="col === columns.visibleColumns.value[0] && data.procFlag && data.procFlag !== 'S'"
                 class="absolute top-1 left-0 w-1.5 h-1.5 rounded-full"
                 :class="{
-                  'bg-green-500': procFlag.getFlag(data[rowKey]) === 'I',
-                  'bg-amber-500': procFlag.getFlag(data[rowKey]) === 'U',
+                  'bg-green-500': data.procFlag === 'I',
+                  'bg-amber-500': data.procFlag === 'U',
                 }"
-                :title="`procFlag: ${procFlag.getFlag(data[rowKey])}`"
+                :title="`procFlag: ${data.procFlag}`"
               />
               <slot :name="`body-${col.field}`" :data="data" :column="col" :index="index">
                 <template v-if="(col.editType === 'checkbox' || col.editType === 'toggle') && editable && edit.isCellEditable(data, col.field)">

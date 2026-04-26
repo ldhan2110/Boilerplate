@@ -10,11 +10,6 @@ export type ExportScope = 'all' | 'visible' | 'selected'
 
 export type ProcFlag = 'S' | 'I' | 'U' | 'D'
 
-export interface ProcRow<T = any> {
-  data: T
-  procFlag: ProcFlag
-}
-
 export interface ExcelProps {
   type?: 'number' | 'string' | 'date' | 'boolean'
   format?: string

@@ -1,13 +1,13 @@
-import type { ProcFlag, ProcRow } from '~/types/table'
+import type { ProcFlag } from '~/types/table'
 
 export function useAppDataTable<T = any>() {
   const tableRef = ref<any>()
 
-  function insertRow(defaultValues?: Partial<T>): T {
+  function insertRow(defaultValues?: Partial<T>): T & { procFlag: ProcFlag } {
     return tableRef.value?.insertRow(defaultValues)
   }
 
-  function insertRows(rowDefaults: Partial<T>[]): T[] {
+  function insertRows(rowDefaults: Partial<T>[]): (T & { procFlag: ProcFlag })[] {
     return tableRef.value?.insertRows(rowDefaults) ?? []
   }
 
@@ -19,11 +19,11 @@ export function useAppDataTable<T = any>() {
     tableRef.value?.deleteRows(keys)
   }
 
-  function getRow(key: string | number): ProcRow<T> | undefined {
+  function getRow(key: string | number): (T & { procFlag: ProcFlag }) | undefined {
     return tableRef.value?.getRow(key)
   }
 
-  function getRows(flags?: ProcFlag[]): ProcRow<T>[] {
+  function getRows(flags?: ProcFlag[]): (T & { procFlag: ProcFlag })[] {
     return tableRef.value?.getRows(flags) ?? []
   }
 

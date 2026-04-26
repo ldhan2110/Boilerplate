@@ -220,7 +220,7 @@ function handleSaveToBackend() {
   console.log('Payload for backend:', JSON.stringify(changed, null, 2))
   logTableEvent('save', {
     message: `Would send ${changed.length} rows to backend`,
-    payload: changed.map(r => ({ procFlag: r.procFlag, key: (r.data as any).id, name: (r.data as any).name })),
+    payload: changed.map((r: any) => ({ procFlag: r.procFlag, key: r.id, name: r.name })),
   })
 }
 </script>
