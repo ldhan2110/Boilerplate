@@ -521,6 +521,46 @@ defineExpose({
   text-overflow: ellipsis;
 }
 
+/* Cell editor Select / MultiSelect: compact size */
+:deep(.cell-editor .p-select),
+:deep(.cell-editor .p-multiselect) {
+  font-size: 0.85rem;
+}
+
+:deep(.cell-editor .p-select .p-select-label),
+:deep(.cell-editor .p-multiselect .p-multiselect-label) {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.375rem;
+}
+
+:deep(.cell-editor .p-select .p-select-dropdown),
+:deep(.cell-editor .p-multiselect .p-multiselect-dropdown) {
+  width: 1.25rem;
+}
+
+:deep(.cell-editor .p-select .p-select-dropdown .p-icon),
+:deep(.cell-editor .p-multiselect .p-multiselect-dropdown .p-icon) {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+:deep(.cell-editor .p-select .p-select-clear-icon),
+:deep(.cell-editor .p-multiselect .p-multiselect-clear-icon) {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+/* InputNumber: make wrapper fill cell, input truncate on overflow */
+:deep(.cell-editor .p-inputnumber) {
+  width: 100%;
+}
+:deep(.cell-editor .p-inputnumber .p-inputtext) {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Compact paginator styling */
 :deep(.p-paginator) {
   padding: 0 !important;
