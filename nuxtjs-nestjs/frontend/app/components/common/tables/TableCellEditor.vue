@@ -30,7 +30,7 @@ const localValue = computed({
   set: val => emit('update:value', val)
 })
 
-/** For date types: convert string value to Date for PrimeVue picker */
+/** For date-only: convert string value to Date for PrimeVue picker */
 const dateValue = computed(() => {
   if (!isDateType.value || localValue.value == null) return null
   if (localValue.value instanceof Date) return localValue.value
@@ -40,7 +40,44 @@ const dateValue = computed(() => {
   return null
 })
 
-/** Convert PrimeVue Date back to string and emit */
+/** Enforce HH:mm format on time input */
+function onTimeInput(event: Event) {
+  const input = event.target as HTMLInputElement
+  let raw = input.value.replace(/[^\d]/g, '').slice(0, 4)
+
+  // Clamp hours
+  if (raw.length >= 2) {
+    let hh = parseInt(raw.slice(0, 2), 10)
+    if (hh > 23) hh = 23
+    raw = hh.toString().padStart(2, '0') + raw.slice(2)
+  }
+
+  // Clamp minutes
+  if (raw.length >= 4) {
+    let mm = parseInt(raw.slice(2, 4), 10)
+    if (mm > 59) mm = 59
+    raw = raw.slice(0, 2) + mm.toString().padStart(2, '0')
+  }
+
+  // Insert colon
+  const formatted = raw.length > 2 ? raw.slice(0, 2) + ':' + raw.slice(2) : raw
+  input.value = formatted
+  emit('update:value', formatted)
+}
+
+/** Block non-digit and non-colon keys in time input */
+function onTimeKeydown(e: KeyboardEvent) {
+  // Allow navigation/control keys
+  if (['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter', 'Escape'].includes(e.key)) return
+  // Allow Ctrl/Cmd shortcuts
+  if (e.ctrlKey || e.metaKey) return
+  // Block non-digits
+  if (!/^\d$/.test(e.key)) {
+    e.preventDefault()
+  }
+}
+
+/** Convert PrimeVue Date back to string and emit (date-only picker) */
 function onDateUpdate(val: Date | Date[] | (Date | null)[] | null | undefined) {
   if (val == null) {
     emit('update:value', null)
@@ -66,35 +103,18 @@ onMounted(() => {
       return
     }
 
-    // PDatePicker: focus input without opening popup
-    if (isDateType.value) {
+    // PDatePicker (date / datetime): focus input without opening popup
+    if (editType.value === 'date' || editType.value === 'datetime') {
       const dateInput: HTMLInputElement | null = root.querySelector?.('input') ?? root
       if (dateInput?.focus) {
         const blocker = (e: FocusEvent) => e.stopImmediatePropagation()
         dateInput.addEventListener('focus', blocker, { capture: true, once: true })
         dateInput.focus()
       }
-
-      // Workaround: PrimeVue bug — manualInput + showTime/timeOnly reverts on blur.
-      if (editType.value === 'datetime' || editType.value === 'time') {
-        const inputEl: HTMLInputElement | null = root.querySelector?.('input')
-        if (inputEl) {
-          inputEl.addEventListener('blur', () => {
-            const text = inputEl.value?.trim()
-            if (!text) return
-            nextTick(() => {
-              const parsed = fromDateString(text, dateVariant.value)
-              if (parsed) {
-                emit('update:value', toDateString(parsed, dateVariant.value))
-              }
-            })
-          })
-        }
-      }
       return
     }
 
-    // Standard inputs
+    // Standard inputs (including datetime/time which now use PInputText)
     const el = root.querySelector?.('input') ?? root
     el?.focus()
   })
@@ -132,21 +152,25 @@ onMounted(() => {
     :model-value="dateValue"
     date-format="dd/mm/yy"
     show-time
+    hour-format="24"
     manual-input
     v-bind="editProps"
     class="w-full"
     @update:model-value="onDateUpdate"
   />
-  <PDatePicker
-    v-else-if="editType === 'time'"
-    ref="inputRef"
-    :model-value="dateValue"
-    time-only
-    manual-input
-    v-bind="editProps"
-    class="w-full"
-    @update:model-value="onDateUpdate"
-  />
+  <!-- time: validated HH:mm input with clock icon -->
+  <PIconField v-else-if="editType === 'time'" ref="inputRef" icon-position="right">
+    <PInputText
+      :model-value="localValue"
+      placeholder="HH:mm"
+      maxlength="5"
+      v-bind="editProps"
+      class="w-full"
+      @input="onTimeInput"
+      @keydown="onTimeKeydown"
+    />
+    <PInputIcon class="pi pi-clock" />
+  </PIconField>
   <PSelect
     v-else-if="editType === 'select'"
     ref="inputRef"

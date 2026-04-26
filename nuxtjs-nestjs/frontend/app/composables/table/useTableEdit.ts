@@ -23,6 +23,7 @@ export interface UseTableEditReturn {
   handleKeyDown: (e: KeyboardEvent) => void
   onCellEditInit: (event: any) => void
   onCellEditComplete: (event: any) => void
+  onEditorValueChange: (field: string, value: any) => void
   activateCell: (rowIndex: number, field: string) => void
   deactivateCell: () => void
   getDirtyRows: () => any[]
@@ -309,10 +310,25 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     activeCell.value = null
   }
 
+  // Track the last value emitted by the cell editor so we can merge it in
+  // onCellEditComplete even when PrimeVue's editingMeta didn't capture it
+  // (happens with datetime/time manual input due to PrimeVue parseDateTime bug).
+  let lastEditorValue: { field: string; value: any } | null = null
+
+  function onEditorValueChange(field: string, value: any) {
+    lastEditorValue = { field, value }
+  }
+
   function onCellEditComplete(event: any) {
     const { data, newData, field } = event
     const oldRow = JSON.parse(JSON.stringify(data))
     const key = data[rowKey.value]
+
+    // Merge last editor-emitted value if PrimeVue's editingMeta missed it
+    if (lastEditorValue && lastEditorValue.field === field) {
+      newData[field] = lastEditorValue.value
+    }
+    lastEditorValue = null
 
     Object.assign(data, newData)
     dirtyRows.value.add(key)
@@ -325,6 +341,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
   }
 
   function onInlineToggle(row: any, field: string, val: any) {
+    debugger;
     const oldRow = JSON.parse(JSON.stringify(row))
     row[field] = val
     const key = row[rowKey.value]
@@ -356,6 +373,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     handleKeyDown,
     onCellEditInit,
     onCellEditComplete,
+    onEditorValueChange,
     activateCell,
     deactivateCell,
     getDirtyRows,

@@ -126,6 +126,7 @@ const tableRef = ref()
 const tableEventLog = ref<string[]>([])
 
 function logTableEvent(event: string, data: any) {
+  console.log(`Table event: ${event}`, data);
   tableEventLog.value.unshift(`[${new Date().toLocaleTimeString()}] ${event}: ${JSON.stringify(data)}`)
   if (tableEventLog.value.length > 10) tableEventLog.value.pop()
 }
@@ -459,7 +460,7 @@ const tableCellConfig = (row: any, field: string) => {
             :cell-config="tableCellConfig"
             @page="logTableEvent('page', $event)"
             @sort="logTableEvent('sort', $event)"
-            @row-edit-save="logTableEvent('edit-save', { field: $event.field })"
+            @row-edit-save="logTableEvent('edit-save', { field: $event.field , value: $event })"
             @selection-change="logTableEvent('selection', { count: $event.length })"
             @refresh="logTableEvent('refresh', {})"
           />

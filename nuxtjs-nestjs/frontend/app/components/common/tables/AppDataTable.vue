@@ -296,7 +296,6 @@ defineExpose({
             width: '50px',
             background: 'light-dark(#ffffff, #18181B)',
             borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)',
-            zIndex: 1,
           }"
         />
 
@@ -311,7 +310,7 @@ defineExpose({
             width: (col.width ?? defaultColumnWidth) + 'px',
             minWidth: (col.minWidth ?? 80) + 'px',
             textAlign: col.align ?? 'left',
-            ...(col.frozen ? { background: 'light-dark(#ffffff, #18181B)', borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)', zIndex: 1 } : {}),
+            ...(col.frozen ? { background: 'light-dark(#ffffff, #18181B)', borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)'} : {}),
           }"
         >
           <!-- Header with context menu trigger -->
@@ -380,7 +379,7 @@ defineExpose({
                 :row="data"
                 :col-def="col"
                 :options="edit.getCellOptions(data, col)"
-                @update:value="(val: any) => { data[field] = val }"
+                @update:value="(val: any) => { data[field] = val; edit.onEditorValueChange(field, val) }"
               />
             </template>
             <template v-else>
