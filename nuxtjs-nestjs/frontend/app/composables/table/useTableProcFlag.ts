@@ -18,7 +18,6 @@ export interface UseTableProcFlagReturn {
   getRowByKey: <T = any>(key: string | number) => ProcRow<T> | undefined
   hasChanges: () => boolean
   clearProcFlags: () => void
-  activeRows: ComputedRef<any[]>
 }
 
 let _tempCounter = 0
@@ -54,14 +53,14 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
 
   // Watch dirtyRows — mark S rows as U when edited
   watch(dirtyRows, (dirty) => {
+    let changed = false
     for (const key of dirty) {
-      const current = procMap.value.get(key)
-      if (current === 'S') {
+      if (procMap.value.get(key) === 'S') {
         procMap.value.set(key, 'U')
-        // Trigger reactivity
-        procMap.value = new Map(procMap.value)
+        changed = true
       }
     }
+    if (changed) procMap.value = new Map(procMap.value)
   }, { deep: true })
 
   function markInsert(key: string | number) {
@@ -85,7 +84,10 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
       procMap.value.delete(key)
       procMap.value = new Map(procMap.value)
       const idx = rows.value.findIndex(r => r[rowKey.value] === key)
-      if (idx !== -1) rows.value.splice(idx, 1)
+      if (idx !== -1) {
+        rows.value.splice(idx, 1)
+        triggerRef(rows)
+      }
     } else {
       // Stash row data, mark D, remove from visible rows
       const idx = rows.value.findIndex(r => r[rowKey.value] === key)
@@ -94,6 +96,7 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
         deletedRows.value.set(key, JSON.parse(JSON.stringify(row)))
         deletedRows.value = new Map(deletedRows.value)
         rows.value.splice(idx, 1)
+        triggerRef(rows)
       }
       procMap.value.set(key, 'D')
       procMap.value = new Map(procMap.value)
@@ -174,11 +177,10 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
 
     // Clear dirty tracking
     dirtyRows.value.clear()
-  }
 
-  // D rows are already spliced from rows.value in markDelete,
-  // so activeRows just returns rows.value directly.
-  const activeRows = computed(() => rows.value)
+    // Trigger shallowRef reactivity for rows array mutations
+    triggerRef(rows)
+  }
 
   return {
     procMap,
@@ -192,6 +194,5 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
     getRowByKey,
     hasChanges,
     clearProcFlags,
-    activeRows,
   }
 }

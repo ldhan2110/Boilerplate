@@ -7,6 +7,8 @@ import type {
   EditSaveEvent,
   ExportFormat,
   ExportScope,
+  ProcFlag,
+  ProcRow,
 } from '~/types/table'
 import {
   useTableColumns,
@@ -17,6 +19,8 @@ import {
   useTableFooter,
   useTableExport,
   useTableMenus,
+  useTableProcFlag,
+  generateTempKey,
 } from '~/composables/table'
 
 const props = withDefaults(defineProps<AppDataTableProps>(), {
@@ -148,6 +152,61 @@ const edit = useTableEdit({
   },
 })
 
+const procFlag = useTableProcFlag({
+  rows: rowsRef,
+  rowKey: rowKeyRef,
+  dirtyRows: edit.dirtyRows,
+})
+
+function insertRow(defaultValues?: Partial<any>): any {
+  const blank: any = {}
+  for (const col of columns.columnState) {
+    blank[col.field] = null
+  }
+  const key = generateTempKey()
+  blank[props.rowKey] = key
+  if (defaultValues) {
+    Object.assign(blank, defaultValues)
+    // Ensure rowKey is not overwritten by defaultValues
+    blank[props.rowKey] = key
+  }
+  rowsRef.value.push(blank)
+  triggerRef(rowsRef)
+  procFlag.markInsert(key)
+  return blank
+}
+
+function insertRows(rowDefaults: Partial<any>[]): any[] {
+  return rowDefaults.map(defaults => insertRow(defaults))
+}
+
+function deleteRow(key: string | number): void {
+  procFlag.markDelete(key)
+}
+
+function deleteRows(keys: (string | number)[]): void {
+  for (const key of keys) {
+    procFlag.markDelete(key)
+  }
+}
+
+function getRow<T = any>(key: string | number): ProcRow<T> | undefined {
+  return procFlag.getRowByKey<T>(key)
+}
+
+function getRows<T = any>(flags?: ProcFlag[]): ProcRow<T>[] {
+  return procFlag.getRowsByFlag<T>(flags)
+}
+
+function hasChanges(): boolean {
+  return procFlag.hasChanges()
+}
+
+function clearChanges(): void {
+  procFlag.clearProcFlags()
+  edit.clearDirty()
+}
+
 const footer = useTableFooter({
   rows: rowsRef,
   visibleColumns: columns.visibleColumns,
@@ -182,6 +241,13 @@ const menus = useTableMenus({
   },
   rootRef,
   confirmAsync,
+  procFlag: {
+    markInsert: procFlag.markInsert,
+    markDelete: procFlag.markDelete,
+    getFlag: procFlag.getFlag,
+  },
+  generateTempKey,
+  columnState: columns.columnState,
 })
 
 // Virtual scroll options
@@ -220,6 +286,7 @@ onUnmounted(() => document.removeEventListener('fullscreenchange', onFullscreenC
 
 // Expose API
 defineExpose({
+  // Existing
   exportTable: exportTable.exportTable,
   scrollToTop,
   resetColumns: columns.resetColumns,
@@ -228,6 +295,16 @@ defineExpose({
   clearDirty: edit.clearDirty,
   getDirtyRows: edit.getDirtyRows,
   refresh: () => emit('refresh'),
+  // procFlag API
+  insertRow,
+  insertRows,
+  deleteRow,
+  deleteRows,
+  getRow,
+  getRows,
+  hasChanges,
+  clearChanges,
+  getFlag: procFlag.getFlag,
 })
 </script>
 
@@ -326,8 +403,13 @@ defineExpose({
             <div :data-field="col.field" class="cell-content relative">
               <!-- Dirty indicator (first visible column only) -->
               <span
-                v-if="col === columns.visibleColumns.value[0] && edit.dirtyRows.value.has(data[rowKey])"
-                class="absolute top-1 left-0 w-1.5 h-1.5 rounded-full bg-amber-500"
+                v-if="col === columns.visibleColumns.value[0] && procFlag.getFlag(data[rowKey]) !== 'S'"
+                class="absolute top-1 left-0 w-1.5 h-1.5 rounded-full"
+                :class="{
+                  'bg-green-500': procFlag.getFlag(data[rowKey]) === 'I',
+                  'bg-amber-500': procFlag.getFlag(data[rowKey]) === 'U',
+                }"
+                :title="`procFlag: ${procFlag.getFlag(data[rowKey])}`"
               />
               <slot :name="`body-${col.field}`" :data="data" :column="col" :index="index">
                 <template v-if="(col.editType === 'checkbox' || col.editType === 'toggle') && editable && edit.isCellEditable(data, col.field)">

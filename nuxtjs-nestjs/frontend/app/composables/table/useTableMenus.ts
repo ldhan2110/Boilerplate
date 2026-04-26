@@ -1,4 +1,4 @@
-import type { ColumnDef, EditSaveEvent, ExportFormat } from '~/types/table'
+import type { ColumnDef, EditSaveEvent, ExportFormat, ProcFlag } from '~/types/table'
 import type { UseTableColumnsReturn } from './useTableColumns'
 import type { UseTableSortReturn } from './useTableSort'
 import type { UseTableSelectionReturn } from './useTableSelection'
@@ -21,6 +21,13 @@ export interface UseTableMenusOptions {
   }
   rootRef: Ref<HTMLElement | null>
   confirmAsync: (options: any) => Promise<boolean>
+  procFlag: {
+    markInsert: (key: string | number) => void
+    markDelete: (key: string | number) => void
+    getFlag: (key: string | number) => ProcFlag
+  }
+  generateTempKey: () => string
+  columnState: ColumnDef[]
 }
 
 export interface UseTableMenusReturn {
@@ -50,6 +57,9 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
     emit,
     rootRef,
     confirmAsync,
+    procFlag,
+    generateTempKey: genKey,
+    columnState,
   } = options
 
   const { t } = useI18n()
@@ -214,9 +224,10 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
 
   function createBlankRow(): any {
     const blank: any = {}
-    for (const col of columns.columnState) {
+    for (const col of columnState) {
       blank[col.field] = null
     }
+    blank[rowKey.value] = genKey()
     return blank
   }
 
@@ -226,6 +237,8 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
     const blank = createBlankRow()
     const insertIdx = position === 'above' ? idx : idx + 1
     rows.value.splice(insertIdx, 0, blank)
+    triggerRef(rows)
+    procFlag.markInsert(blank[rowKey.value])
     emit.editSave({ oldRow: null, newRow: blank })
   }
 
@@ -233,8 +246,11 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
     const idx = rows.value.indexOf(rightClickedRow.value)
     if (idx === -1) return
     const copy = JSON.parse(JSON.stringify(rightClickedRow.value))
-    copy[rowKey.value] = null
+    const newKey = genKey()
+    copy[rowKey.value] = newKey
     rows.value.splice(idx + 1, 0, copy)
+    triggerRef(rows)
+    procFlag.markInsert(newKey)
     emit.editSave({ oldRow: null, newRow: copy })
   }
 
@@ -243,10 +259,8 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
       message: t('table.deleteConfirmMessage'),
     })
     if (!confirmed) return
-    const idx = rows.value.indexOf(rightClickedRow.value)
-    if (idx !== -1) {
-      rows.value.splice(idx, 1)
-    }
+    const key = rightClickedRow.value[rowKey.value]
+    procFlag.markDelete(key)
   }
 
   async function deleteSelected() {
@@ -254,12 +268,10 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
       message: t('table.deleteConfirmMessage'),
     })
     if (!confirmed) return
-    const selectedKeys = new Set(
-      selection.selectedRows.value.map((r: any) => r[rowKey.value])
-    )
-    const filtered = rows.value.filter(r => !selectedKeys.has(r[rowKey.value]))
-    rows.value.length = 0
-    rows.value.push(...filtered)
+    const keys = selection.selectedRows.value.map((r: any) => r[rowKey.value])
+    for (const key of keys) {
+      procFlag.markDelete(key)
+    }
     selection.clearSelection()
   }
 
