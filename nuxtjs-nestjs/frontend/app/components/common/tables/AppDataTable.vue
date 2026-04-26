@@ -307,7 +307,12 @@ defineExpose({
           :field="col.field"
           :sortable="col.sortable !== false"
           :frozen="col.frozen"
-          :style="{ width: (col.width ?? defaultColumnWidth) + 'px', minWidth: (col.minWidth ?? 80) + 'px', textAlign: col.align ?? 'left' }"
+          :style="{
+            width: (col.width ?? defaultColumnWidth) + 'px',
+            minWidth: (col.minWidth ?? 80) + 'px',
+            textAlign: col.align ?? 'left',
+            ...(col.frozen ? { background: 'light-dark(#ffffff, #18181B)', borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)', zIndex: 1 } : {}),
+          }"
         >
           <!-- Header with context menu trigger -->
           <template #header>

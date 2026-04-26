@@ -41,8 +41,11 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
   const frozenFields = ref(new Set<string>(frozenColumns?.value ?? []))
 
   function syncFrozenToState() {
-    for (const col of columnState) {
-      col.frozen = frozenFields.value.has(col.field)
+    for (let i = 0; i < columnState.length; i++) {
+      const shouldBeFrozen = frozenFields.value.has(columnState[i].field)
+      if (columnState[i].frozen !== shouldBeFrozen) {
+        columnState[i] = { ...columnState[i], frozen: shouldBeFrozen }
+      }
     }
   }
   syncFrozenToState()
@@ -56,31 +59,29 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
   )
 
   function toggleColumnVisibility(field: string) {
-    const col = columnState.find(c => c.field === field)
-    if (col) {
-      col.hidden = !col.hidden
-      triggerRef(columnState as any)
+    const idx = columnState.findIndex(c => c.field === field)
+    if (idx !== -1) {
+      columnState[idx] = { ...columnState[idx], hidden: !columnState[idx].hidden }
     }
   }
 
   function showAllColumns() {
-    for (const col of columnState) {
-      col.hidden = false
+    for (let i = 0; i < columnState.length; i++) {
+      if (columnState[i].hidden) {
+        columnState[i] = { ...columnState[i], hidden: false }
+      }
     }
-    triggerRef(columnState as any)
   }
 
   function freezeColumn(field: string) {
     if (frozenFields.value.size >= maxFrozenColumns.value) return
     frozenFields.value.add(field)
     syncFrozenToState()
-    triggerRef(columnState as any)
   }
 
   function unfreezeColumn(field: string) {
     frozenFields.value.delete(field)
     syncFrozenToState()
-    triggerRef(columnState as any)
   }
 
   function isColumnFrozen(field: string): boolean {
@@ -142,10 +143,11 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     const offset = hasCheckbox ? 1 : 0
     const cols = visibleColumns.value
     for (let i = 0; i < cols.length; i++) {
-      cols[i].width = newWidths[i + offset]
+      const idx = columnState.indexOf(cols[i])
+      if (idx !== -1) {
+        columnState[idx] = { ...columnState[idx], width: newWidths[i + offset] }
+      }
     }
-
-    triggerRef(columnState as any)
   }
 
   function resetColumns() {
