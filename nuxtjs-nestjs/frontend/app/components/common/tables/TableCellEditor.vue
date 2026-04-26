@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import type { ColumnDef } from '~/types/table'
+import { toDateString, fromDateString } from '~/utils/date'
+
+type DateVariant = 'date' | 'datetime' | 'time'
 
 const props = defineProps<{
   value: any
@@ -19,10 +22,34 @@ const editType = computed(() => props.colDef.editType ?? 'input')
 const editProps = computed(() => props.colDef.editProps ?? {})
 const editOptions = computed(() => props.options ?? props.colDef.editOptions ?? [])
 
+const isDateType = computed(() => editType.value === 'date' || editType.value === 'datetime' || editType.value === 'time')
+const dateVariant = computed<DateVariant>(() => editType.value as DateVariant)
+
 const localValue = computed({
   get: () => props.value,
-  set: (val) => emit('update:value', val),
+  set: val => emit('update:value', val)
 })
+
+/** For date types: convert string value to Date for PrimeVue picker */
+const dateValue = computed(() => {
+  if (!isDateType.value || localValue.value == null) return null
+  if (localValue.value instanceof Date) return localValue.value
+  if (typeof localValue.value === 'string') {
+    return fromDateString(localValue.value, dateVariant.value)
+  }
+  return null
+})
+
+/** Convert PrimeVue Date back to string and emit */
+function onDateUpdate(val: Date | Date[] | (Date | null)[] | null | undefined) {
+  if (val == null) {
+    emit('update:value', null)
+    return
+  }
+  const d = Array.isArray(val) ? val[0] : val
+  if (!d) { emit('update:value', null); return }
+  emit('update:value', toDateString(d, dateVariant.value))
+}
 
 onMounted(() => {
   nextTick(() => {
@@ -40,12 +67,29 @@ onMounted(() => {
     }
 
     // PDatePicker: focus input without opening popup
-    if (editType.value === 'date') {
+    if (isDateType.value) {
       const dateInput: HTMLInputElement | null = root.querySelector?.('input') ?? root
       if (dateInput?.focus) {
         const blocker = (e: FocusEvent) => e.stopImmediatePropagation()
         dateInput.addEventListener('focus', blocker, { capture: true, once: true })
         dateInput.focus()
+      }
+
+      // Workaround: PrimeVue bug — manualInput + showTime/timeOnly reverts on blur.
+      if (editType.value === 'datetime' || editType.value === 'time') {
+        const inputEl: HTMLInputElement | null = root.querySelector?.('input')
+        if (inputEl) {
+          inputEl.addEventListener('blur', () => {
+            const text = inputEl.value?.trim()
+            if (!text) return
+            nextTick(() => {
+              const parsed = fromDateString(text, dateVariant.value)
+              if (parsed) {
+                emit('update:value', toDateString(parsed, dateVariant.value))
+              }
+            })
+          })
+        }
       }
       return
     }
@@ -75,9 +119,33 @@ onMounted(() => {
   <PDatePicker
     v-else-if="editType === 'date'"
     ref="inputRef"
-    v-model="localValue"
+    :model-value="dateValue"
+    date-format="dd/mm/yy"
+    manual-input
     v-bind="editProps"
     class="w-full"
+    @update:model-value="onDateUpdate"
+  />
+  <PDatePicker
+    v-else-if="editType === 'datetime'"
+    ref="inputRef"
+    :model-value="dateValue"
+    date-format="dd/mm/yy"
+    show-time
+    manual-input
+    v-bind="editProps"
+    class="w-full"
+    @update:model-value="onDateUpdate"
+  />
+  <PDatePicker
+    v-else-if="editType === 'time'"
+    ref="inputRef"
+    :model-value="dateValue"
+    time-only
+    manual-input
+    v-bind="editProps"
+    class="w-full"
+    @update:model-value="onDateUpdate"
   />
   <PSelect
     v-else-if="editType === 'select'"
@@ -85,8 +153,8 @@ onMounted(() => {
     v-model="localValue"
     :options="editOptions"
     filter
-    showClear
-    resetFilterOnClear
+    show-clear
+    reset-filter-on-clear
     v-bind="editProps"
     class="w-full"
   />
@@ -96,8 +164,8 @@ onMounted(() => {
     v-model="localValue"
     :options="editOptions"
     filter
-    showClear
-    resetFilterOnClear
+    show-clear
+    reset-filter-on-clear
     v-bind="editProps"
     class="w-full"
   />

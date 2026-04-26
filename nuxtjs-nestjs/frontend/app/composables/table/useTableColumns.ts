@@ -44,9 +44,9 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
 
   function syncFrozenToState() {
     for (let i = 0; i < columnState.length; i++) {
-      const shouldBeFrozen = frozenFields.value.has(columnState[i].field)
-      if (columnState[i].frozen !== shouldBeFrozen) {
-        columnState[i] = { ...columnState[i], frozen: shouldBeFrozen }
+      const shouldBeFrozen = frozenFields.value.has(columnState[i]!.field)
+      if (columnState[i]!.frozen !== shouldBeFrozen) {
+        columnState[i] = { ...columnState[i]!, frozen: shouldBeFrozen }
       }
     }
   }
@@ -63,14 +63,14 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
   function toggleColumnVisibility(field: string) {
     const idx = columnState.findIndex(c => c.field === field)
     if (idx !== -1) {
-      columnState[idx] = { ...columnState[idx], hidden: !columnState[idx].hidden }
+      columnState[idx] = { ...columnState[idx]!, hidden: !columnState[idx]!.hidden }
     }
   }
 
   function showAllColumns() {
     for (let i = 0; i < columnState.length; i++) {
-      if (columnState[i].hidden) {
-        columnState[i] = { ...columnState[i], hidden: false }
+      if (columnState[i]!.hidden) {
+        columnState[i] = { ...columnState[i]!, hidden: false }
       }
     }
   }
@@ -145,9 +145,10 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     const offset = hasCheckbox ? 1 : 0
     const cols = visibleColumns.value
     for (let i = 0; i < cols.length; i++) {
-      const idx = columnState.indexOf(cols[i])
+      const col = cols[i]!
+      const idx = columnState.indexOf(col)
       if (idx !== -1) {
-        columnState[idx] = { ...columnState[idx], width: newWidths[i + offset] }
+        columnState[idx] = { ...columnState[idx]!, width: newWidths[i + offset] }
       }
     }
   }

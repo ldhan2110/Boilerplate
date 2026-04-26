@@ -2,6 +2,7 @@
 import { z } from 'zod'
 import { Form } from '@primevue/forms'
 import type { ColumnDef, EditSaveEvent, PageEvent, SortEvent } from '~/types/table'
+import { formatDate, formatTime, formatDateTime } from '~/utils/date'
 
 const { t } = useI18n()
 const toast = useAppToast()
@@ -44,8 +45,10 @@ const formSchema = z.object({
   newsletter: z.boolean().optional(),
   darkMode: z.boolean().optional(),
   notifications: z.boolean().optional(),
-  startDate: z.any().nullable().optional(),
-  dateRange: z.any().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  startDateTime: z.string().nullable().optional(),
+  startTime: z.string().nullable().optional(),
+  dateRange: z.array(z.string()).nullable().optional(),
   content: z.string().optional(),
   age: z.number().min(1, 'Age must be at least 1').max(150, 'Age must be at most 150').nullable().optional(),
   price: z.number().min(0, 'Price must be positive').nullable().optional(),
@@ -71,6 +74,8 @@ const { formProps, formRef, field, values, isDirty, isSubmitting, resetForm } = 
     darkMode: false,
     notifications: true,
     startDate: null,
+    startDateTime: null,
+    startTime: null,
     dateRange: null,
     content: '',
     age: null,
@@ -135,7 +140,9 @@ const employees = ref(
     department: departments[i % departments.length],
     salary: Math.round(40000 + Math.random() * 60000),
     status: employeeStatuses[i % employeeStatuses.length],
-    hireDate: new Date(2020 + Math.floor(Math.random() * 5), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0],
+    hireDate: formatDate(new Date(2020 + Math.floor(Math.random() * 5), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1)),
+    lastLogin: formatDateTime(new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60))),
+    shiftStart: formatTime(new Date(2024, 0, 1, 8 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 60))),
     isRemote: i % 3 === 0,
     isVerified: i % 2 === 0,
   }))
@@ -148,6 +155,8 @@ const tableColumns: ColumnDef[] = [
   { field: 'salary', header: 'Salary', width: 130, editable: true, editType: 'number', align: 'right', sortable: true, aggregation: 'sum', format: (val) => val != null ? `$${Number(val).toLocaleString()}` : '' },
   { field: 'status', header: 'Status', width: 120, editable: true, editType: 'select', editOptions: employeeStatuses, sortable: true, format: (val) => val ? val.charAt(0).toUpperCase() + val.slice(1) : '' },
   { field: 'hireDate', header: 'Hire Date', width: 130, editable: true, editType: 'date', sortable: true },
+  { field: 'lastLogin', header: 'Last Login', width: 180, editable: true, editType: 'datetime', sortable: true },
+  { field: 'shiftStart', header: 'Shift Start', width: 130, editable: true, editType: 'time', sortable: true },
   { field: 'isRemote', header: 'Remote', width: 100, editable: true, editType: 'checkbox', align: 'center', sortable: true },
   { field: 'isVerified', header: 'Verified', width: 100, editable: true, editType: 'toggle', align: 'center', sortable: true },
 ]
@@ -353,6 +362,18 @@ const tableCellConfig = (row: any, field: string) => {
                   v-bind="field('startDate')"
                   label="Start Date"
                   required
+                />
+                <DatePicker
+                  v-bind="field('startDateTime')"
+                  label="Start Date & Time"
+                  variant="datetime"
+                  hint="Date with time picker"
+                />
+                <DatePicker
+                  v-bind="field('startTime')"
+                  label="Start Time"
+                  variant="time"
+                  hint="Time only picker"
                 />
                 <DatePicker
                   v-bind="field('dateRange')"

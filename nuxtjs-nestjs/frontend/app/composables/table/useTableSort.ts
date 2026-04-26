@@ -50,8 +50,8 @@ export function useTableSort(options: UseTableSortOptions): UseTableSortReturn {
   function onSort(event: any) {
     multiSortMeta.value = event.multiSortMeta ?? []
     if (multiSortMeta.value.length > 0) {
-      sortField.value = multiSortMeta.value[0].field
-      sortOrder.value = multiSortMeta.value[0].order
+      sortField.value = multiSortMeta.value[0]!.field
+      sortOrder.value = multiSortMeta.value[0]!.order
     }
     emitSort()
   }
