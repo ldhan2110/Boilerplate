@@ -341,7 +341,6 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
   }
 
   function onInlineToggle(row: any, field: string, val: any) {
-    debugger;
     const oldRow = JSON.parse(JSON.stringify(row))
     row[field] = val
     const key = row[rowKey.value]
