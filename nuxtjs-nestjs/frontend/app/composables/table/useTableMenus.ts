@@ -33,6 +33,7 @@ export interface UseTableMenusReturn {
   onHeaderContextMenu: (event: MouseEvent, col: ColumnDef) => void
   onRowContextMenu: (event: any) => void
   isRefreshing: Ref<boolean>
+  showColumnManager: Ref<boolean>
 }
 
 export function useTableMenus(options: UseTableMenusOptions): UseTableMenusReturn {
@@ -58,6 +59,7 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
   const rightClickedColumn = ref<ColumnDef | null>(null)
   const rightClickedRow = ref<any>(null)
   const isRefreshing = ref(false)
+  const showColumnManager = ref(false)
 
   const headerMenuModel = computed(() => {
     if (!headerContextMenu.value || !rightClickedColumn.value) return []
@@ -108,26 +110,21 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
     items.push(
       { separator: true },
       {
-        label: t('table.columns'),
+        label: t('table.showHideColumns'),
         icon: 'pi pi-th-large',
-        items: [
-          ...columns.columnState.map(c => ({
-            label: c.header,
-            icon: c.hidden ? 'pi pi-eye-slash' : 'pi pi-eye',
-            command: () => columns.toggleColumnVisibility(c.field),
-          })),
-          { separator: true },
-          {
-            label: t('table.showAllColumns'),
-            icon: 'pi pi-eye',
-            command: () => columns.showAllColumns(),
-          },
-          {
-            label: t('table.resetToDefault'),
-            icon: 'pi pi-refresh',
-            command: () => columns.resetColumns(),
-          },
-        ],
+        command: () => { showColumnManager.value = true },
+      },
+    )
+
+    items.push(
+      { separator: true },
+      {
+        label: t('table.resetToDefault'),
+        icon: 'pi pi-undo',
+        command: () => {
+          sort.clearSort()
+          columns.resetColumns()
+        },
       },
     )
 
@@ -304,5 +301,6 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
     onHeaderContextMenu,
     onRowContextMenu,
     isRefreshing,
+    showColumnManager,
   }
 }

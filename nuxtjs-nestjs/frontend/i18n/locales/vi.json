@@ -80,6 +80,7 @@
     "freezeColumn": "Cố định cột",
     "unfreezeColumn": "Bỏ cố định cột",
     "columns": "Các cột",
+    "showHideColumns": "Ẩn/Hiện cột",
     "showAllColumns": "Hiện tất cả cột",
     "resetToDefault": "Đặt lại mặc định",
     "copyRow": "Sao chép dòng",

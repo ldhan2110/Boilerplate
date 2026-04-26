@@ -80,6 +80,7 @@
     "freezeColumn": "Freeze column",
     "unfreezeColumn": "Unfreeze column",
     "columns": "Columns",
+    "showHideColumns": "Show/Hide columns",
     "showAllColumns": "Show all columns",
     "resetToDefault": "Reset to default",
     "copyRow": "Copy row",

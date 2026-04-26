@@ -452,6 +452,60 @@ defineExpose({
       :model="menus.rowMenuModel.value"
       :global="false"
     />
+
+    <!-- Column Manager Dialog -->
+    <PDialog
+      v-model:visible="menus.showColumnManager.value"
+      :header="$t('table.showHideColumns')"
+      modal
+      :style="{ width: '360px' }"
+      :draggable="false"
+    >
+      <div class="flex flex-col gap-1">
+        <div
+          v-for="(col, idx) in columns.columnState"
+          :key="col.field"
+          class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800"
+        >
+          <PCheckbox
+            :model-value="!col.hidden"
+            :binary="true"
+            @update:model-value="() => columns.toggleColumnVisibility(col.field)"
+          />
+          <span class="flex-1 text-sm truncate">{{ col.header }}</span>
+          <button
+            class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
+            :disabled="idx === 0"
+            @click="columns.moveColumnUp(col.field)"
+          >
+            <i class="pi pi-chevron-up text-xs" />
+          </button>
+          <button
+            class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
+            :disabled="idx === columns.columnState.length - 1"
+            @click="columns.moveColumnDown(col.field)"
+          >
+            <i class="pi pi-chevron-down text-xs" />
+          </button>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4 pt-3 border-t border-surface-200 dark:border-surface-700">
+        <PButton
+          :label="$t('table.showAllColumns')"
+          icon="pi pi-eye"
+          severity="secondary"
+          size="small"
+          @click="columns.showAllColumns()"
+        />
+        <PButton
+          :label="$t('table.resetToDefault')"
+          icon="pi pi-refresh"
+          severity="secondary"
+          size="small"
+          @click="columns.resetColumns()"
+        />
+      </div>
+    </PDialog>
   </div>
 </template>
 

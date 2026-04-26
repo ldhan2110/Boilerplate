@@ -19,6 +19,8 @@ export interface UseTableColumnsReturn {
   isColumnFrozen: (field: string) => boolean
   canFreezeMore: Ref<boolean>
   onColumnResizeEnd: (dataTableInstance: any) => void
+  moveColumnUp: (field: string) => void
+  moveColumnDown: (field: string) => void
 }
 
 export function useTableColumns(options: UseTableColumnsOptions): UseTableColumnsReturn {
@@ -150,6 +152,22 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     }
   }
 
+  function moveColumnUp(field: string) {
+    const idx = columnState.findIndex(c => c.field === field)
+    if (idx > 0) {
+      const item = columnState.splice(idx, 1)[0]!
+      columnState.splice(idx - 1, 0, item)
+    }
+  }
+
+  function moveColumnDown(field: string) {
+    const idx = columnState.findIndex(c => c.field === field)
+    if (idx >= 0 && idx < columnState.length - 1) {
+      const item = columnState.splice(idx, 1)[0]!
+      columnState.splice(idx + 1, 0, item)
+    }
+  }
+
   function resetColumns() {
     const restored = initialSnapshot.map(col => ({ ...col }))
     columnState.length = 0
@@ -170,5 +188,7 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     isColumnFrozen,
     canFreezeMore,
     onColumnResizeEnd,
+    moveColumnUp,
+    moveColumnDown,
   }
 }

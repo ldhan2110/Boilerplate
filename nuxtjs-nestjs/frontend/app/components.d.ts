@@ -19,6 +19,7 @@ declare module 'vue' {
     PContextMenu: typeof import('primevue/contextmenu')['default']
     PDataTable: typeof import('primevue/datatable')['default']
     PDatePicker: typeof import('primevue/datepicker')['default']
+    PDialog: typeof import('primevue/dialog')['default']
     PDivider: typeof import('primevue/divider')['default']
     PDrawer: typeof import('primevue/drawer')['default']
     PEditor: typeof import('primevue/editor')['default']
