@@ -136,6 +136,8 @@ const employees = ref(
     salary: Math.round(40000 + Math.random() * 60000),
     status: employeeStatuses[i % employeeStatuses.length],
     hireDate: new Date(2020 + Math.floor(Math.random() * 5), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0],
+    isRemote: i % 3 === 0,
+    isVerified: i % 2 === 0,
   }))
 )
 
@@ -146,6 +148,8 @@ const tableColumns: ColumnDef[] = [
   { field: 'salary', header: 'Salary', width: 130, editable: true, editType: 'number', align: 'right', sortable: true, aggregation: 'sum', format: (val) => val != null ? `$${Number(val).toLocaleString()}` : '' },
   { field: 'status', header: 'Status', width: 120, editable: true, editType: 'select', editOptions: employeeStatuses, sortable: true, format: (val) => val ? val.charAt(0).toUpperCase() + val.slice(1) : '' },
   { field: 'hireDate', header: 'Hire Date', width: 130, editable: true, editType: 'date', sortable: true },
+  { field: 'isRemote', header: 'Remote', width: 100, editable: true, editType: 'checkbox', align: 'center', sortable: true },
+  { field: 'isVerified', header: 'Verified', width: 100, editable: true, editType: 'toggle', align: 'center', sortable: true },
 ]
 
 const tableCellConfig = (row: any, field: string) => {

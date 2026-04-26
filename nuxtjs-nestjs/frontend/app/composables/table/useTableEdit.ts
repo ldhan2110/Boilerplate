@@ -32,6 +32,7 @@ export interface UseTableEditReturn {
   isCellDisabled: (row: any, field: string) => boolean
   getCellOptions: (row: any, col: ColumnDef) => any[] | undefined
   getCellDisplayValue: (val: any, row: any, col: ColumnDef) => string
+  onInlineToggle: (row: any, field: string, val: any) => void
 }
 
 export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
@@ -100,6 +101,9 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     const config = getCellConfig(row, col.field)
     if (config?.render) return config.render(val, row)
     if (col.format) return col.format(val, row)
+    if (col.editType === 'checkbox' || col.editType === 'toggle') {
+      return val ? 'Yes' : 'No'
+    }
     return val?.toString() ?? ''
   }
 
@@ -220,6 +224,13 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
   }
 
   function focusEditorElement(container: Element) {
+    // Checkbox / Toggle: focus the input inside the wrapper
+    const checkbox = container.querySelector<HTMLElement>('.p-checkbox input, .p-toggleswitch input')
+    if (checkbox) {
+      checkbox.focus()
+      return
+    }
+
     // PSelect / PMultiSelect: focusable element is a span[role="combobox"], not an input
     const combobox = container.querySelector<HTMLElement>('[role="combobox"]')
     if (combobox) {
@@ -303,6 +314,18 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     })
   }
 
+  function onInlineToggle(row: any, field: string, val: any) {
+    const oldRow = JSON.parse(JSON.stringify(row))
+    row[field] = val
+    const key = row[rowKey.value]
+    dirtyRows.value.add(key)
+    emit.editSave({
+      oldRow,
+      newRow: { ...row },
+      field,
+    })
+  }
+
   function getDirtyRows(): any[] {
     return rows.value.filter(row => dirtyRows.value.has(row[rowKey.value]))
   }
@@ -332,5 +355,6 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     isCellDisabled,
     getCellOptions,
     getCellDisplayValue,
+    onInlineToggle,
   }
 }

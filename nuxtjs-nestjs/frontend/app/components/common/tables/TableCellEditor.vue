@@ -26,6 +26,9 @@ const localValue = computed({
 
 onMounted(() => {
   nextTick(() => {
+    // Checkbox/toggle: no focus needed, they work via click
+    if (editType.value === 'checkbox' || editType.value === 'toggle') return
+
     const root = inputRef.value?.$el
     if (!root) return
 
@@ -98,6 +101,27 @@ onMounted(() => {
     v-bind="editProps"
     class="w-full"
   />
+  <div
+    v-else-if="editType === 'checkbox'"
+    ref="inputRef"
+    class="flex items-center justify-center w-full px-2 py-1"
+  >
+    <PCheckbox
+      v-model="localValue"
+      :binary="true"
+      v-bind="editProps"
+    />
+  </div>
+  <div
+    v-else-if="editType === 'toggle'"
+    ref="inputRef"
+    class="flex items-center justify-center w-full px-2 py-1"
+  >
+    <PToggleSwitch
+      v-model="localValue"
+      v-bind="editProps"
+    />
+  </div>
   <PInputText
     v-else
     ref="inputRef"

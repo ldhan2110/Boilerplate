@@ -294,7 +294,8 @@ defineExpose({
           :frozen="true"
           :style="{
             width: '50px',
-            borderRight: '0.5px solid #E2E8F0',
+            background: 'var(--p-card-bg)',
+            borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)',
             zIndex: 1,
           }"
         />
@@ -329,7 +330,34 @@ defineExpose({
                 class="absolute top-1 left-0 w-1.5 h-1.5 rounded-full bg-amber-500"
               />
               <slot :name="`body-${col.field}`" :data="data" :column="col" :index="index">
-                <span class="cell-text" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
+                <template v-if="(col.editType === 'checkbox' || col.editType === 'toggle') && editable && edit.isCellEditable(data, col.field)">
+                  <div class="flex items-center justify-center" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
+                    <PCheckbox
+                      v-if="col.editType === 'checkbox'"
+                      :model-value="data[col.field]"
+                      :binary="true"
+                      :disabled="edit.isCellDisabled(data, col.field)"
+                      v-bind="col.editProps"
+                      @update:model-value="(val: any) => edit.onInlineToggle(data, col.field, val)"
+                    />
+                    <PToggleSwitch
+                      v-else
+                      :model-value="data[col.field]"
+                      :disabled="edit.isCellDisabled(data, col.field)"
+                      v-bind="col.editProps"
+                      @update:model-value="(val: any) => edit.onInlineToggle(data, col.field, val)"
+                    />
+                  </div>
+                </template>
+                <template v-else-if="col.editType === 'checkbox' || col.editType === 'toggle'">
+                  <div class="flex items-center justify-center" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
+                    <i
+                      class="pi text-sm"
+                      :class="data[col.field] ? 'pi-check-circle text-green-500' : 'pi-times-circle text-surface-400'"
+                    />
+                  </div>
+                </template>
+                <span v-else class="cell-text" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
                   <component v-if="col.render" :is="() => col.render!(data[col.field], data, col)" />
                   <template v-else>{{ edit.getCellDisplayValue(data[col.field], data, col) }}</template>
                 </span>
@@ -337,8 +365,8 @@ defineExpose({
             </div>
           </template>
 
-          <!-- Cell editor -->
-          <template v-if="editable" #editor="{ data, field, index }">
+          <!-- Cell editor (skip checkbox/toggle — they render inline in body) -->
+          <template v-if="editable && col.editType !== 'checkbox' && col.editType !== 'toggle'" #editor="{ data, field, index }">
             <div :data-field="field" class="cell-editor" @keydown.tab.prevent.stop="edit.handleKeyDown($event)">
             <template v-if="edit.isCellEditable(data, field) && !edit.isCellDisabled(data, field)">
               <TableCellEditor
@@ -364,7 +392,7 @@ defineExpose({
             <slot :name="`footer-${col.field}`" :column="col" :value="footer.footerValues.value[col.field]">
               <template v-if="footer.footerValues.value[col.field]">
                 <span class="font-semibold" :class="{ 'text-right block': col.align === 'right' || ['number'].includes(col.editType ?? '') }">
-                  {{ footer.footerValues.value[col.field].formatted }}
+                  {{ footer?.footerValues?.value[col.field]?.formatted }}
                 </span>
               </template>
               <template v-else-if="footer.firstNonAggColumn.value === col.field">
@@ -432,6 +460,11 @@ defineExpose({
   z-index: 9999;
   overflow: auto;
   background: var(--p-surface-0);
+}
+
+:deep(.p-checkbox) {
+  height: 1.25rem !important;
+  width: 1.25rem !important;
 }
 
 :deep(td) {
