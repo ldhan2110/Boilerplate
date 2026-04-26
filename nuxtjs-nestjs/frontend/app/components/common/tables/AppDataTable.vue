@@ -292,11 +292,7 @@ defineExpose({
           v-if="selectable && selectionMode === 'checkbox'"
           selection-mode="multiple"
           :frozen="true"
-          :style="{
-            width: '50px',
-            background: 'light-dark(#ffffff, #18181B)',
-            borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)',
-          }"
+          :style="{ width: '50px' }"
         />
 
         <!-- Data columns -->
@@ -310,7 +306,7 @@ defineExpose({
             width: (col.width ?? defaultColumnWidth) + 'px',
             minWidth: (col.minWidth ?? 80) + 'px',
             textAlign: col.align ?? 'left',
-            ...(col.frozen ? { background: 'light-dark(#ffffff, #18181B)', borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)'} : {}),
+            ...(col.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {}),
           }"
         >
           <!-- Header with context menu trigger -->
@@ -539,11 +535,50 @@ defineExpose({
   padding: 0.5rem 0.75rem;
 }
 
-/* Frozen columns need an opaque background so content doesn't bleed through on horizontal scroll */
-:deep(.p-datatable-thead > tr > th[data-p-frozen-column="true"]),
-:deep(.p-datatable-tbody > tr > td[data-p-frozen-column="true"]),
-:deep(.p-datatable-tfoot > tr > td[data-p-frozen-column="true"]) {
-  background: light-dark(#ffffff, #1f1f1f);
+/*
+ * Z-index layering for frozen columns + sticky header/footer.
+ *
+ * PrimeVue defaults (scrollable table):
+ *   thead/tfoot: position:sticky, z-index:1
+ *   frozen th:   position:sticky, z-index:1
+ *   frozen td:   position:sticky, z-index:auto, background:inherit
+ *
+ * Problem: frozen td with z-index >= thead's z-index overlaps header
+ * (equal z-index → DOM order wins → tbody paints over thead).
+ *
+ * Solution: bump thead/tfoot to z-2 at the element level.
+ * Frozen cells use z-1 for horizontal scroll layering within their section.
+ */
+
+/* Sticky thead/tfoot: z-2 so entire header/footer sits above frozen body cells */
+:deep(.p-datatable-scrollable-table > .p-datatable-thead) {
+  z-index: 2 !important;
+}
+
+:deep(.p-datatable-scrollable-table > .p-datatable-tfoot) {
+  z-index: 2 !important;
+}
+
+/* Frozen body cells: opaque + z-1 (above non-frozen siblings on horizontal scroll) */
+:deep(.p-datatable-tbody > tr > td.p-datatable-frozen-column) {
+  background: var(--p-datatable-row-background);
+  z-index: 1 !important;
+}
+
+/* Frozen header cells: opaque + z-1 within thead stacking context (horizontal scroll) */
+:deep(.p-datatable-thead > tr > th.p-datatable-frozen-column) {
+  background: var(--p-datatable-header-cell-background);
+}
+
+/* Frozen footer cells: opaque + z-1 within tfoot stacking context */
+:deep(.p-datatable-tfoot > tr > td.p-datatable-frozen-column) {
+  background: var(--p-datatable-footer-cell-background);
+}
+
+/* Frozen column right border for visual separation */
+:deep(th.p-datatable-frozen-column),
+:deep(td.p-datatable-frozen-column) {
+  border-right: 0.5px solid var(--p-datatable-body-cell-border-color);
 }
 
 /* Force cells to respect column width and truncate overflow */
