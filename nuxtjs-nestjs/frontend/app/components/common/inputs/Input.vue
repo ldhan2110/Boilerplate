@@ -4,7 +4,7 @@ type InputVariant = 'input' | 'textarea'
 
 interface InputProps {
   /** v-model binding */
-  modelValue?: string | number
+  modelValue?: string | number | undefined
   /** Label text — i18n key or raw text */
   label?: string
   /** Placeholder — i18n key or raw text */
@@ -41,7 +41,7 @@ const props = withDefaults(defineProps<InputProps>(), {
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string | number]
+  'update:modelValue': [value: string | number | undefined]
 }>()
 
 const { t, te } = useI18n()
@@ -88,14 +88,14 @@ const computedType = computed(() => {
     <div v-else-if="type === 'password'" class="relative" :class="{ 'w-full': fluid }">
       <PInputText
         :id="inputId"
-        :model-value="modelValue"
+        :model-value="modelValue as string"
         :type="computedType"
         :placeholder="resolvedPlaceholder"
         :disabled="disabled"
         :fluid="fluid"
         :invalid="hasError"
         size="small"
-        @update:model-value="emit('update:modelValue', $event)"
+        @update:model-value="emit('update:modelValue', $event!)"
       />
       <button
         type="button"
@@ -109,14 +109,14 @@ const computedType = computed(() => {
     <PInputText
       v-else
       :id="inputId"
-      :model-value="modelValue"
+      :model-value="modelValue as string"
       :type="type"
       :placeholder="resolvedPlaceholder"
       :disabled="disabled"
       :fluid="fluid"
       :invalid="hasError"
       size="small"
-      @update:model-value="emit('update:modelValue', $event)"
+      @update:model-value="emit('update:modelValue', $event!)"
     />
   </FormField>
 </template>

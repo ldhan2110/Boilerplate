@@ -294,7 +294,7 @@ defineExpose({
           :frozen="true"
           :style="{
             width: '50px',
-            background: 'var(--p-card-bg)',
+            background: 'light-dark(#ffffff, #18181B)',
             borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)',
             zIndex: 1,
           }"
@@ -431,7 +431,7 @@ defineExpose({
         />
       </div>
       <!-- Total rows display (fixed on right) -->
-      <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-[5px]">
+      <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-1.25">
         Total: {{ pagination.totalCount.value }} row(s)
       </span>
     </div>
@@ -485,7 +485,7 @@ defineExpose({
 :deep(.p-datatable-thead > tr > th[data-p-frozen-column="true"]),
 :deep(.p-datatable-tbody > tr > td[data-p-frozen-column="true"]),
 :deep(.p-datatable-tfoot > tr > td[data-p-frozen-column="true"]) {
-  background: white;
+  background: light-dark(#ffffff, #1f1f1f);
 }
 
 /* Force cells to respect column width and truncate overflow */

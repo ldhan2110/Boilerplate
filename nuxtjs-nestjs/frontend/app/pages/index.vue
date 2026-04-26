@@ -40,7 +40,7 @@ const formSchema = z.object({
   role: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
-  agreeTerms: z.boolean().optional(),
+  agreeTerms: z.string().optional(),
   newsletter: z.boolean().optional(),
   darkMode: z.boolean().optional(),
   notifications: z.boolean().optional(),

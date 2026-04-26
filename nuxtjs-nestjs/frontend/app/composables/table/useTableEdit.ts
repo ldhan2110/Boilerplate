@@ -213,10 +213,20 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
         e.preventDefault()
         move('up')
         break
-      case 'Enter':
+      case 'Enter': {
         e.preventDefault()
-        move('down')
+        const { rowIndex, field } = activeCell.value
+        const col = visibleColumns.value.find(c => c.field === field)
+        if (col && (col.editType === 'checkbox' || col.editType === 'toggle')) {
+          const row = displayedRows.value[rowIndex]
+          if (row && isCellEditable(row, field) && !isCellDisabled(row, field)) {
+            onInlineToggle(row, field, !row[field])
+          }
+        } else {
+          move('down')
+        }
         break
+      }
       case 'Escape':
         deactivateCell()
         break
