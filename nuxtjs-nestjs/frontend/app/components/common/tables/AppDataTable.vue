@@ -7,7 +7,8 @@ import type {
   EditSaveEvent,
   ExportFormat,
   ExportScope,
-  ProcFlag
+  ProcFlag,
+  ValidationError
 } from '~/types/table'
 import type { HeaderCell } from '~/composables/table/useTableSpan'
 import {
@@ -16,6 +17,7 @@ import {
   useTablePagination,
   useTableSelection,
   useTableEdit,
+  useTableValidation,
   useTableFooter,
   useTableExport,
   useTableMenus,
@@ -357,11 +359,33 @@ const edit = useTableEdit({
   getMergeGroupIndices: span.getMergeGroupIndices
 })
 
+const validation = useTableValidation({
+  rows: rowsRef,
+  displayedRows: pagination.displayedRows,
+  rowKey: rowKeyRef,
+  columnState: columns.columnState,
+  visibleColumns: columns.visibleColumns,
+  cellConfig: cellConfigRef,
+  editable: editableRef,
+  editableColumns: editableColumnsRef
+})
+
 const procFlag = useTableProcFlag({
   rows: rowsRef,
   rowKey: rowKeyRef,
   dirtyRows: edit.dirtyRows
 })
+
+function onCellEditCompleteWithValidation(event: any) {
+  edit.onCellEditComplete(event)
+  const { data, field } = event
+  validation.validateCell(data, field)
+}
+
+function onInlineToggleWithValidation(row: any, field: string, val: any) {
+  edit.onInlineToggle(row, field, val)
+  validation.validateCell(row, field)
+}
 
 function insertRow(defaultValues?: Partial<any>): any {
   const blank: any = {}
@@ -380,6 +404,12 @@ function insertRow(defaultValues?: Partial<any>): any {
   rowsRef.value.push(blank)
   triggerRef(rowsRef)
   procFlag.markInsert(key)
+  // Validate required fields on new row
+  for (const col of columns.columnState) {
+    if (col.field && col.validators) {
+      validation.validateCell(blank, col.field)
+    }
+  }
   return blank
 }
 
@@ -420,6 +450,7 @@ function hasChanges(): boolean {
 function clearChanges(): void {
   procFlag.clearProcFlags()
   edit.clearDirty()
+  validation.clearErrors()
 }
 
 function resetTable(): void {
@@ -428,6 +459,7 @@ function resetTable(): void {
   selection.clearSelection()
   procFlag.clearProcFlags()
   edit.clearDirty()
+  validation.clearErrors()
 }
 
 const footer = useTableFooter({
@@ -530,7 +562,13 @@ defineExpose({
   getRows,
   hasChanges,
   clearChanges,
-  getFlag: procFlag.getFlag
+  getFlag: procFlag.getFlag,
+  // Validation API
+  validate: validation.validate,
+  getErrors: validation.getErrors,
+  getCellErrors: validation.getCellErrors,
+  clearErrors: validation.clearErrors,
+  isValid: validation.isValid
 })
 </script>
 
@@ -584,7 +622,7 @@ defineExpose({
 
         @column-resize-end="() => columns.onColumnResizeEnd(dataTableRef)"
         @cell-edit-init="edit.onCellEditInit"
-        @cell-edit-complete="edit.onCellEditComplete"
+        @cell-edit-complete="onCellEditCompleteWithValidation"
         @row-contextmenu="menus.onRowContextMenu"
       >
         <!-- Empty slot -->
@@ -699,8 +737,10 @@ defineExpose({
           <template #body="{ data, index }">
             <div
               v-row-span="col.rowSpan ? span.getBodyRowSpan(data, col.field!, index) : 1"
+              v-tooltip.top="validation.hasError(data, col.field!) ? validation.getCellErrors(data, col.field!).join('\n') : undefined"
               :data-field="col.field"
-              class="cell-content relative"
+              class="cell-content"
+              :class="{ 'cell-invalid': validation.hasError(data, col.field!) }"
             >
               <slot
                 :name="`body-${col.field}`"
@@ -719,14 +759,14 @@ defineExpose({
                       :binary="true"
                       :disabled="edit.isCellDisabled(data, col.field!)"
                       v-bind="col.editProps"
-                      @update:model-value="(val: any) => edit.onInlineToggle(data, col.field!, val)"
+                      @update:model-value="(val: any) => onInlineToggleWithValidation(data, col.field!, val)"
                     />
                     <PToggleSwitch
                       v-else
                       :model-value="data[col.field!]"
                       :disabled="edit.isCellDisabled(data, col.field!)"
                       v-bind="col.editProps"
-                      @update:model-value="(val: any) => edit.onInlineToggle(data, col.field!, val)"
+                      @update:model-value="(val: any) => onInlineToggleWithValidation(data, col.field!, val)"
                     />
                   </div>
                 </template>
@@ -1047,6 +1087,7 @@ defineExpose({
 
 .cell-content {
   overflow: hidden;
+  min-height: 1.25rem;
 }
 
 .cell-text {
@@ -1207,6 +1248,18 @@ defineExpose({
 
 .cm-drop-after {
   box-shadow: 0 2px 0 0 var(--p-primary-color);
+}
+
+/* Validation error — red outline on td (body mode only, not during edit) */
+:deep(td:has(.cell-invalid)) {
+  outline: 2px solid var(--p-red-400);
+  outline-offset: -2px;
+}
+
+/* Smaller tooltip text for validation errors */
+:deep(.p-tooltip .p-tooltip-text) {
+  font-size: 0.7rem;
+  line-height: 1.3;
 }
 
 /* ==================== Tablet ==================== */

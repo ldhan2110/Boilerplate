@@ -98,5 +98,13 @@
     "totals": "Tổng cộng",
     "noData": "Không có dữ liệu",
     "totalRecords": "Tổng: {total} dòng"
+  },
+  "validation": {
+    "required": "Trường này là bắt buộc",
+    "maxLength": "Tối đa {max} ký tự",
+    "minLength": "Tối thiểu {min} ký tự",
+    "min": "Giá trị tối thiểu là {min}",
+    "max": "Giá trị tối đa là {max}",
+    "pattern": "Định dạng không hợp lệ"
   }
 }

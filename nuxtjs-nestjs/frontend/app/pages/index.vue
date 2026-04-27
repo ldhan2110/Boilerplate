@@ -216,7 +216,7 @@ const rowSpanColumns: ColumnDef[] = [
 ]
 
 // --- AppDataTable demo ---
-const { tableRef, insertRow, insertRows, deleteRow, deleteRows, getRows, hasChanges, clearChanges } = useAppDataTable<typeof employees.value[0]>()
+const { tableRef, insertRow, insertRows, deleteRow, deleteRows, getRows, hasChanges, clearChanges, validate, clearErrors, isValid } = useAppDataTable<typeof employees.value[0]>()
 const tableEventLog = ref<string[]>([])
 
 function logTableEvent(event: string, data: any) {
@@ -245,13 +245,13 @@ const employees = ref(
 
 const tableColumns: ColumnDef[] = [
   { field: 'id', header: 'ID', width: 70, frozen: true, editable: false, sortable: true, align: 'center' },
-  { field: 'name', header: 'Name', width: 180, editable: true, editType: 'input', sortable: true },
-  { field: 'department', header: 'Department', width: 150, editable: true, editType: 'select', editOptions: departments, sortable: true },
-  { field: 'salary', header: 'Salary', width: 130, editable: true, editType: 'number', align: 'right', sortable: true, aggregation: 'sum', format: (val) => val != null ? `$${Number(val).toLocaleString()}` : '' },
-  { field: 'status', header: 'Status', width: 120, editable: true, editType: 'select', editOptions: employeeStatuses, sortable: true, format: (val) => val ? val.charAt(0).toUpperCase() + val.slice(1) : '' },
-  { field: 'hireDate', header: 'Hire Date', width: 130, editable: true, editType: 'date', sortable: true },
+  { field: 'name', header: 'Name', width: 180, editable: true, editType: 'input', sortable: true, validators: { required: true, maxLength: 50 } },
+  { field: 'department', header: 'Department', width: 150, editable: true, editType: 'select', editOptions: departments, sortable: true, validators: { required: true } },
+  { field: 'salary', header: 'Salary', width: 130, editable: true, editType: 'number', align: 'right', sortable: true, aggregation: 'sum', format: (val) => val != null ? `$${Number(val).toLocaleString()}` : '', validators: { required: true, min: 0, max: 999999 } },
+  { field: 'status', header: 'Status', width: 120, editable: true, editType: 'select', editOptions: employeeStatuses, sortable: true, format: (val) => val ? val.charAt(0).toUpperCase() + val.slice(1) : '', validators: { required: true } },
+  { field: 'hireDate', header: 'Hire Date', width: 130, editable: true, editType: 'date', sortable: true, validators: { required: true } },
   { field: 'lastLogin', header: 'Last Login', width: 180, editable: true, editType: 'datetime', sortable: true },
-  { field: 'shiftStart', header: 'Shift Start', width: 130, editable: true, editType: 'time', sortable: true },
+  { field: 'shiftStart', header: 'Shift Start', width: 130, editable: true, editType: 'time', sortable: true, validators: { pattern: /^\d{2}:\d{2}$/, messages: { pattern: 'Use HH:mm format' } } },
   { field: 'isRemote', header: 'Remote', width: 100, editable: true, editType: 'checkbox', align: 'center', sortable: true },
   { field: 'isVerified', header: 'Verified', width: 100, editable: true, editType: 'toggle', align: 'center', sortable: true },
 ]
@@ -259,6 +259,20 @@ const tableColumns: ColumnDef[] = [
 const tableCellConfig = (row: any, field: string) => {
   if (field === 'salary' && row.status === 'inactive') {
     return { disabled: true, editable: false, render: () => 'N/A' }
+  }
+  // Per-cell validation: probation employees salary capped at 60k
+  if (field === 'salary' && row.status === 'probation') {
+    return {
+      validators: {
+        required: true,
+        min: 0,
+        max: 60000,
+        custom: (val: any, r: any) => {
+          if (val != null && val > 60000) return 'Probation salary cannot exceed $60,000'
+          return null
+        }
+      }
+    }
   }
 }
 
@@ -305,7 +319,30 @@ function handleClearChanges() {
   logTableEvent('clearChanges', { hasChanges: hasChanges() })
 }
 
+function handleValidate() {
+  const errors = validate()
+  if (errors.length === 0) {
+    toast.showSuccess('All cells valid!')
+    logTableEvent('validate', { valid: true })
+  } else {
+    toast.showWarning(`${errors.length} validation error(s) found`)
+    logTableEvent('validate', { valid: false, errorCount: errors.length, errors: errors.slice(0, 5) })
+  }
+}
+
+function handleClearErrors() {
+  clearErrors()
+  logTableEvent('clearErrors', { cleared: true })
+}
+
 function handleSaveToBackend() {
+  // Validate before save
+  const errors = validate()
+  if (errors.length > 0) {
+    toast.showWarning(`Fix ${errors.length} validation error(s) before saving`)
+    logTableEvent('save-blocked', { errorCount: errors.length })
+    return
+  }
   const changed = getRows(['I', 'U', 'D'])
   if (changed.length === 0) {
     logTableEvent('save', { message: 'No changes to save' })
@@ -595,6 +632,12 @@ function handleSaveToBackend() {
             <Button label="Get All" icon="pi pi-list" variant="secondary" size="sm" @click="handleGetAll" />
             <Button label="Save to Backend" icon="pi pi-cloud-upload" variant="success" size="sm" @click="handleSaveToBackend" />
             <Button label="Clear Changes" icon="pi pi-undo" variant="secondary" size="sm" outlined @click="handleClearChanges" />
+            <!-- Validation -->
+            <Button label="Validate All" icon="pi pi-check-circle" variant="warn" size="sm" @click="handleValidate" />
+            <Button label="Clear Errors" icon="pi pi-eraser" variant="secondary" size="sm" outlined @click="handleClearErrors" />
+            <span v-if="!isValid" class="inline-flex items-center text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded">
+              Has Errors
+            </span>
             <span v-if="hasChanges()" class="inline-flex items-center text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded">
               Unsaved Changes
             </span>

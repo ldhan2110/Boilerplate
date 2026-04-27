@@ -98,5 +98,13 @@
     "totals": "Totals",
     "noData": "No data found",
     "totalRecords": "Total: {total} row(s)"
+  },
+  "validation": {
+    "required": "This field is required",
+    "maxLength": "Maximum {max} characters",
+    "minLength": "Minimum {min} characters",
+    "min": "Minimum value is {min}",
+    "max": "Maximum value is {max}",
+    "pattern": "Invalid format"
   }
 }

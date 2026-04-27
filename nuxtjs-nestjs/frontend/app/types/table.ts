@@ -36,6 +36,7 @@ export interface ColumnDef {
   format?: (val: any, row: any) => string
   aggregation?: AggregationType
   excelProps?: ExcelProps
+  validators?: ValidationRules
 }
 
 export interface FooterAgg {
@@ -44,11 +45,29 @@ export interface FooterAgg {
   format?: (val: number) => string
 }
 
+export interface ValidationRules {
+  required?: boolean
+  maxLength?: number
+  minLength?: number
+  min?: number
+  max?: number
+  pattern?: RegExp
+  custom?: (value: any, row: any, field: string) => string | null
+  messages?: Partial<Record<'required' | 'maxLength' | 'minLength' | 'min' | 'max' | 'pattern', string>>
+}
+
+export interface ValidationError {
+  field: string
+  rowKey: string | number
+  messages: string[]
+}
+
 export interface CellConfig {
   editable?: boolean
   disabled?: boolean
   options?: any[]
   render?: (val: any, row: any) => string
+  validators?: ValidationRules
 }
 
 export interface PageEvent {

@@ -1,4 +1,4 @@
-import type { ProcFlag } from '~/types/table'
+import type { ProcFlag, ValidationError } from '~/types/table'
 
 export function useAppDataTable<T = any>() {
   const tableRef = ref<any>()
@@ -43,6 +43,24 @@ export function useAppDataTable<T = any>() {
     tableRef.value?.deleteSelected()
   }
 
+  function validate(): ValidationError[] {
+    return tableRef.value?.validate() ?? []
+  }
+
+  function getErrors(): ValidationError[] {
+    return tableRef.value?.getErrors() ?? []
+  }
+
+  function getCellErrors(row: any, field: string): string[] {
+    return tableRef.value?.getCellErrors(row, field) ?? []
+  }
+
+  function clearErrors(rowKey?: string | number): void {
+    tableRef.value?.clearErrors(rowKey)
+  }
+
+  const isValid = computed(() => tableRef.value?.isValid ?? true)
+
   return {
     tableRef,
     insertRow,
@@ -55,5 +73,10 @@ export function useAppDataTable<T = any>() {
     hasChanges,
     clearChanges,
     clearSelection,
+    validate,
+    getErrors,
+    getCellErrors,
+    clearErrors,
+    isValid,
   }
 }
