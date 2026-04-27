@@ -46,9 +46,16 @@ function flattenLeaves(columns: ColumnDef[]): ColumnDef[] {
   const leaves: ColumnDef[] = []
   for (const col of columns) {
     if (col.children?.length) {
+      if (import.meta.dev && col.field) {
+        console.warn(`[useTableSpan] Column "${col.header}" has both 'field' and 'children'. It will be treated as a group node; 'field' is ignored.`)
+      }
       leaves.push(...flattenLeaves(col.children))
     } else {
-      leaves.push(col)
+      if (import.meta.dev && !col.field) {
+        console.warn(`[useTableSpan] Column "${col.header}" has neither 'field' nor 'children'. It will be skipped.`)
+      } else {
+        leaves.push(col)
+      }
     }
   }
   return leaves

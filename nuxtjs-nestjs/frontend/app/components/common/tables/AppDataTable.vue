@@ -161,6 +161,15 @@ const span = useTableSpan({
   rowKey: rowKeyRef,
 })
 
+// Warn if virtual scroll + rowSpan used together (unsupported)
+if (import.meta.dev) {
+  watch([virtualScrollRef, span.spanFields], ([vs, fields]) => {
+    if (vs && fields.length > 0) {
+      console.warn('[AppDataTable] rowSpan is not supported with virtual scroll. Row merging will not work correctly with recycled DOM rows.')
+    }
+  }, { immediate: true })
+}
+
 const bodyColumns = computed(() => {
   if (span.hasColumnGroups.value) {
     return span.leafColumns.value.filter(col => !col.hidden)
