@@ -348,30 +348,37 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     }
     lastEditorValue = null
 
-    Object.assign(data, newData)
-    dirtyRows.value.add(key)
-
-    // If this field is part of a rowSpan merge group, update all rows in the group
+    // Capture merge group BEFORE mutating data — mutation triggers spanMap
+    // recompute which breaks the group apart before we can read it
+    let groupIndices: number[] | null = null
     if (getMergeGroupIndices && getBodyRowSpan) {
       const index = displayedRows.value.indexOf(data)
       if (index !== -1) {
         const col = visibleColumns.value.find(c => c.field === field)
         if (col?.rowSpan) {
-          const groupIndices = getMergeGroupIndices(index, field)
-          for (const gi of groupIndices) {
-            if (gi === index) continue // already updated above
-            const groupRow = displayedRows.value[gi]
-            if (!groupRow) continue
-            groupRow[field] = newData[field]
-            const groupKey = groupRow[rowKey.value]
-            dirtyRows.value.add(groupKey)
-            emit.editSave({
-              oldRow: JSON.parse(JSON.stringify({ ...groupRow, [field]: oldRow[field] })),
-              newRow: { ...groupRow },
-              field,
-            })
-          }
+          groupIndices = getMergeGroupIndices(index, field)
         }
+      }
+    }
+
+    Object.assign(data, newData)
+    dirtyRows.value.add(key)
+
+    // Update all rows in the merge group
+    if (groupIndices) {
+      const index = displayedRows.value.indexOf(data)
+      for (const gi of groupIndices) {
+        if (gi === index) continue // already updated above
+        const groupRow = displayedRows.value[gi]
+        if (!groupRow) continue
+        groupRow[field] = newData[field]
+        const groupKey = groupRow[rowKey.value]
+        dirtyRows.value.add(groupKey)
+        emit.editSave({
+          oldRow: JSON.parse(JSON.stringify({ ...groupRow, [field]: oldRow[field] })),
+          newRow: { ...groupRow },
+          field,
+        })
       }
     }
 
@@ -384,31 +391,38 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
 
   function onInlineToggle(row: any, field: string, val: any) {
     const oldRow = JSON.parse(JSON.stringify(row))
-    row[field] = val
-    const key = row[rowKey.value]
-    dirtyRows.value.add(key)
 
-    // If this field is part of a rowSpan merge group, update all rows in the group
+    // Capture merge group BEFORE mutating data
+    let groupIndices: number[] | null = null
     if (getMergeGroupIndices && getBodyRowSpan) {
       const index = displayedRows.value.indexOf(row)
       if (index !== -1) {
         const col = visibleColumns.value.find(c => c.field === field)
         if (col?.rowSpan) {
-          const groupIndices = getMergeGroupIndices(index, field)
-          for (const gi of groupIndices) {
-            if (gi === index) continue
-            const groupRow = displayedRows.value[gi]
-            if (!groupRow) continue
-            groupRow[field] = val
-            const groupKey = groupRow[rowKey.value]
-            dirtyRows.value.add(groupKey)
-            emit.editSave({
-              oldRow: JSON.parse(JSON.stringify({ ...groupRow, [field]: oldRow[field] })),
-              newRow: { ...groupRow },
-              field,
-            })
-          }
+          groupIndices = getMergeGroupIndices(index, field)
         }
+      }
+    }
+
+    row[field] = val
+    const key = row[rowKey.value]
+    dirtyRows.value.add(key)
+
+    // Update all rows in the merge group
+    if (groupIndices) {
+      const index = displayedRows.value.indexOf(row)
+      for (const gi of groupIndices) {
+        if (gi === index) continue
+        const groupRow = displayedRows.value[gi]
+        if (!groupRow) continue
+        groupRow[field] = val
+        const groupKey = groupRow[rowKey.value]
+        dirtyRows.value.add(groupKey)
+        emit.editSave({
+          oldRow: JSON.parse(JSON.stringify({ ...groupRow, [field]: oldRow[field] })),
+          newRow: { ...groupRow },
+          field,
+        })
       }
     }
 
