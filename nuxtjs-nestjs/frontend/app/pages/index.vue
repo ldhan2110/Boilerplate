@@ -186,7 +186,10 @@ const salesColumns: ColumnDef[] = [
   },
 ]
 
-// --- RowSpan demo data ---
+// --- RowSpan demo ---
+const { tableRef: rowSpanTableRef, deleteSelected: deleteRowSpanSelected } = useAppDataTable<any>()
+const rowSpanSelectionCount = ref(0)
+
 const rowSpanData = ref([
   { id: 1, department: 'Engineering', team: 'Frontend', name: 'Alice', salary: 85000 },
   { id: 2, department: 'Engineering', team: 'Frontend', name: 'Bob', salary: 78000 },
@@ -198,6 +201,12 @@ const rowSpanData = ref([
   { id: 8, department: 'HR', team: 'Recruiting', name: 'Hank', salary: 70000 },
   { id: 9, department: 'HR', team: 'Recruiting', name: 'Iris', salary: 67000 },
 ])
+
+function handleDeleteRowSpanRows() {
+  if (rowSpanSelectionCount.value === 0) return
+  deleteRowSpanSelected()
+  logTableEvent('rowspan-delete', { deleted: true })
+}
 
 const rowSpanColumns: ColumnDef[] = [
   { field: 'department', header: 'Department', width: 140, rowSpan: true },
@@ -648,17 +657,34 @@ function handleSaveToBackend() {
       <!-- RowSpan Demo -->
       <PCard>
         <template #title>
-          <span class="text-base">RowSpan Demo (auto-merge)</span>
+          <span class="text-base">RowSpan Demo (auto-merge + selection)</span>
         </template>
         <template #content>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <Button
+              label="Delete Selected"
+              icon="pi pi-trash"
+              variant="danger"
+              size="sm"
+              :disabled="rowSpanSelectionCount === 0"
+              @click="handleDeleteRowSpanRows"
+            />
+            <span v-if="rowSpanSelectionCount > 0" class="inline-flex items-center text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
+              {{ rowSpanSelectionCount }} row(s) selected
+            </span>
+          </div>
           <AppDataTable
+            ref="rowSpanTableRef"
             :rows="rowSpanData"
             :columns="rowSpanColumns"
             :editable="true"
+            :selectable="true"
+            selection-mode="checkbox"
             :show-gridlines="true"
             pagination-mode="client"
             sort-backend="client"
             @row-edit-save="logTableEvent('rowspan-edit', $event)"
+            @selection-change="(sel: any[]) => { rowSpanSelectionCount = sel.length; logTableEvent('rowspan-selection', { count: sel.length }) }"
           />
         </template>
       </PCard>

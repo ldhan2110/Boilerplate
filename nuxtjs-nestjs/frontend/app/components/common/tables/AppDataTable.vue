@@ -397,6 +397,14 @@ function deleteRows(keys: (string | number)[]): void {
   }
 }
 
+function deleteSelected(): void {
+  const keys = selection.selectedRows.value.map((r: any) => r[props.rowKey])
+  for (const key of keys) {
+    procFlag.markDelete(key)
+  }
+  selection.clearSelection()
+}
+
 function getRow(key: string | number): any | undefined {
   return procFlag.getRowByKey(key)
 }
@@ -517,6 +525,7 @@ defineExpose({
   insertRows,
   deleteRow,
   deleteRows,
+  deleteSelected,
   getRow,
   getRows,
   hasChanges,

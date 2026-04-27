@@ -35,15 +35,25 @@ export function useAppDataTable<T = any>() {
     tableRef.value?.clearChanges()
   }
 
+  function clearSelection(): void {
+    tableRef.value?.clearSelection()
+  }
+
+  function deleteSelected(): void {
+    tableRef.value?.deleteSelected()
+  }
+
   return {
     tableRef,
     insertRow,
     insertRows,
     deleteRow,
     deleteRows,
+    deleteSelected,
     getRow,
     getRows,
     hasChanges,
     clearChanges,
+    clearSelection,
   }
 }
