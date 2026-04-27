@@ -13,6 +13,9 @@ export interface UseTableEditOptions {
   emit: {
     editSave: (payload: EditSaveEvent) => void
   }
+  // Span support (optional -- undefined when no span active)
+  getBodyRowSpan?: (row: any, field: string, index: number) => number
+  getMergeGroupIndices?: (index: number, field: string) => number[]
 }
 
 export interface UseTableEditReturn {
@@ -48,6 +51,8 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     cellConfig,
     dataTableRef,
     emit,
+    getBodyRowSpan,
+    getMergeGroupIndices,
   } = options
 
   const activeCell = ref<{ rowIndex: number; field: string } | null>(null)
@@ -174,6 +179,17 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     const targetField = grid[row]?.[col]
     if (!targetField) return
     const targetRow = displayedRows.value[row]
+
+    // Skip cells hidden by rowSpan merge (span = 0)
+    if (getBodyRowSpan && targetField) {
+      const spanVal = getBodyRowSpan(targetRow, targetField, row)
+      if (spanVal === 0) {
+        activeCell.value = { rowIndex: row, field: targetField }
+        move(direction, depth + 1)
+        return
+      }
+    }
+
     if (isCellDisabled(targetRow, targetField)) {
       activeCell.value = { rowIndex: row, field: targetField }
       move(direction, depth + 1)
@@ -333,6 +349,30 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     Object.assign(data, newData)
     dirtyRows.value.add(key)
 
+    // If this field is part of a rowSpan merge group, update all rows in the group
+    if (getMergeGroupIndices && getBodyRowSpan) {
+      const index = displayedRows.value.indexOf(data)
+      if (index !== -1) {
+        const col = visibleColumns.value.find(c => c.field === field)
+        if (col?.rowSpan) {
+          const groupIndices = getMergeGroupIndices(index, field)
+          for (const gi of groupIndices) {
+            if (gi === index) continue // already updated above
+            const groupRow = displayedRows.value[gi]
+            if (!groupRow) continue
+            groupRow[field] = newData[field]
+            const groupKey = groupRow[rowKey.value]
+            dirtyRows.value.add(groupKey)
+            emit.editSave({
+              oldRow: JSON.parse(JSON.stringify({ ...groupRow, [field]: oldRow[field] })),
+              newRow: { ...groupRow },
+              field,
+            })
+          }
+        }
+      }
+    }
+
     emit.editSave({
       oldRow,
       newRow: { ...data },
@@ -345,6 +385,31 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     row[field] = val
     const key = row[rowKey.value]
     dirtyRows.value.add(key)
+
+    // If this field is part of a rowSpan merge group, update all rows in the group
+    if (getMergeGroupIndices && getBodyRowSpan) {
+      const index = displayedRows.value.indexOf(row)
+      if (index !== -1) {
+        const col = visibleColumns.value.find(c => c.field === field)
+        if (col?.rowSpan) {
+          const groupIndices = getMergeGroupIndices(index, field)
+          for (const gi of groupIndices) {
+            if (gi === index) continue
+            const groupRow = displayedRows.value[gi]
+            if (!groupRow) continue
+            groupRow[field] = val
+            const groupKey = groupRow[rowKey.value]
+            dirtyRows.value.add(groupKey)
+            emit.editSave({
+              oldRow: JSON.parse(JSON.stringify({ ...groupRow, [field]: oldRow[field] })),
+              newRow: { ...groupRow },
+              field,
+            })
+          }
+        }
+      }
+    }
+
     emit.editSave({
       oldRow,
       newRow: { ...row },
