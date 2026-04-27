@@ -16,8 +16,12 @@ export interface ExcelProps {
 }
 
 export interface ColumnDef {
-  field: string
+  field?: string              // optional -- group nodes omit this
   header: string
+  children?: ColumnDef[]      // nested sub-columns (group node)
+  rowSpan?: boolean           // auto-merge consecutive duplicate values in body
+
+  // Leaf-only props (ignored when children is present)
   width?: number
   minWidth?: number
   sortable?: boolean
