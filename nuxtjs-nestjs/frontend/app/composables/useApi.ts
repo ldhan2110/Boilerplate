@@ -1,3 +1,4 @@
+import { onUnmounted } from 'vue'
 import { apiClient } from '~/services'
 
 interface UseApiOptions {
@@ -11,14 +12,20 @@ export function useApi<T>(url: string, options: UseApiOptions = {}) {
   const data = ref<T | null>(null) as Ref<T | null>
   const error = ref<Error | null>(null)
   const loading = ref(false)
+  let currentController: AbortController | null = null
 
   async function execute(overrideBody?: Record<string, any> | null): Promise<T | null> {
+    currentController?.abort()
+    const controller = new AbortController()
+    currentController = controller
+
     loading.value = true
     error.value = null
     try {
       const method = options.method || 'GET'
       const fetchOptions: Parameters<typeof $fetch>[1] = {
-        headers: options.headers
+        headers: options.headers,
+        signal: controller.signal
       }
       const body = overrideBody !== undefined ? overrideBody : options.body
 
@@ -43,12 +50,21 @@ export function useApi<T>(url: string, options: UseApiOptions = {}) {
       data.value = result
       return result
     } catch (e: any) {
+      if (e.name === 'AbortError') return null
       error.value = e
       return null
     } finally {
-      loading.value = false
+      if (currentController === controller) {
+        loading.value = false
+      }
     }
   }
 
-  return { data, error, loading, execute }
+  function abort() {
+    currentController?.abort()
+  }
+
+  onUnmounted(() => abort())
+
+  return { data, error, loading, execute, abort }
 }
