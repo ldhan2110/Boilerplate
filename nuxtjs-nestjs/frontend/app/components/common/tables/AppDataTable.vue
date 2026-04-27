@@ -702,16 +702,6 @@ defineExpose({
               :data-field="col.field"
               class="cell-content relative"
             >
-              <!-- ProcFlag indicator (first visible column only) -->
-              <span
-                v-if="col === bodyColumns[0] && data.procFlag && data.procFlag !== 'S'"
-                class="absolute top-1 left-0 w-1.5 h-1.5 rounded-full"
-                :class="{
-                  'bg-green-500': data.procFlag === 'I',
-                  'bg-amber-500': data.procFlag === 'U'
-                }"
-                :title="`procFlag: ${data.procFlag}`"
-              />
               <slot
                 :name="`body-${col.field}`"
                 :data="data"
@@ -1217,5 +1207,242 @@ defineExpose({
 
 .cm-drop-after {
   box-shadow: 0 2px 0 0 var(--p-primary-color);
+}
+
+/* ==================== Tablet ==================== */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* Cell padding + font */
+  :deep(.p-datatable-tbody > tr > td),
+  :deep(.p-datatable-thead > tr > th) {
+    padding: 0.25rem 0.375rem;
+    font-size: 0.75rem;
+  }
+
+  /* Header text truncation */
+  :deep(.p-datatable-thead > tr > th) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Footer */
+  :deep(.p-datatable-tfoot > tr > td) {
+    padding: 0.25rem 0.375rem;
+    font-size: 0.75rem;
+  }
+
+  /* Header sort icon + badge */
+  :deep(.p-datatable-sort-icon) {
+    width: 0.7rem;
+    height: 0.7rem;
+  }
+  :deep(.p-datatable-sort-badge) {
+    font-size: 0.5rem;
+    min-width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  /* Cell editors */
+  :deep(.cell-editor .p-select),
+  :deep(.cell-editor .p-multiselect) {
+    font-size: 0.75rem;
+  }
+  :deep(.cell-editor .p-select .p-select-label),
+  :deep(.cell-editor .p-multiselect .p-multiselect-label) {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.1875rem;
+  }
+  :deep(.cell-editor .p-select .p-select-dropdown),
+  :deep(.cell-editor .p-multiselect .p-multiselect-dropdown) {
+    width: 1rem;
+  }
+  :deep(.cell-editor .p-select .p-select-dropdown .p-icon),
+  :deep(.cell-editor .p-multiselect .p-multiselect-dropdown .p-icon) {
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+  :deep(.cell-editor .p-select .p-select-clear-icon),
+  :deep(.cell-editor .p-multiselect .p-multiselect-clear-icon) {
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+
+  /* Paginator */
+  :deep(.p-paginator) {
+    gap: 0.1875rem;
+    font-size: 0.6875rem;
+  }
+  :deep(.p-paginator .p-paginator-content) {
+    gap: 0.1875rem;
+  }
+  :deep(.p-paginator .p-paginator-current) {
+    font-size: 0.6875rem;
+  }
+  :deep(.p-paginator .p-paginator-rpp-dropdown) {
+    font-size: 0.6875rem;
+    height: 1.5rem;
+  }
+  :deep(.p-paginator .p-paginator-rpp-dropdown .p-select-label) {
+    font-size: 0.6875rem;
+  }
+  :deep(.p-paginator .p-paginator-rpp-dropdown .p-select-dropdown .p-icon) {
+    width: 0.55rem;
+    height: 0.55rem;
+  }
+  :deep(.p-paginator .p-paginator-page),
+  :deep(.p-paginator .p-paginator-next),
+  :deep(.p-paginator .p-paginator-prev),
+  :deep(.p-paginator .p-paginator-first),
+  :deep(.p-paginator .p-paginator-last) {
+    font-size: 0.6875rem;
+    min-width: 1.5rem;
+    height: 1.5rem;
+  }
+  :deep(.p-paginator .p-paginator-first .p-icon),
+  :deep(.p-paginator .p-paginator-prev .p-icon),
+  :deep(.p-paginator .p-paginator-next .p-icon),
+  :deep(.p-paginator .p-paginator-last .p-icon) {
+    width: 0.55rem;
+    height: 0.55rem;
+  }
+}
+
+/* ==================== Mobile ==================== */
+@media (max-width: 639px) {
+  /* Cell padding + font */
+  :deep(.p-datatable-tbody > tr > td),
+  :deep(.p-datatable-thead > tr > th) {
+    padding: 0.1875rem 0.25rem;
+    font-size: 0.6875rem;
+  }
+
+  /* Header text truncation */
+  :deep(.p-datatable-thead > tr > th) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Header sort icon + badge */
+  :deep(.p-datatable-sort-icon) {
+    width: 0.5625rem;
+    height: 0.5625rem;
+  }
+  :deep(.p-datatable-sort-badge) {
+    font-size: 0.4375rem;
+    min-width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  /* Footer */
+  :deep(.p-datatable-tfoot > tr > td) {
+    padding: 0.1875rem 0.25rem;
+    font-size: 0.6875rem;
+  }
+
+  /* Cell editors */
+  :deep(.cell-editor .p-select),
+  :deep(.cell-editor .p-multiselect) {
+    font-size: 0.6875rem;
+  }
+  :deep(.cell-editor .p-select .p-select-label),
+  :deep(.cell-editor .p-multiselect .p-multiselect-label) {
+    font-size: 0.6875rem;
+    padding: 0.0625rem 0.125rem;
+  }
+  :deep(.cell-editor .p-select .p-select-dropdown),
+  :deep(.cell-editor .p-multiselect .p-multiselect-dropdown) {
+    width: 0.875rem;
+  }
+  :deep(.cell-editor .p-select .p-select-dropdown .p-icon),
+  :deep(.cell-editor .p-multiselect .p-multiselect-dropdown .p-icon) {
+    width: 0.4375rem;
+    height: 0.4375rem;
+  }
+  :deep(.cell-editor .p-select .p-select-clear-icon),
+  :deep(.cell-editor .p-multiselect .p-multiselect-clear-icon) {
+    width: 0.4375rem;
+    height: 0.4375rem;
+  }
+
+  /* Checkbox — box + icon */
+  :deep(.p-checkbox) {
+    height: 0.875rem !important;
+    width: 0.875rem !important;
+  }
+  :deep(.p-checkbox .p-checkbox-box) {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  :deep(.p-checkbox .p-checkbox-icon) {
+    font-size: 0.5rem;
+  }
+  :deep(.p-checkbox .p-checkbox-box .p-icon) {
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+
+  /* Toggle switch — compact for mobile */
+  :deep(.p-toggleswitch) {
+    width: 2rem;
+    height: 1rem;
+  }
+  :deep(.p-toggleswitch .p-toggleswitch-slider) {
+    width: 2rem;
+    height: 1rem;
+  }
+  :deep(.p-toggleswitch .p-toggleswitch-handle) {
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-top: -6px;
+  }
+
+  /* Paginator */
+  :deep(.p-paginator) {
+    gap: 0.125rem;
+    font-size: 0.625rem;
+  }
+  :deep(.p-paginator .p-paginator-content) {
+    gap: 0.125rem;
+  }
+  :deep(.p-paginator .p-paginator-current) {
+    font-size: 0.625rem;
+  }
+  :deep(.p-paginator .p-paginator-rpp-dropdown) {
+    font-size: 0.625rem;
+    height: 1.5rem;
+  }
+  :deep(.p-paginator .p-paginator-rpp-dropdown .p-select-label) {
+    font-size: 0.625rem;
+  }
+  :deep(.p-paginator .p-paginator-rpp-dropdown .p-select-dropdown .p-icon) {
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+  :deep(.p-paginator .p-paginator-page),
+  :deep(.p-paginator .p-paginator-next),
+  :deep(.p-paginator .p-paginator-prev),
+  :deep(.p-paginator .p-paginator-first),
+  :deep(.p-paginator .p-paginator-last) {
+    font-size: 0.625rem;
+    min-width: 1.5rem;
+    height: 1.5rem;
+  }
+  :deep(.p-paginator .p-paginator-first .p-icon),
+  :deep(.p-paginator .p-paginator-prev .p-icon),
+  :deep(.p-paginator .p-paginator-next .p-icon),
+  :deep(.p-paginator .p-paginator-last .p-icon) {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+
+  /* Hide page numbers on mobile — keep only prev/next */
+  :deep(.p-paginator .p-paginator-pages) {
+    display: none;
+  }
+  :deep(.p-paginator .p-paginator-first),
+  :deep(.p-paginator .p-paginator-last) {
+    display: none;
+  }
 }
 </style>
