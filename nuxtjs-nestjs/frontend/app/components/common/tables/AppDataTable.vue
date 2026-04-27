@@ -9,6 +9,7 @@ import type {
   ExportScope,
   ProcFlag,
 } from '~/types/table'
+import type { HeaderCell } from '~/composables/table/useTableSpan'
 import {
   useTableColumns,
   useTableSort,
@@ -20,6 +21,7 @@ import {
   useTableMenus,
   useTableProcFlag,
   useTableSpan,
+  useTableColumnDrag,
   generateTempKey,
 } from '~/composables/table'
 
@@ -124,6 +126,7 @@ const headerContextMenuRef = computed(() => props.headerContextMenu)
 const rowContextMenuRef = computed(() => props.rowContextMenu)
 const exportFilenameRef = computed(() => props.exportFilename)
 const cellConfigRef = computed(() => props.cellConfig)
+const reorderableColumnsRef = computed(() => props.reorderableColumns)
 
 // --- Wire composables ---
 const columns = useTableColumns({
@@ -176,6 +179,32 @@ const bodyColumns = computed(() => {
   }
   return columns.visibleColumns.value
 })
+
+const columnDrag = useTableColumnDrag({
+  columns: columnsRef,
+  hasColumnGroups: span.hasColumnGroups,
+  headerRows: span.headerRows,
+  reorderableColumns: reorderableColumnsRef,
+  columnsApi: columns,
+})
+
+/** Resolve a HeaderCell to its top-level column index (for CSS class binding). */
+function resolveHeaderCellGroup(cell: HeaderCell): number | null {
+  const cols = props.columns
+  if (cell.field) {
+    for (let i = 0; i < cols.length; i++) {
+      const col = cols[i]!
+      if (col.children?.length) {
+        if (col.children.some(c => c.field === cell.field)) return i
+      } else if (col.field === cell.field) {
+        return i
+      }
+    }
+    return null
+  }
+  // Group header
+  return cols.findIndex(col => col.children?.length && col.header === cell.header)
+}
 
 const selection = useTableSelection({
   selectable: selectableRef,
@@ -388,7 +417,7 @@ defineExpose({
         :striped-rows="stripedRows"
         :resizable-columns="resizableColumns"
         column-resize-mode="expand"
-        :reorderable-columns="reorderableColumns"
+        :reorderable-columns="reorderableColumns && !span.hasColumnGroups.value"
         :scroll-height="tableHeight ?? (virtualScrollRef ? scrollHeight : undefined)"
         :scrollable="!!tableHeight || stickyHeader || virtualScrollRef"
         :virtual-scroller-options="virtualScrollerOptions"
@@ -431,12 +460,27 @@ defineExpose({
               <PColumn
                 v-for="(cell, ci) in hRow"
                 :key="ci"
+                v-bind="columnDrag.getDragAttrs(cell, ri)"
                 :header="cell.header"
                 :colspan="cell.colspan > 1 ? cell.colspan : undefined"
                 :rowspan="cell.rowspan > 1 ? cell.rowspan : undefined"
                 :sortable="cell.col ? cell.col.sortable !== false : false"
                 :field="cell.field"
                 :frozen="cell.col?.frozen"
+                :pt="{
+                  root: {
+                    class: columnDrag.isActive.value ? [
+                      {
+                        'column-drag-over-left': columnDrag.dragOverGroupIndex.value !== null
+                          && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
+                          && columnDrag.dragDirection.value === 'left',
+                        'column-drag-over-right': columnDrag.dragOverGroupIndex.value !== null
+                          && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
+                          && columnDrag.dragDirection.value === 'right',
+                      },
+                    ] : [],
+                  },
+                }"
                 :style="{
                   ...(cell.col ? {
                     width: (cell.col.width ?? defaultColumnWidth) + 'px',
@@ -444,6 +488,7 @@ defineExpose({
                     textAlign: cell.col.align ?? 'left',
                   } : { textAlign: 'center' }),
                   ...(cell.col?.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {}),
+                  ...(columnDrag.isActive.value && !cell.col?.frozen ? { cursor: 'grab' } : {}),
                 }"
               />
             </PRow>
@@ -894,5 +939,18 @@ defineExpose({
 /* Merged rowSpan cells: vertical alignment */
 :deep(td[rowspan]) {
   vertical-align: middle;
+}
+
+/* Column drag-and-drop visual feedback */
+:deep(.column-drag-source) {
+  opacity: 0.4 !important;
+}
+
+:deep(.column-drag-over-left) {
+  border-left: 2.5px solid var(--p-primary-color) !important;
+}
+
+:deep(.column-drag-over-right) {
+  border-right: 2.5px solid var(--p-primary-color) !important;
 }
 </style>
