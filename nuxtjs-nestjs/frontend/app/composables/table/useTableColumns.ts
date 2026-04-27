@@ -44,7 +44,9 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
 
   function syncFrozenToState() {
     for (let i = 0; i < columnState.length; i++) {
-      const shouldBeFrozen = frozenFields.value.has(columnState[i]!.field)
+      const colField = columnState[i]!.field
+      if (!colField) continue
+      const shouldBeFrozen = frozenFields.value.has(colField)
       if (columnState[i]!.frozen !== shouldBeFrozen) {
         columnState[i] = { ...columnState[i]!, frozen: shouldBeFrozen }
       }
