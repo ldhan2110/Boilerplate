@@ -121,6 +121,91 @@ const countries = [
   { name: 'United Kingdom', code: 'GB' }
 ]
 
+// --- Column Span demo data ---
+const salesData = ref(
+  Array.from({ length: 20 }, (_, i) => ({
+    id: i + 1,
+    product: `Product ${String.fromCharCode(65 + (i % 8))}`,
+    q1Revenue: Math.round(10000 + Math.random() * 50000),
+    q1Units: Math.round(50 + Math.random() * 500),
+    q2Revenue: Math.round(10000 + Math.random() * 50000),
+    q2Units: Math.round(50 + Math.random() * 500),
+    q3Revenue: Math.round(10000 + Math.random() * 50000),
+    q3Units: Math.round(50 + Math.random() * 500),
+    q4Revenue: Math.round(10000 + Math.random() * 50000),
+    q4Units: Math.round(50 + Math.random() * 500),
+  }))
+)
+
+const salesTotals = computed(() => {
+  const t = { q1Revenue: 0, q1Units: 0, q2Revenue: 0, q2Units: 0, q3Revenue: 0, q3Units: 0, q4Revenue: 0, q4Units: 0 }
+  for (const row of salesData.value) {
+    t.q1Revenue += row.q1Revenue; t.q1Units += row.q1Units
+    t.q2Revenue += row.q2Revenue; t.q2Units += row.q2Units
+    t.q3Revenue += row.q3Revenue; t.q3Units += row.q3Units
+    t.q4Revenue += row.q4Revenue; t.q4Units += row.q4Units
+  }
+  return t
+})
+
+function fmtCurrency(val: number) {
+  return `$${val.toLocaleString()}`
+}
+
+// --- Column Span demo using AppDataTable children ---
+const salesColumns: ColumnDef[] = [
+  { field: 'id', header: '#', width: 60, align: 'center' },
+  { field: 'product', header: 'Product', width: 140 },
+  {
+    header: 'Q1',
+    children: [
+      { field: 'q1Revenue', header: 'Revenue', width: 110, align: 'right', format: (val) => fmtCurrency(val) },
+      { field: 'q1Units', header: 'Units', width: 80, align: 'right' },
+    ],
+  },
+  {
+    header: 'Q2',
+    children: [
+      { field: 'q2Revenue', header: 'Revenue', width: 110, align: 'right', format: (val) => fmtCurrency(val) },
+      { field: 'q2Units', header: 'Units', width: 80, align: 'right' },
+    ],
+  },
+  {
+    header: 'Q3',
+    children: [
+      { field: 'q3Revenue', header: 'Revenue', width: 110, align: 'right', format: (val) => fmtCurrency(val) },
+      { field: 'q3Units', header: 'Units', width: 80, align: 'right' },
+    ],
+  },
+  {
+    header: 'Q4',
+    children: [
+      { field: 'q4Revenue', header: 'Revenue', width: 110, align: 'right', format: (val) => fmtCurrency(val) },
+      { field: 'q4Units', header: 'Units', width: 80, align: 'right' },
+    ],
+  },
+]
+
+// --- RowSpan demo data ---
+const rowSpanData = ref([
+  { id: 1, department: 'Engineering', team: 'Frontend', name: 'Alice', salary: 85000 },
+  { id: 2, department: 'Engineering', team: 'Frontend', name: 'Bob', salary: 78000 },
+  { id: 3, department: 'Engineering', team: 'Backend', name: 'Carol', salary: 92000 },
+  { id: 4, department: 'Engineering', team: 'Backend', name: 'Dave', salary: 88000 },
+  { id: 5, department: 'Sales', team: 'Enterprise', name: 'Eve', salary: 72000 },
+  { id: 6, department: 'Sales', team: 'Enterprise', name: 'Frank', salary: 68000 },
+  { id: 7, department: 'Sales', team: 'SMB', name: 'Grace', salary: 65000 },
+  { id: 8, department: 'HR', team: 'Recruiting', name: 'Hank', salary: 70000 },
+  { id: 9, department: 'HR', team: 'Recruiting', name: 'Iris', salary: 67000 },
+])
+
+const rowSpanColumns: ColumnDef[] = [
+  { field: 'department', header: 'Department', width: 140, rowSpan: true },
+  { field: 'team', header: 'Team', width: 120, rowSpan: true },
+  { field: 'name', header: 'Name', width: 150, editable: true, editType: 'input' },
+  { field: 'salary', header: 'Salary', width: 120, align: 'right', editable: true, editType: 'number', format: (val) => val != null ? `$${Number(val).toLocaleString()}` : '' },
+]
+
 // --- AppDataTable demo ---
 const { tableRef, insertRow, insertRows, deleteRow, deleteRows, getRows, hasChanges, clearChanges } = useAppDataTable<typeof employees.value[0]>()
 const tableEventLog = ref<string[]>([])
@@ -539,6 +624,42 @@ function handleSaveToBackend() {
               </div>
             </div>
           </div>
+        </template>
+      </PCard>
+
+      <!-- Column Groups Demo (AppDataTable children) -->
+      <PCard>
+        <template #title>
+          <span class="text-base">Grouped Headers Demo (children)</span>
+        </template>
+        <template #content>
+          <AppDataTable
+            :rows="salesData"
+            :columns="salesColumns"
+            table-height="400px"
+            data-mode="pagination"
+            :page-size="10"
+            pagination-mode="client"
+            sort-backend="client"
+          />
+        </template>
+      </PCard>
+
+      <!-- RowSpan Demo -->
+      <PCard>
+        <template #title>
+          <span class="text-base">RowSpan Demo (auto-merge)</span>
+        </template>
+        <template #content>
+          <AppDataTable
+            :rows="rowSpanData"
+            :columns="rowSpanColumns"
+            :editable="true"
+            :show-gridlines="true"
+            pagination-mode="client"
+            sort-backend="client"
+            @row-edit-save="logTableEvent('rowspan-edit', $event)"
+          />
         </template>
       </PCard>
 
