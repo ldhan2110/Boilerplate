@@ -65,17 +65,39 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
   )
 
   function toggleColumnVisibility(field: string) {
+    // Search top-level
     const idx = columnState.findIndex(c => c.field === field)
     if (idx !== -1) {
       columnState[idx] = { ...columnState[idx]!, hidden: !columnState[idx]!.hidden }
+      return
+    }
+    // Search inside children (grouped columns)
+    for (let i = 0; i < columnState.length; i++) {
+      const parent = columnState[i]!
+      if (!parent.children?.length) continue
+      const ci = parent.children.findIndex(c => c.field === field)
+      if (ci !== -1) {
+        parent.children[ci] = { ...parent.children[ci]!, hidden: !parent.children[ci]!.hidden }
+        columnState[i] = { ...parent }
+        return
+      }
     }
   }
 
   function showAllColumns() {
     for (let i = 0; i < columnState.length; i++) {
-      if (columnState[i]!.hidden) {
-        columnState[i] = { ...columnState[i]!, hidden: false }
+      const col = columnState[i]!
+      let changed = col.hidden
+      if (changed) col.hidden = false
+      if (col.children?.length) {
+        for (let j = 0; j < col.children.length; j++) {
+          if (col.children[j]!.hidden) {
+            col.children[j] = { ...col.children[j]!, hidden: false }
+            changed = true
+          }
+        }
       }
+      if (changed) columnState[i] = { ...col }
     }
   }
 

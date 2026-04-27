@@ -206,6 +206,59 @@ function resolveHeaderCellGroup(cell: HeaderCell): number | null {
   return cols.findIndex(col => col.children?.length && col.header === cell.header)
 }
 
+/**
+ * Flat list for column manager: groups become section headers, leaves are toggleable.
+ * Each item tracks parentIndex/childIndex for up/down reorder.
+ */
+interface ColumnManagerItem {
+  col: ColumnDef
+  isGroup: boolean
+  parentIndex: number      // top-level index in columnState
+  childIndex: number | null // index within parent.children (null for top-level/group)
+  isFirst: boolean         // first in its reorder scope
+  isLast: boolean          // last in its reorder scope
+}
+
+const columnManagerItems = computed<ColumnManagerItem[]>(() => {
+  const items: ColumnManagerItem[] = []
+  const state = columns.columnState
+  for (let pi = 0; pi < state.length; pi++) {
+    const col = state[pi]!
+    if (col.children?.length) {
+      // Group header
+      items.push({ col, isGroup: true, parentIndex: pi, childIndex: null, isFirst: pi === 0, isLast: pi === state.length - 1 })
+      // Children
+      for (let ci = 0; ci < col.children.length; ci++) {
+        items.push({ col: col.children[ci]!, isGroup: false, parentIndex: pi, childIndex: ci, isFirst: ci === 0, isLast: ci === col.children.length - 1 })
+      }
+    } else {
+      // Standalone leaf
+      items.push({ col, isGroup: false, parentIndex: pi, childIndex: null, isFirst: pi === 0, isLast: pi === state.length - 1 })
+    }
+  }
+  return items
+})
+
+function onColumnManagerMoveUp(item: ColumnManagerItem) {
+  if (item.childIndex !== null) {
+    // Child within group
+    columns.reorderChildren(item.parentIndex, item.childIndex, item.childIndex - 1)
+  } else {
+    // Top-level (standalone or group)
+    columns.reorderTopLevel(item.parentIndex, item.parentIndex - 1)
+  }
+}
+
+function onColumnManagerMoveDown(item: ColumnManagerItem) {
+  if (item.childIndex !== null) {
+    // Child within group
+    columns.reorderChildren(item.parentIndex, item.childIndex, item.childIndex + 1)
+  } else {
+    // Top-level (standalone or group)
+    columns.reorderTopLevel(item.parentIndex, item.parentIndex + 1)
+  }
+}
+
 const selection = useTableSelection({
   selectable: selectableRef,
   selectionMode: selectionModeRef,
@@ -465,21 +518,6 @@ defineExpose({
                 :sortable="cell.col ? cell.col.sortable !== false : false"
                 :field="cell.field"
                 :frozen="cell.col?.frozen"
-                :pt="{
-                  root: {
-                    ...columnDrag.getDragAttrs(cell, ri),
-                    class: columnDrag.isActive.value ? [
-                      {
-                        'column-drag-over-left': columnDrag.dragOverGroupIndex.value !== null
-                          && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
-                          && columnDrag.dragDirection.value === 'left',
-                        'column-drag-over-right': columnDrag.dragOverGroupIndex.value !== null
-                          && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
-                          && columnDrag.dragDirection.value === 'right',
-                      },
-                    ] : [],
-                  },
-                }"
                 :style="{
                   ...(cell.col ? {
                     width: (cell.col.width ?? defaultColumnWidth) + 'px',
@@ -487,12 +525,21 @@ defineExpose({
                     textAlign: cell.col.align ?? 'left',
                   } : { textAlign: 'center' }),
                   ...(cell.col?.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {}),
-                  ...(columnDrag.isActive.value && !cell.col?.frozen ? { cursor: 'grab' } : {}),
                 }"
               >
                 <template #header>
                   <div
-                    class="flex items-center gap-1 w-full font-bold"
+                    v-bind="columnDrag.getDragAttrs(cell, ri)"
+                    class="grouped-header-cell flex items-center gap-1 w-full font-bold"
+                    :class="{
+                      'column-drag-over-left': columnDrag.dragOverGroupIndex.value !== null
+                        && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
+                        && columnDrag.dragDirection.value === 'left',
+                      'column-drag-over-right': columnDrag.dragOverGroupIndex.value !== null
+                        && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
+                        && columnDrag.dragDirection.value === 'right',
+                    }"
+                    :style="columnDrag.isActive.value && !cell.col?.frozen ? { cursor: 'grab' } : {}"
                     @contextmenu.prevent="cell.col ? menus.onHeaderContextMenu($event, cell.col) : undefined"
                   >
                     <slot :name="cell.field ? `header-${cell.field}` : undefined" :column="cell.col">
@@ -684,32 +731,56 @@ defineExpose({
       :draggable="false"
     >
       <div class="flex flex-col gap-1">
-        <div
-          v-for="(col, idx) in columns.columnState"
-          :key="col.field"
-          class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800"
-        >
-          <PCheckbox
-            :model-value="!col.hidden"
-            :binary="true"
-            @update:model-value="() => columns.toggleColumnVisibility(col.field!)"
-          />
-          <span class="flex-1 text-sm truncate">{{ col.header }}</span>
-          <button
-            class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
-            :disabled="idx === 0"
-            @click="columns.moveColumnUp(col.field!)"
+        <template v-for="(item, idx) in columnManagerItems" :key="item.col.field ?? `group-${item.parentIndex}`">
+          <!-- Group header row -->
+          <div
+            v-if="item.isGroup"
+            class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800 mt-1"
           >
-            <i class="pi pi-chevron-up text-xs" />
-          </button>
-          <button
-            class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
-            :disabled="idx === columns.columnState.length - 1"
-            @click="columns.moveColumnDown(col.field!)"
+            <span class="flex-1 text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wide">{{ item.col.header }}</span>
+            <button
+              class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
+              :disabled="item.isFirst"
+              @click="onColumnManagerMoveUp(item)"
+            >
+              <i class="pi pi-chevron-up text-xs" />
+            </button>
+            <button
+              class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
+              :disabled="item.isLast"
+              @click="onColumnManagerMoveDown(item)"
+            >
+              <i class="pi pi-chevron-down text-xs" />
+            </button>
+          </div>
+          <!-- Leaf column row -->
+          <div
+            v-else
+            class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800"
+            :class="{ 'ml-4': item.childIndex !== null }"
           >
-            <i class="pi pi-chevron-down text-xs" />
-          </button>
-        </div>
+            <PCheckbox
+              :model-value="!item.col.hidden"
+              :binary="true"
+              @update:model-value="() => columns.toggleColumnVisibility(item.col.field!)"
+            />
+            <span class="flex-1 text-sm truncate">{{ item.col.header }}</span>
+            <button
+              class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
+              :disabled="item.isFirst"
+              @click="onColumnManagerMoveUp(item)"
+            >
+              <i class="pi pi-chevron-up text-xs" />
+            </button>
+            <button
+              class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
+              :disabled="item.isLast"
+              @click="onColumnManagerMoveDown(item)"
+            >
+              <i class="pi pi-chevron-down text-xs" />
+            </button>
+          </div>
+        </template>
       </div>
       <div class="flex gap-2 mt-4 pt-3 border-t border-surface-200 dark:border-surface-700">
         <PButton
@@ -951,16 +1022,16 @@ defineExpose({
   vertical-align: middle;
 }
 
-/* Column drag-and-drop visual feedback */
-:deep(.column-drag-source) {
-  opacity: 0.4 !important;
+/* Column drag-and-drop visual feedback (on .grouped-header-cell div inside th) */
+.grouped-header-cell.column-drag-source {
+  opacity: 0.4;
 }
 
-:deep(.column-drag-over-left) {
-  border-left: 2.5px solid var(--p-primary-color) !important;
+.grouped-header-cell.column-drag-over-left {
+  border-left: 2.5px solid var(--p-primary-color);
 }
 
-:deep(.column-drag-over-right) {
-  border-right: 2.5px solid var(--p-primary-color) !important;
+.grouped-header-cell.column-drag-over-right {
+  border-right: 2.5px solid var(--p-primary-color);
 }
 </style>
