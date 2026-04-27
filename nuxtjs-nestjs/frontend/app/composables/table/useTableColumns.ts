@@ -21,6 +21,8 @@ export interface UseTableColumnsReturn {
   onColumnResizeEnd: (dataTableInstance: any) => void
   moveColumnUp: (field: string) => void
   moveColumnDown: (field: string) => void
+  reorderTopLevel: (fromIndex: number, toIndex: number) => void
+  reorderChildren: (parentIndex: number, fromChildIndex: number, toChildIndex: number) => void
 }
 
 export function useTableColumns(options: UseTableColumnsOptions): UseTableColumnsReturn {
@@ -171,6 +173,28 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     }
   }
 
+  function reorderTopLevel(fromIndex: number, toIndex: number) {
+    if (fromIndex === toIndex) return
+    if (fromIndex < 0 || toIndex < 0) return
+    if (fromIndex >= columnState.length || toIndex >= columnState.length) return
+
+    const item = columnState.splice(fromIndex, 1)[0]!
+    columnState.splice(toIndex, 0, item)
+  }
+
+  function reorderChildren(parentIndex: number, fromChildIndex: number, toChildIndex: number) {
+    if (fromChildIndex === toChildIndex) return
+    const parent = columnState[parentIndex]
+    if (!parent?.children?.length) return
+    if (fromChildIndex < 0 || toChildIndex < 0) return
+    if (fromChildIndex >= parent.children.length || toChildIndex >= parent.children.length) return
+
+    const child = parent.children.splice(fromChildIndex, 1)[0]!
+    parent.children.splice(toChildIndex, 0, child)
+    // Trigger reactivity on the parent slot
+    columnState[parentIndex] = { ...parent }
+  }
+
   function resetColumns() {
     const restored = initialSnapshot.map(col => ({ ...col }))
     columnState.length = 0
@@ -193,5 +217,7 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     onColumnResizeEnd,
     moveColumnUp,
     moveColumnDown,
+    reorderTopLevel,
+    reorderChildren,
   }
 }
