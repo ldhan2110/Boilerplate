@@ -759,6 +759,129 @@ function handleSaveToBackend() {
           <Button label="Block Button" block icon="pi pi-arrow-right" icon-pos="right" @click="handleSave" />
         </template>
       </PCard>
+
+      <!-- Layout Components Demo -->
+      <PCard>
+        <template #title>
+          <span class="text-base">Layout Components Demo</span>
+        </template>
+        <template #content>
+          <div class="flex flex-col gap-6">
+            <!-- Flex: Basic row -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Flex — row, gap="3", align="center"
+              </p>
+              <Flex gap="3" align="center">
+                <div class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded px-4 py-2 text-sm font-medium">A</div>
+                <div class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded px-4 py-6 text-sm font-medium">B (tall)</div>
+                <div class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded px-4 py-2 text-sm font-medium">C</div>
+              </Flex>
+            </div>
+
+            <!-- Flex: Column -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Flex — direction="col", gap="2"
+              </p>
+              <Flex direction="col" gap="2">
+                <div class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded px-4 py-2 text-sm font-medium">Row 1</div>
+                <div class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded px-4 py-2 text-sm font-medium">Row 2</div>
+                <div class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded px-4 py-2 text-sm font-medium">Row 3</div>
+              </Flex>
+            </div>
+
+            <!-- Flex: Justify between -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Flex — justify="between", align="center"
+              </p>
+              <Flex justify="between" align="center">
+                <div class="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded px-4 py-2 text-sm font-medium">Left</div>
+                <div class="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded px-4 py-2 text-sm font-medium">Right</div>
+              </Flex>
+            </div>
+
+            <!-- Flex: Auto-responsive with minChildWidth -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Flex — minChildWidth="200px", gap="3" (resize browser to see wrap)
+              </p>
+              <Flex minChildWidth="200px" gap="3">
+                <div v-for="i in 6" :key="i" class="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 rounded px-4 py-3 text-sm font-medium text-center">
+                  Item {{ i }}
+                </div>
+              </Flex>
+            </div>
+
+            <!-- Flex: Responsive override -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Flex — direction="col", responsive md: direction="row" (stacks on mobile)
+              </p>
+              <Flex direction="col" :responsive="{ md: { direction: 'row' } }" gap="3">
+                <div class="bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 rounded px-4 py-3 text-sm font-medium flex-1 text-center">Panel A</div>
+                <div class="bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 rounded px-4 py-3 text-sm font-medium flex-1 text-center">Panel B</div>
+                <div class="bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 rounded px-4 py-3 text-sm font-medium flex-1 text-center">Panel C</div>
+              </Flex>
+            </div>
+
+            <!-- Grid: Auto-responsive -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Grid — minChildWidth="200px", gap="3" (auto-fill columns)
+              </p>
+              <Grid minChildWidth="200px" gap="3">
+                <div v-for="i in 8" :key="i" class="bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-300 rounded px-4 py-4 text-sm font-medium text-center">
+                  Card {{ i }}
+                </div>
+              </Grid>
+            </div>
+
+            <!-- Grid: Explicit responsive cols -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Grid — cols={ base: 1, sm: 2, lg: 4 }, gap="3"
+              </p>
+              <Grid :cols="{ base: 1, sm: 2, lg: 4 }" gap="3">
+                <div v-for="i in 4" :key="i" class="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded px-4 py-4 text-sm font-medium text-center">
+                  Col {{ i }}
+                </div>
+              </Grid>
+            </div>
+
+            <!-- Grid: Form layout -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Grid as="form" — cols=3, gap="3", gapY="4"
+              </p>
+              <Grid as="form" :cols="3" gap="3" gapY="4">
+                <Input model-value="John" label="First Name" />
+                <Input model-value="Doe" label="Last Name" />
+                <Input model-value="john@example.com" label="Email" />
+                <Input model-value="+1234567890" label="Phone" />
+                <Input model-value="ACME Inc." label="Company" />
+                <Input model-value="Engineer" label="Title" />
+              </Grid>
+            </div>
+
+            <!-- Container query demo -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Grid container — minChildWidth="150px" inside resizable box
+              </p>
+              <div class="resize overflow-auto border border-gray-300 dark:border-gray-600 rounded p-3" style="min-width: 200px; max-width: 100%;">
+                <Grid container minChildWidth="150px" gap="2">
+                  <div v-for="i in 6" :key="i" class="bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300 rounded px-3 py-3 text-sm font-medium text-center">
+                    {{ i }}
+                  </div>
+                </Grid>
+              </div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Drag bottom-right corner to resize</p>
+            </div>
+          </div>
+        </template>
+      </PCard>
     </div>
   </div>
 </template>
