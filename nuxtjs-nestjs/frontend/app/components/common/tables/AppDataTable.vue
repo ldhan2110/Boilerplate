@@ -414,6 +414,14 @@ function clearChanges(): void {
   edit.clearDirty()
 }
 
+function resetTable(): void {
+  columns.resetColumns()
+  sort.clearSort()
+  selection.clearSelection()
+  procFlag.clearProcFlags()
+  edit.clearDirty()
+}
+
 const footer = useTableFooter({
   rows: rowsRef,
   visibleColumns: columns.visibleColumns,
@@ -454,7 +462,8 @@ const menus = useTableMenus({
     getFlag: procFlag.getFlag
   },
   generateTempKey,
-  columnState: columns.columnState
+  columnState: columns.columnState,
+  resetTable
 })
 
 // Virtual scroll options
@@ -500,6 +509,7 @@ defineExpose({
   clearSelection: selection.clearSelection,
   clearSort: sort.clearSort,
   clearDirty: edit.clearDirty,
+  resetTable,
   getDirtyRows: edit.getDirtyRows,
   refresh: () => emit('refresh'),
   // procFlag API
@@ -541,13 +551,13 @@ defineExpose({
 
       <PDataTable
         ref="dataTableRef"
+        v-model:selection="selectedRowsModel"
         :value="pagination.displayedRows.value"
         :data-key="rowKey"
         :loading="loading"
         :show-gridlines="showGridlines"
         :striped-rows="stripedRows"
         :resizable-columns="resizableColumns"
-        v-model:selection="selectedRowsModel"
         column-resize-mode="expand"
         :reorderable-columns="reorderableColumns && !span.hasColumnGroups.value"
         :scroll-height="tableHeight ?? (virtualScrollRef ? scrollHeight : undefined)"
@@ -862,6 +872,7 @@ defineExpose({
       modal
       :style="{ width: '360px' }"
       :draggable="false"
+      :content-style="{ overflow: 'auto', maxHeight: '60vh', paddingBottom: 0 }"
     >
       <div class="flex flex-col gap-1">
         <template
@@ -931,22 +942,24 @@ defineExpose({
           </div>
         </template>
       </div>
-      <div class="flex gap-2 mt-4 pt-3 border-t border-surface-200 dark:border-surface-700">
-        <PButton
-          :label="$t('table.showAllColumns')"
-          icon="pi pi-eye"
-          severity="secondary"
-          size="small"
-          @click="columns.showAllColumns()"
-        />
-        <PButton
-          :label="$t('table.resetToDefault')"
-          icon="pi pi-refresh"
-          severity="secondary"
-          size="small"
-          @click="columns.resetColumns()"
-        />
-      </div>
+      <template #footer>
+        <div class="flex gap-2">
+          <PButton
+            :label="$t('table.showAllColumns')"
+            icon="pi pi-eye"
+            severity="secondary"
+            size="small"
+            @click="columns.showAllColumns()"
+          />
+          <PButton
+            :label="$t('table.resetToDefault')"
+            icon="pi pi-refresh"
+            severity="secondary"
+            size="small"
+            @click="columns.resetColumns()"
+          />
+        </div>
+      </template>
     </PDialog>
   </div>
 </template>

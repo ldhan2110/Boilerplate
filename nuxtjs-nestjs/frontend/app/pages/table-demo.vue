@@ -137,10 +137,20 @@ function onEditSave(event: EditSaveEvent) {
   log('row-edit-save', { field: event.field, newRow: event.newRow })
 }
 function onSelectionChange(selected: any[]) {
+  selectedRows.value = selected
   log('selection-change', { count: selected.length })
 }
 
+function deleteSelected() {
+  if (!selectedRows.value.length) return
+  const keys = selectedRows.value.map((r: any) => r.id)
+  tableRef.value?.deleteRows(keys)
+  tableRef.value?.clearSelection()
+  log('delete-rows', { keys })
+}
+
 const tableRef = ref()
+const selectedRows = ref<any[]>([])
 </script>
 
 <template>
@@ -159,6 +169,22 @@ const tableRef = ref()
       </label>
       <PButton label="Export CSV" icon="pi pi-file" severity="secondary" size="small" @click="tableRef?.exportTable('csv', 'all')" />
       <PButton label="Export XLSX" icon="pi pi-file-excel" severity="success" size="small" @click="tableRef?.exportTable('xlsx', 'all')" />
+      <PButton
+        label="Delete Selected"
+        icon="pi pi-trash"
+        severity="danger"
+        size="small"
+        :disabled="!selectedRows.length"
+        @click="deleteSelected"
+      />
+      <PButton
+        label="Reset Table"
+        icon="pi pi-undo"
+        severity="secondary"
+        size="small"
+        :disabled="!tableRef?.hasChanges()"
+        @click="tableRef?.resetTable()"
+      />
     </div>
 
     <!-- Table -->
@@ -173,7 +199,7 @@ const tableRef = ref()
       :sort-backend="serverMode ? 'server' : 'client'"
       :editable="true"
       :selectable="true"
-      :selection-mode="'multiple'"
+      :selection-mode="'checkbox'"
       :show-footer="true"
       :header-context-menu="true"
       :row-context-menu="true"

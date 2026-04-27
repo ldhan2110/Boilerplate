@@ -31,6 +31,9 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
   // Stash for D-flagged rows (removed from visible rows array)
   const deletedRows = ref<any[]>([])
 
+  // Deep snapshot of initial row data for reset
+  let initialRowSnapshot: any[] = JSON.parse(JSON.stringify(rows.value))
+
   function initFlags() {
     for (const row of rows.value) {
       if (!row.procFlag) {
@@ -39,8 +42,14 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
     }
   }
 
-  // Initialize on mount and when rows change
-  watch(rows, () => initFlags(), { immediate: true, flush: 'sync' })
+  // Initialize on mount and when rows change externally (parent re-fetched data)
+  watch(rows, (newRows, oldRows) => {
+    initFlags()
+    // Re-snapshot when parent replaces the array (new fetch), not on internal mutations
+    if (newRows !== oldRows) {
+      initialRowSnapshot = JSON.parse(JSON.stringify(newRows))
+    }
+  }, { immediate: true, flush: 'sync' })
 
   // Watch dirtyRows — mark S rows as U when edited
   watch(dirtyRows, (dirty) => {
@@ -127,21 +136,13 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
   }
 
   function clearProcFlags() {
-    // Restore D-flagged rows back into rows array
-    for (const row of deletedRows.value) {
-      row.procFlag = 'S'
-      rows.value.push(row)
-    }
+    // Restore rows from initial snapshot (reverts all edits, inserts, deletes)
+    const restored = JSON.parse(JSON.stringify(initialRowSnapshot))
+    rows.value.length = 0
+    rows.value.push(...restored)
     deletedRows.value = []
 
-    // Remove I-flagged rows (never persisted)
-    for (let i = rows.value.length - 1; i >= 0; i--) {
-      if (rows.value[i].procFlag === 'I') {
-        rows.value.splice(i, 1)
-      }
-    }
-
-    // Reset all remaining to S
+    // Re-init all flags to S
     for (const row of rows.value) {
       row.procFlag = 'S'
     }

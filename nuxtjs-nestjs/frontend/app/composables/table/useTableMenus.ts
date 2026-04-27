@@ -19,6 +19,7 @@ export interface UseTableMenusOptions {
     refresh: () => void | Promise<void>
     fullScreenChange: (isFullscreen: boolean) => void
   }
+  resetTable: () => void
   rootRef: Ref<HTMLElement | null>
   confirmAsync: (options: any) => Promise<boolean>
   procFlag: {
@@ -60,6 +61,7 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
     procFlag,
     generateTempKey: genKey,
     columnState,
+    resetTable,
   } = options
 
   const { t } = useI18n()
@@ -131,10 +133,7 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
       {
         label: t('table.resetToDefault'),
         icon: 'pi pi-undo',
-        command: () => {
-          sort.clearSort()
-          columns.resetColumns()
-        },
+        command: () => resetTable(),
       },
     )
 
@@ -206,6 +205,12 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
         label: isFullscreen() ? t('table.exitFullScreen') : t('table.fullScreen'),
         icon: isFullscreen() ? 'pi pi-window-minimize' : 'pi pi-window-maximize',
         command: () => toggleFullscreen(),
+      },
+      { separator: true },
+      {
+        label: t('table.resetToDefault'),
+        icon: 'pi pi-undo',
+        command: () => resetTable(),
       },
     )
 

@@ -30,12 +30,12 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     columns,
     frozenColumns,
     maxFrozenColumns = ref(3),
-    defaultColumnWidth = ref(150),
+    defaultColumnWidth = ref(150)
   } = options
 
   const cloneColumn = (col: ColumnDef): ColumnDef => ({
     ...col,
-    children: col.children?.map(c => cloneColumn(c)),
+    children: col.children?.map(c => cloneColumn(c))
   })
 
   const initialSnapshot = columns.value.map(cloneColumn)
@@ -245,6 +245,6 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     moveColumnUp,
     moveColumnDown,
     reorderTopLevel,
-    reorderChildren,
+    reorderChildren
   }
 }
