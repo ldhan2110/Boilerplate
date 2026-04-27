@@ -460,8 +460,6 @@ defineExpose({
               <PColumn
                 v-for="(cell, ci) in hRow"
                 :key="ci"
-                v-bind="columnDrag.getDragAttrs(cell, ri)"
-                :header="cell.header"
                 :colspan="cell.colspan > 1 ? cell.colspan : undefined"
                 :rowspan="cell.rowspan > 1 ? cell.rowspan : undefined"
                 :sortable="cell.col ? cell.col.sortable !== false : false"
@@ -469,6 +467,7 @@ defineExpose({
                 :frozen="cell.col?.frozen"
                 :pt="{
                   root: {
+                    ...columnDrag.getDragAttrs(cell, ri),
                     class: columnDrag.isActive.value ? [
                       {
                         'column-drag-over-left': columnDrag.dragOverGroupIndex.value !== null
@@ -490,7 +489,18 @@ defineExpose({
                   ...(cell.col?.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {}),
                   ...(columnDrag.isActive.value && !cell.col?.frozen ? { cursor: 'grab' } : {}),
                 }"
-              />
+              >
+                <template #header>
+                  <div
+                    class="flex items-center gap-1 w-full font-bold"
+                    @contextmenu.prevent="cell.col ? menus.onHeaderContextMenu($event, cell.col) : undefined"
+                  >
+                    <slot :name="cell.field ? `header-${cell.field}` : undefined" :column="cell.col">
+                      {{ cell.header }}
+                    </slot>
+                  </div>
+                </template>
+              </PColumn>
             </PRow>
           </PColumnGroup>
         </template>
