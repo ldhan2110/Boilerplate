@@ -212,7 +212,7 @@ const procFlag = useTableProcFlag({
 function insertRow(defaultValues?: Partial<any>): any {
   const blank: any = {}
   for (const col of columns.columnState) {
-    blank[col.field] = null
+    if (col.field) blank[col.field] = null
   }
   const key = generateTempKey()
   blank[props.rowKey] = key
@@ -637,20 +637,20 @@ defineExpose({
           <PCheckbox
             :model-value="!col.hidden"
             :binary="true"
-            @update:model-value="() => columns.toggleColumnVisibility(col.field)"
+            @update:model-value="() => columns.toggleColumnVisibility(col.field!)"
           />
           <span class="flex-1 text-sm truncate">{{ col.header }}</span>
           <button
             class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
             :disabled="idx === 0"
-            @click="columns.moveColumnUp(col.field)"
+            @click="columns.moveColumnUp(col.field!)"
           >
             <i class="pi pi-chevron-up text-xs" />
           </button>
           <button
             class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
             :disabled="idx === columns.columnState.length - 1"
-            @click="columns.moveColumnDown(col.field)"
+            @click="columns.moveColumnDown(col.field!)"
           >
             <i class="pi pi-chevron-down text-xs" />
           </button>

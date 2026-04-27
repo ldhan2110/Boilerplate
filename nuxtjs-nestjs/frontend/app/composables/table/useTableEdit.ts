@@ -67,6 +67,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
       const key = row[rowKey.value]
       const rowConfigs: Record<string, CellConfig> = {}
       for (const col of visibleColumns.value) {
+        if (!col.field) continue
         const result = cellConfig.value(row, col.field)
         if (result) rowConfigs[col.field] = result
       }
@@ -99,12 +100,12 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
   }
 
   function getCellOptions(row: any, col: ColumnDef): any[] | undefined {
-    const config = getCellConfig(row, col.field)
+    const config = getCellConfig(row, col.field!)
     return config?.options ?? col.editOptions
   }
 
   function getCellDisplayValue(val: any, row: any, col: ColumnDef): string {
-    const config = getCellConfig(row, col.field)
+    const config = getCellConfig(row, col.field!)
     if (config?.render) return config.render(val, row)
     if (col.format) return col.format(val, row)
     if (col.editType === 'checkbox' || col.editType === 'toggle') {
@@ -116,10 +117,11 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
   function getEditableGrid(): string[][] {
     const editableCols = visibleColumns.value.filter(col => {
       if (col.editable === false) return false
+      if (!col.field) return false
       if (editableColumns.value && !editableColumns.value.includes(col.field)) return false
       return true
     })
-    return displayedRows.value.map(() => editableCols.map(col => col.field))
+    return displayedRows.value.map(() => editableCols.map(col => col.field!))
   }
 
   function findCellPosition(rowIndex: number, field: string): { row: number; col: number } | null {
