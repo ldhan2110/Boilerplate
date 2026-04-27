@@ -7,7 +7,7 @@ import type {
   EditSaveEvent,
   ExportFormat,
   ExportScope,
-  ProcFlag,
+  ProcFlag
 } from '~/types/table'
 import type { HeaderCell } from '~/composables/table/useTableSpan'
 import {
@@ -22,7 +22,7 @@ import {
   useTableProcFlag,
   useTableSpan,
   useTableColumnDrag,
-  generateTempKey,
+  generateTempKey
 } from '~/composables/table'
 
 // --- v-row-span directive ---
@@ -32,7 +32,7 @@ const vRowSpan = {
   },
   updated(el: HTMLElement, binding: { value: number }) {
     applyRowSpan(el, binding.value)
-  },
+  }
 }
 
 function applyRowSpan(el: HTMLElement, span: number) {
@@ -81,7 +81,7 @@ const props = withDefaults(defineProps<AppDataTableProps>(), {
   footerAggregations: () => [],
   exportFormats: () => ['csv', 'xlsx'] as ExportFormat[],
   frozenColumns: () => [],
-  editableColumns: undefined,
+  editableColumns: undefined
 })
 
 const emit = defineEmits<{
@@ -133,14 +133,14 @@ const columns = useTableColumns({
   columns: columnsRef,
   frozenColumns: frozenColumnsRef,
   maxFrozenColumns: maxFrozenColumnsRef,
-  defaultColumnWidth: defaultColumnWidthRef,
+  defaultColumnWidth: defaultColumnWidthRef
 })
 
 const sort = useTableSort({
   sortBackend: sortBackendRef,
   defaultSortField: defaultSortFieldRef,
   defaultSortOrder: defaultSortOrderRef,
-  emit: (_, payload) => emit('sort', payload),
+  emit: (_, payload) => emit('sort', payload)
 })
 
 const pagination = useTablePagination({
@@ -153,15 +153,18 @@ const pagination = useTablePagination({
   virtualScroll: virtualScrollRef,
   onLoadMore: onLoadMoreRef,
   emit: {
-    page: (payload) => emit('page', payload),
-    loadMore: () => emit('load-more'),
-  },
+    page: payload => emit('page', payload),
+    loadMore: () => emit('load-more')
+  }
 })
 
+// Reactive ref from columnState so span/drag track reorders + visibility changes
+const columnStateRef = computed(() => [...columns.columnState])
+
 const span = useTableSpan({
-  columns: columnsRef,
+  columns: columnStateRef,
   displayedRows: pagination.displayedRows,
-  rowKey: rowKeyRef,
+  rowKey: rowKeyRef
 })
 
 // Warn if virtual scroll + rowSpan used together (unsupported)
@@ -181,16 +184,16 @@ const bodyColumns = computed(() => {
 })
 
 const columnDrag = useTableColumnDrag({
-  columns: columnsRef,
+  columns: columnStateRef,
   hasColumnGroups: span.hasColumnGroups,
   headerRows: span.headerRows,
   reorderableColumns: reorderableColumnsRef,
-  columnsApi: columns,
+  columnsApi: columns
 })
 
 /** Resolve a HeaderCell to its top-level column index (for CSS class binding). */
 function resolveHeaderCellGroup(cell: HeaderCell): number | null {
-  const cols = props.columns
+  const cols = columns.columnState
   if (cell.field) {
     for (let i = 0; i < cols.length; i++) {
       const col = cols[i]!
@@ -213,10 +216,10 @@ function resolveHeaderCellGroup(cell: HeaderCell): number | null {
 interface ColumnManagerItem {
   col: ColumnDef
   isGroup: boolean
-  parentIndex: number      // top-level index in columnState
+  parentIndex: number // top-level index in columnState
   childIndex: number | null // index within parent.children (null for top-level/group)
-  isFirst: boolean         // first in its reorder scope
-  isLast: boolean          // last in its reorder scope
+  isFirst: boolean // first in its reorder scope
+  isLast: boolean // last in its reorder scope
 }
 
 const columnManagerItems = computed<ColumnManagerItem[]>(() => {
@@ -259,10 +262,79 @@ function onColumnManagerMoveDown(item: ColumnManagerItem) {
   }
 }
 
+// Column manager drag-and-drop
+const cmDragSource = ref<{ parentIndex: number, childIndex: number | null } | null>(null)
+const cmDropTarget = ref<{ parentIndex: number, childIndex: number | null, position: 'before' | 'after' } | null>(null)
+
+function isCmDropValid(target: ColumnManagerItem): boolean {
+  const src = cmDragSource.value
+  if (!src) return false
+  // Both children in same group
+  if (src.childIndex !== null && target.childIndex !== null) return src.parentIndex === target.parentIndex
+  // Both top-level (group or standalone)
+  if (src.childIndex === null && target.childIndex === null) return true
+  return false
+}
+
+function onCmDragStart(item: ColumnManagerItem, e: DragEvent) {
+  cmDragSource.value = { parentIndex: item.parentIndex, childIndex: item.childIndex }
+  e.dataTransfer!.effectAllowed = 'move'
+}
+
+function onCmDragOver(item: ColumnManagerItem, e: DragEvent) {
+  if (!isCmDropValid(item)) return
+  e.preventDefault()
+  e.dataTransfer!.dropEffect = 'move'
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+  const position: 'before' | 'after' = e.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
+  cmDropTarget.value = { parentIndex: item.parentIndex, childIndex: item.childIndex, position }
+}
+
+function onCmDragLeave(e: DragEvent) {
+  const el = e.currentTarget as HTMLElement
+  if (!el.contains(e.relatedTarget as Node)) cmDropTarget.value = null
+}
+
+function onCmDrop() {
+  const src = cmDragSource.value
+  const tgt = cmDropTarget.value
+  if (!src || !tgt) return
+
+  if (src.childIndex !== null && tgt.childIndex !== null) {
+    let to = tgt.position === 'before' ? tgt.childIndex : tgt.childIndex + 1
+    if (src.childIndex < to) to--
+    if (src.childIndex !== to) columns.reorderChildren(src.parentIndex, src.childIndex, to)
+  } else {
+    let to = tgt.position === 'before' ? tgt.parentIndex : tgt.parentIndex + 1
+    if (src.parentIndex < to) to--
+    if (src.parentIndex !== to) columns.reorderTopLevel(src.parentIndex, to)
+  }
+
+  cmDragSource.value = null
+  cmDropTarget.value = null
+}
+
+function onCmDragEnd() {
+  cmDragSource.value = null
+  cmDropTarget.value = null
+}
+
+function cmDragClasses(item: ColumnManagerItem): Record<string, boolean> {
+  const src = cmDragSource.value
+  const tgt = cmDropTarget.value
+  const isSource = !!src && src.parentIndex === item.parentIndex && src.childIndex === item.childIndex
+  const isGroupChild = !!src && src.childIndex === null && item.childIndex !== null && src.parentIndex === item.parentIndex
+  return {
+    'cm-drag-source': isSource || isGroupChild,
+    'cm-drop-before': !!tgt && tgt.parentIndex === item.parentIndex && tgt.childIndex === item.childIndex && tgt.position === 'before',
+    'cm-drop-after': !!tgt && tgt.parentIndex === item.parentIndex && tgt.childIndex === item.childIndex && tgt.position === 'after'
+  }
+}
+
 const selection = useTableSelection({
   selectable: selectableRef,
   selectionMode: selectionModeRef,
-  emit: (selected) => emit('selection-change', selected),
+  emit: selected => emit('selection-change', selected)
 })
 
 // Alias for v-model:selection binding (v-model needs a ref, not .value)
@@ -279,16 +351,16 @@ const edit = useTableEdit({
   cellConfig: cellConfigRef,
   dataTableRef,
   emit: {
-    editSave: (payload) => emit('row-edit-save', payload),
+    editSave: payload => emit('row-edit-save', payload)
   },
   getBodyRowSpan: span.getBodyRowSpan,
-  getMergeGroupIndices: span.getMergeGroupIndices,
+  getMergeGroupIndices: span.getMergeGroupIndices
 })
 
 const procFlag = useTableProcFlag({
   rows: rowsRef,
   rowKey: rowKeyRef,
-  dirtyRows: edit.dirtyRows,
+  dirtyRows: edit.dirtyRows
 })
 
 function insertRow(defaultValues?: Partial<any>): any {
@@ -346,7 +418,7 @@ const footer = useTableFooter({
   rows: rowsRef,
   visibleColumns: columns.visibleColumns,
   footerAggregations: footerAggregationsRef,
-  showFooter: showFooterRef,
+  showFooter: showFooterRef
 })
 
 const exportTable = useTableExport({
@@ -354,7 +426,7 @@ const exportTable = useTableExport({
   displayedRows: pagination.displayedRows,
   selectedRows: selection.selectedRows,
   visibleColumns: columns.visibleColumns,
-  exportFilename: exportFilenameRef,
+  exportFilename: exportFilenameRef
 })
 
 const { confirmAsync } = useAppDialog()
@@ -370,19 +442,19 @@ const menus = useTableMenus({
   rows: rowsRef,
   rowKey: rowKeyRef,
   emit: {
-    editSave: (payload) => emit('row-edit-save', payload),
+    editSave: payload => emit('row-edit-save', payload),
     refresh: () => emit('refresh'),
-    fullScreenChange: (val) => emit('full-screen-change', val),
+    fullScreenChange: val => emit('full-screen-change', val)
   },
   rootRef,
   confirmAsync,
   procFlag: {
     markInsert: procFlag.markInsert,
     markDelete: procFlag.markDelete,
-    getFlag: procFlag.getFlag,
+    getFlag: procFlag.getFlag
   },
   generateTempKey,
-  columnState: columns.columnState,
+  columnState: columns.columnState
 })
 
 // Virtual scroll options
@@ -439,7 +511,7 @@ defineExpose({
   getRows,
   hasChanges,
   clearChanges,
-  getFlag: procFlag.getFlag,
+  getFlag: procFlag.getFlag
 })
 </script>
 
@@ -451,13 +523,19 @@ defineExpose({
     @keydown="edit.handleKeyDown"
   >
     <!-- Toolbar slot -->
-    <div v-if="$slots.toolbar" class="mb-2 flex items-center gap-2 flex-wrap">
+    <div
+      v-if="$slots.toolbar"
+      class="mb-2 flex items-center gap-2 flex-wrap"
+    >
       <slot name="toolbar" />
     </div>
 
     <!-- Loading overlay for refresh -->
     <div class="relative">
-      <div v-if="menus.isRefreshing.value" class="absolute inset-0 z-10 flex items-center justify-center bg-surface-0/50 dark:bg-surface-900/50">
+      <div
+        v-if="menus.isRefreshing.value"
+        class="absolute inset-0 z-10 flex items-center justify-center bg-surface-0/50 dark:bg-surface-900/50"
+      >
         <PProgressSpinner style="width: 2rem; height: 2rem" />
       </div>
 
@@ -469,6 +547,7 @@ defineExpose({
         :show-gridlines="showGridlines"
         :striped-rows="stripedRows"
         :resizable-columns="resizableColumns"
+        v-model:selection="selectedRowsModel"
         column-resize-mode="expand"
         :reorderable-columns="reorderableColumns && !span.hasColumnGroups.value"
         :scroll-height="tableHeight ?? (virtualScrollRef ? scrollHeight : undefined)"
@@ -479,7 +558,6 @@ defineExpose({
         :multi-sort-meta="sort.multiSortMeta.value"
         sort-mode="multiple"
         :removable-sort="true"
-        v-model:selection="selectedRowsModel"
         :selection-mode="selectable ? (selectionMode === 'checkbox' ? undefined : selectionMode) : undefined"
         :edit-mode="editable ? 'cell' : undefined"
         :lazy="paginationMode === 'server'"
@@ -502,7 +580,10 @@ defineExpose({
         <!-- === Grouped header mode (PColumnGroup) === -->
         <template v-if="span.hasColumnGroups.value">
           <PColumnGroup type="header">
-            <PRow v-for="(hRow, ri) in span.headerRows.value" :key="ri">
+            <PRow
+              v-for="(hRow, ri) in span.headerRows.value"
+              :key="ri"
+            >
               <PColumn
                 v-if="selectable && selectionMode === 'checkbox' && ri === 0"
                 selection-mode="multiple"
@@ -522,9 +603,9 @@ defineExpose({
                   ...(cell.col ? {
                     width: (cell.col.width ?? defaultColumnWidth) + 'px',
                     minWidth: (cell.col.minWidth ?? 80) + 'px',
-                    textAlign: cell.col.align ?? 'left',
+                    textAlign: cell.col.align ?? 'left'
                   } : { textAlign: 'center' }),
-                  ...(cell.col?.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {}),
+                  ...(cell.col?.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {})
                 }"
               >
                 <template #header>
@@ -537,12 +618,15 @@ defineExpose({
                         && columnDrag.dragDirection.value === 'left',
                       'column-drag-over-right': columnDrag.dragOverGroupIndex.value !== null
                         && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
-                        && columnDrag.dragDirection.value === 'right',
+                        && columnDrag.dragDirection.value === 'right'
                     }"
                     :style="columnDrag.isActive.value && !cell.col?.frozen ? { cursor: 'grab' } : {}"
                     @contextmenu.prevent="cell.col ? menus.onHeaderContextMenu($event, cell.col) : undefined"
                   >
-                    <slot :name="cell.field ? `header-${cell.field}` : undefined" :column="cell.col">
+                    <slot
+                      :name="cell.field ? `header-${cell.field}` : undefined"
+                      :column="cell.col"
+                    >
                       {{ cell.header }}
                     </slot>
                   </div>
@@ -571,16 +655,22 @@ defineExpose({
             width: (col.width ?? defaultColumnWidth) + 'px',
             minWidth: (col.minWidth ?? 80) + 'px',
             textAlign: col.align ?? 'left',
-            ...(col.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {}),
+            ...(col.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {})
           }"
         >
           <!-- Header (flat mode only -- grouped mode uses PColumnGroup above) -->
-          <template v-if="!span.hasColumnGroups.value" #header>
+          <template
+            v-if="!span.hasColumnGroups.value"
+            #header
+          >
             <div
               class="flex items-center gap-1 w-full font-bold"
               @contextmenu.prevent="menus.onHeaderContextMenu($event, col)"
             >
-              <slot :name="`header-${col.field}`" :column="col">
+              <slot
+                :name="`header-${col.field}`"
+                :column="col"
+              >
                 {{ col.header }}
               </slot>
             </div>
@@ -589,9 +679,9 @@ defineExpose({
           <!-- Body -->
           <template #body="{ data, index }">
             <div
+              v-row-span="col.rowSpan ? span.getBodyRowSpan(data, col.field!, index) : 1"
               :data-field="col.field"
               class="cell-content relative"
-              v-row-span="col.rowSpan ? span.getBodyRowSpan(data, col.field!, index) : 1"
             >
               <!-- ProcFlag indicator (first visible column only) -->
               <span
@@ -599,13 +689,21 @@ defineExpose({
                 class="absolute top-1 left-0 w-1.5 h-1.5 rounded-full"
                 :class="{
                   'bg-green-500': data.procFlag === 'I',
-                  'bg-amber-500': data.procFlag === 'U',
+                  'bg-amber-500': data.procFlag === 'U'
                 }"
                 :title="`procFlag: ${data.procFlag}`"
               />
-              <slot :name="`body-${col.field}`" :data="data" :column="col" :index="index">
+              <slot
+                :name="`body-${col.field}`"
+                :data="data"
+                :column="col"
+                :index="index"
+              >
                 <template v-if="(col.editType === 'checkbox' || col.editType === 'toggle') && editable && edit.isCellEditable(data, col.field!)">
-                  <div class="flex items-center justify-center" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field!) }">
+                  <div
+                    class="flex items-center justify-center"
+                    :class="{ 'opacity-50': edit.isCellDisabled(data, col.field!) }"
+                  >
                     <PCheckbox
                       v-if="col.editType === 'checkbox'"
                       :model-value="data[col.field!]"
@@ -624,15 +722,25 @@ defineExpose({
                   </div>
                 </template>
                 <template v-else-if="col.editType === 'checkbox' || col.editType === 'toggle'">
-                  <div class="flex items-center justify-center" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field!) }">
+                  <div
+                    class="flex items-center justify-center"
+                    :class="{ 'opacity-50': edit.isCellDisabled(data, col.field!) }"
+                  >
                     <i
                       class="pi text-sm"
                       :class="data[col.field!] ? 'pi-check-circle text-green-500' : 'pi-times-circle text-surface-400'"
                     />
                   </div>
                 </template>
-                <span v-else class="cell-text" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field!) }">
-                  <component v-if="col.render" :is="() => col.render!(data[col.field!], data, col)" />
+                <span
+                  v-else
+                  class="cell-text"
+                  :class="{ 'opacity-50': edit.isCellDisabled(data, col.field!) }"
+                >
+                  <component
+                    :is="() => col.render!(data[col.field!], data, col)"
+                    v-if="col.render"
+                  />
                   <template v-else>{{ edit.getCellDisplayValue(data[col.field!], data, col) }}</template>
                 </span>
               </slot>
@@ -640,32 +748,55 @@ defineExpose({
           </template>
 
           <!-- Cell editor (skip checkbox/toggle — they render inline in body) -->
-          <template v-if="editable && col.editType !== 'checkbox' && col.editType !== 'toggle'" #editor="{ data, field, index }">
-            <div :data-field="field" class="cell-editor" @keydown.tab.prevent.stop="edit.handleKeyDown($event)">
-            <template v-if="edit.isCellEditable(data, field) && !edit.isCellDisabled(data, field)">
-              <TableCellEditor
-                :value="data[field]"
-                :field="field"
-                :row="data"
-                :col-def="col"
-                :options="edit.getCellOptions(data, col)"
-                @update:value="(val: any) => { data[field] = val; edit.onEditorValueChange(field, val) }"
-              />
-            </template>
-            <template v-else>
-              <span class="cell-text" :class="{ 'opacity-50': edit.isCellDisabled(data, field) }">
-                <component v-if="col.render" :is="() => col.render!(data[field], data, col)" />
-                <template v-else>{{ edit.getCellDisplayValue(data[field], data, col) }}</template>
-              </span>
-            </template>
+          <template
+            v-if="editable && col.editType !== 'checkbox' && col.editType !== 'toggle'"
+            #editor="{ data, field, index }"
+          >
+            <div
+              :data-field="field"
+              class="cell-editor"
+              @keydown.tab.prevent.stop="edit.handleKeyDown($event)"
+            >
+              <template v-if="edit.isCellEditable(data, field) && !edit.isCellDisabled(data, field)">
+                <TableCellEditor
+                  :value="data[field]"
+                  :field="field"
+                  :row="data"
+                  :col-def="col"
+                  :options="edit.getCellOptions(data, col)"
+                  @update:value="(val: any) => { data[field] = val; edit.onEditorValueChange(field, val) }"
+                />
+              </template>
+              <template v-else>
+                <span
+                  class="cell-text"
+                  :class="{ 'opacity-50': edit.isCellDisabled(data, field) }"
+                >
+                  <component
+                    :is="() => col.render!(data[field], data, col)"
+                    v-if="col.render"
+                  />
+                  <template v-else>{{ edit.getCellDisplayValue(data[field], data, col) }}</template>
+                </span>
+              </template>
             </div>
           </template>
 
           <!-- Footer -->
-          <template v-if="showFooter" #footer>
-            <slot :name="`footer-${col.field}`" :column="col" :value="footer.footerValues.value[col.field!]">
+          <template
+            v-if="showFooter"
+            #footer
+          >
+            <slot
+              :name="`footer-${col.field}`"
+              :column="col"
+              :value="footer.footerValues.value[col.field!]"
+            >
               <template v-if="footer.footerValues.value[col.field!]">
-                <span class="font-semibold" :class="{ 'text-right block': col.align === 'right' || ['number'].includes(col.editType ?? '') }">
+                <span
+                  class="font-semibold"
+                  :class="{ 'text-right block': col.align === 'right' || ['number'].includes(col.editType ?? '') }"
+                >
                   {{ footer?.footerValues?.value[col.field!]?.formatted }}
                 </span>
               </template>
@@ -675,7 +806,6 @@ defineExpose({
             </slot>
           </template>
         </PColumn>
-
       </PDataTable>
     </div>
 
@@ -692,7 +822,10 @@ defineExpose({
     </div>
 
     <!-- Paginator with total rows display -->
-    <div v-if="pagination.showPaginator.value" class="flex items-center justify-between gap-4 mt-2 min-h-8">
+    <div
+      v-if="pagination.showPaginator.value"
+      class="flex items-center justify-between gap-4 mt-2 min-h-8"
+    >
       <!-- Paginator in center -->
       <div class="flex-1 flex justify-center">
         <PPaginator
@@ -700,8 +833,8 @@ defineExpose({
           :rows="pagination.currentPageSize.value"
           :total-records="pagination.totalCount.value"
           :rows-per-page-options="pageSizeOptions"
-          @page="pagination.onPageChange"
           class="app-paginator-compact"
+          @page="pagination.onPageChange"
         />
       </div>
       <!-- Total rows display (fixed on right) -->
@@ -731,11 +864,21 @@ defineExpose({
       :draggable="false"
     >
       <div class="flex flex-col gap-1">
-        <template v-for="(item, idx) in columnManagerItems" :key="item.col.field ?? `group-${item.parentIndex}`">
+        <template
+          v-for="(item, idx) in columnManagerItems"
+          :key="item.col.field ?? `group-${item.parentIndex}`"
+        >
           <!-- Group header row -->
           <div
             v-if="item.isGroup"
-            class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800 mt-1"
+            class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800 mt-1 cursor-grab"
+            :class="cmDragClasses(item)"
+            draggable="true"
+            @dragstart="onCmDragStart(item, $event)"
+            @dragover="onCmDragOver(item, $event)"
+            @dragleave="onCmDragLeave"
+            @drop.prevent="onCmDrop"
+            @dragend="onCmDragEnd"
           >
             <span class="flex-1 text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wide">{{ item.col.header }}</span>
             <button
@@ -756,8 +899,14 @@ defineExpose({
           <!-- Leaf column row -->
           <div
             v-else
-            class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800"
-            :class="{ 'ml-4': item.childIndex !== null }"
+            class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800 cursor-grab"
+            :class="[{ 'ml-4': item.childIndex !== null }, cmDragClasses(item)]"
+            draggable="true"
+            @dragstart="onCmDragStart(item, $event)"
+            @dragover="onCmDragOver(item, $event)"
+            @dragleave="onCmDragLeave"
+            @drop.prevent="onCmDrop"
+            @dragend="onCmDragEnd"
           >
             <PCheckbox
               :model-value="!item.col.hidden"
@@ -1033,5 +1182,18 @@ defineExpose({
 
 .grouped-header-cell.column-drag-over-right {
   border-right: 2.5px solid var(--p-primary-color);
+}
+
+/* Column manager DnD feedback */
+.cm-drag-source {
+  opacity: 0.4;
+}
+
+.cm-drop-before {
+  box-shadow: 0 -2px 0 0 var(--p-primary-color);
+}
+
+.cm-drop-after {
+  box-shadow: 0 2px 0 0 var(--p-primary-color);
 }
 </style>

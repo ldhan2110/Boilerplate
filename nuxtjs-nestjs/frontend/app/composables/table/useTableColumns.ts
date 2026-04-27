@@ -33,9 +33,14 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     defaultColumnWidth = ref(150),
   } = options
 
-  const initialSnapshot = columns.value.map(col => ({ ...col }))
+  const cloneColumn = (col: ColumnDef): ColumnDef => ({
+    ...col,
+    children: col.children?.map(c => cloneColumn(c)),
+  })
+
+  const initialSnapshot = columns.value.map(cloneColumn)
   const columnState = shallowReactive<ColumnDef[]>(
-    columns.value.map(col => ({ ...col }))
+    columns.value.map(cloneColumn)
   )
 
   for (const col of columnState) {
