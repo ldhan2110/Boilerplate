@@ -65,41 +65,16 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
   )
 
   function toggleColumnVisibility(field: string) {
-    // Search top-level columns
     const idx = columnState.findIndex(c => c.field === field)
     if (idx !== -1) {
       columnState[idx] = { ...columnState[idx]!, hidden: !columnState[idx]!.hidden }
-      return
-    }
-    // Search inside children (grouped columns)
-    for (let i = 0; i < columnState.length; i++) {
-      const parent = columnState[i]!
-      if (!parent.children?.length) continue
-      const childIdx = parent.children.findIndex(c => c.field === field)
-      if (childIdx !== -1) {
-        parent.children[childIdx] = { ...parent.children[childIdx]!, hidden: !parent.children[childIdx]!.hidden }
-        columnState[i] = { ...parent } // trigger reactivity
-        return
-      }
     }
   }
 
   function showAllColumns() {
     for (let i = 0; i < columnState.length; i++) {
-      const col = columnState[i]!
-      if (col.hidden) {
-        columnState[i] = { ...col, hidden: false }
-      }
-      // Also unhide children
-      if (col.children?.length) {
-        let changed = false
-        for (let j = 0; j < col.children.length; j++) {
-          if (col.children[j]!.hidden) {
-            col.children[j] = { ...col.children[j]!, hidden: false }
-            changed = true
-          }
-        }
-        if (changed) columnState[i] = { ...col }
+      if (columnState[i]!.hidden) {
+        columnState[i] = { ...columnState[i]!, hidden: false }
       }
     }
   }
