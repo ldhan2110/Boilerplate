@@ -46,7 +46,7 @@ export function useTableExport(options: UseTableExportOptions): UseTableExportRe
 
     for (const row of data) {
       const values = columns.map(col => {
-        const val = col.format ? col.format(row[col.field], row) : row[col.field]
+        const val = col.format ? col.format(row[col.field!], row) : row[col.field!]
         if (val === null || val === undefined) return ''
         const str = String(val)
         return `"${str.replace(/"/g, '""')}"`
@@ -66,7 +66,7 @@ export function useTableExport(options: UseTableExportOptions): UseTableExportRe
 
     for (const row of data) {
       const rowData = columns.map(col => {
-        const val = row[col.field]
+        const val = row[col.field!]
         if (col.excelProps?.type === 'date' && val) {
           return new Date(val)
         }

@@ -48,13 +48,13 @@ export function useTableFooter(options: UseTableFooterOptions): UseTableFooterRe
       const aggType = footerAgg?.type ?? col.aggregation
       if (!aggType) continue
 
-      const values = rows.value.map(row => Number(row[col.field]) || 0)
+      const values = rows.value.map(row => Number(row[col.field!]) || 0)
       const value = aggregate(values, aggType)
       const formatted = footerAgg?.format
         ? footerAgg.format(value)
         : value.toLocaleString()
 
-      result[col.field] = { value, formatted }
+      result[col.field!] = { value, formatted }
     }
 
     return result
@@ -63,8 +63,8 @@ export function useTableFooter(options: UseTableFooterOptions): UseTableFooterRe
   const firstNonAggColumn = computed<string | null>(() => {
     if (!showFooter.value) return null
     for (const col of visibleColumns.value) {
-      if (!footerValues.value[col.field]) {
-        return col.field
+      if (!footerValues.value[col.field!]) {
+        return col.field!
       }
     }
     return null

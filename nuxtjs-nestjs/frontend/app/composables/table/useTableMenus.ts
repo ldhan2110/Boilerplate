@@ -81,12 +81,12 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
         {
           label: t('table.sortAscending'),
           icon: 'pi pi-sort-amount-up',
-          command: () => sort.setSortAsc(col.field),
+          command: () => sort.setSortAsc(col.field!),
         },
         {
           label: t('table.sortDescending'),
           icon: 'pi pi-sort-amount-down',
-          command: () => sort.setSortDesc(col.field),
+          command: () => sort.setSortDesc(col.field!),
         },
       )
 
@@ -106,14 +106,14 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
       {
         label: t('table.freezeColumn'),
         icon: 'pi pi-lock',
-        command: () => columns.freezeColumn(col.field),
-        disabled: columns.isColumnFrozen(col.field) || !columns.canFreezeMore.value,
+        command: () => columns.freezeColumn(col.field!),
+        disabled: columns.isColumnFrozen(col.field!) || !columns.canFreezeMore.value,
       },
       {
         label: t('table.unfreezeColumn'),
         icon: 'pi pi-lock-open',
-        command: () => columns.unfreezeColumn(col.field),
-        disabled: !columns.isColumnFrozen(col.field),
+        command: () => columns.unfreezeColumn(col.field!),
+        disabled: !columns.isColumnFrozen(col.field!),
       },
     )
 
@@ -225,6 +225,7 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
   function createBlankRow(): any {
     const blank: any = {}
     for (const col of columnState) {
+      if (!col.field) continue
       blank[col.field] = null
     }
     blank[rowKey.value] = genKey()

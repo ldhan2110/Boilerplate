@@ -72,7 +72,7 @@ function buildHeaderRows(columns: ColumnDef[], maxDepth: number): HeaderCell[][]
     for (const col of cols) {
       if (col.children?.length) {
         // Group node: placed at current depth, spans columns
-        rows[depth].push({
+        rows[depth]!.push({
           header: col.header,
           colspan: countLeaves(col),
           rowspan: 1,
@@ -80,7 +80,7 @@ function buildHeaderRows(columns: ColumnDef[], maxDepth: number): HeaderCell[][]
         walk(col.children, depth + 1)
       } else {
         // Leaf node: placed at current depth, spans remaining rows
-        rows[depth].push({
+        rows[depth]!.push({
           header: col.header,
           colspan: 1,
           rowspan: maxDepth - depth,
