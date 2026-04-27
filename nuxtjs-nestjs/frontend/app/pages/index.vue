@@ -347,9 +347,10 @@ function handleSaveToBackend() {
         </template>
         <template #content>
           <ClientOnly>
-            <Form ref="formRef" v-bind="formProps" v-slot="$form" class="flex flex-col gap-4">
+            <Form ref="formRef" v-bind="formProps" v-slot="$form">
+              <Flex direction="col" gap="4">
               <!-- Text Inputs -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Grid :cols="{ base: 1, md: 2 }" gap="4">
                 <Input
                   v-bind="field('name')"
                   label="Full Name"
@@ -376,7 +377,7 @@ function handleSaveToBackend() {
                   label="Disabled Input"
                   disabled
                 />
-              </div>
+              </Grid>
 
               <Input
                 v-bind="field('bio')"
@@ -389,7 +390,7 @@ function handleSaveToBackend() {
               />
 
               <!-- InputNumber -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Grid :cols="{ base: 1, md: 3 }" gap="4">
                 <InputNumber
                   v-bind="field('age')"
                   label="Age"
@@ -415,10 +416,10 @@ function handleSaveToBackend() {
                   :max="100"
                   suffix=" pcs"
                 />
-              </div>
+              </Grid>
 
               <!-- Select -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Grid :cols="{ base: 1, md: 2 }" gap="4">
                 <Select
                   v-bind="field('role')"
                   label="Role"
@@ -449,10 +450,10 @@ function handleSaveToBackend() {
                   show-clear
                   hint="Select multiple options"
                 />
-              </div>
+              </Grid>
 
               <!-- CheckBox -->
-              <div class="flex flex-col gap-3">
+              <Flex direction="col" gap="3">
                 <CheckBox
                   v-bind="field('agreeTerms')"
                   label="I agree to the Terms and Conditions"
@@ -465,10 +466,10 @@ function handleSaveToBackend() {
                   label="Subscribe to newsletter"
                   hint="We'll send you updates once a week"
                 />
-              </div>
+              </Flex>
 
               <!-- Toggle -->
-              <div class="flex flex-col gap-3">
+              <Flex direction="col" gap="3">
                 <Toggle
                   v-bind="field('darkMode')"
                   label="Enable dark mode"
@@ -484,10 +485,10 @@ function handleSaveToBackend() {
                   label="Disabled toggle"
                   disabled
                 />
-              </div>
+              </Flex>
 
               <!-- RadioGroup -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Grid :cols="{ base: 1, md: 2 }" gap="4">
                 <RadioGroup
                   v-bind="field('priority')"
                   label="Priority"
@@ -505,10 +506,10 @@ function handleSaveToBackend() {
                   direction="horizontal"
                   hint="Choose the publication status"
                 />
-              </div>
+              </Grid>
 
               <!-- DatePicker -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Grid :cols="{ base: 1, md: 2 }" gap="4">
                 <DatePicker
                   v-bind="field('startDate')"
                   label="Start Date"
@@ -532,7 +533,7 @@ function handleSaveToBackend() {
                   range
                   hint="Select start and end dates"
                 />
-              </div>
+              </Grid>
 
               <!-- RichEditor -->
               <RichEditor
@@ -543,7 +544,7 @@ function handleSaveToBackend() {
               />
 
               <!-- Form Actions -->
-              <div class="flex flex-wrap items-center gap-2">
+              <Flex wrap="wrap" align="center" gap="2">
                 <SaveButton type="submit" :loading="isSubmitting" />
                 <Button
                   label="Reset"
@@ -552,7 +553,7 @@ function handleSaveToBackend() {
                   icon="pi pi-refresh"
                   @click="resetForm"
                 />
-              </div>
+              </Flex>
 
               <!-- Form State Debug -->
               <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
@@ -574,6 +575,7 @@ function handleSaveToBackend() {
                   <pre class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{{ JSON.stringify(lastSubmitted, null, 2) }}</pre>
                 </details>
               </div>
+              </Flex>
             </Form>
           </ClientOnly>
         </template>
