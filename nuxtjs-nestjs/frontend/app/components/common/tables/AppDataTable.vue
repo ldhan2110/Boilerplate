@@ -19,8 +19,36 @@ import {
   useTableExport,
   useTableMenus,
   useTableProcFlag,
+  useTableSpan,
   generateTempKey,
 } from '~/composables/table'
+
+// --- v-row-span directive ---
+const vRowSpan = {
+  mounted(el: HTMLElement, binding: { value: number }) {
+    applyRowSpan(el, binding.value)
+  },
+  updated(el: HTMLElement, binding: { value: number }) {
+    applyRowSpan(el, binding.value)
+  },
+}
+
+function applyRowSpan(el: HTMLElement, span: number) {
+  const td = el.closest('td')
+  if (!td) return
+
+  if (span === 0) {
+    td.style.display = 'none'
+    td.removeAttribute('rowspan')
+  } else {
+    td.style.display = ''
+    if (span > 1) {
+      td.rowSpan = span
+    } else {
+      td.removeAttribute('rowspan')
+    }
+  }
+}
 
 const props = withDefaults(defineProps<AppDataTableProps>(), {
   rowKey: 'id',
@@ -127,6 +155,19 @@ const pagination = useTablePagination({
   },
 })
 
+const span = useTableSpan({
+  columns: columnsRef,
+  displayedRows: pagination.displayedRows,
+  rowKey: rowKeyRef,
+})
+
+const bodyColumns = computed(() => {
+  if (span.hasColumnGroups.value) {
+    return span.leafColumns.value.filter(col => !col.hidden)
+  }
+  return columns.visibleColumns.value
+})
+
 const selection = useTableSelection({
   selectable: selectableRef,
   selectionMode: selectionModeRef,
@@ -149,6 +190,8 @@ const edit = useTableEdit({
   emit: {
     editSave: (payload) => emit('row-edit-save', payload),
   },
+  getBodyRowSpan: span.getBodyRowSpan,
+  getMergeGroupIndices: span.getMergeGroupIndices,
 })
 
 const procFlag = useTableProcFlag({
@@ -365,20 +408,53 @@ defineExpose({
           </slot>
         </template>
 
-        <!-- Checkbox column for checkbox selection -->
+        <!-- === Grouped header mode (PColumnGroup) === -->
+        <template v-if="span.hasColumnGroups.value">
+          <PColumnGroup type="header">
+            <PRow v-for="(hRow, ri) in span.headerRows.value" :key="ri">
+              <PColumn
+                v-if="selectable && selectionMode === 'checkbox' && ri === 0"
+                selection-mode="multiple"
+                :rowspan="span.headerRows.value.length"
+                :frozen="true"
+                :style="{ width: '50px' }"
+              />
+              <PColumn
+                v-for="(cell, ci) in hRow"
+                :key="ci"
+                :header="cell.header"
+                :colspan="cell.colspan > 1 ? cell.colspan : undefined"
+                :rowspan="cell.rowspan > 1 ? cell.rowspan : undefined"
+                :sortable="cell.col ? cell.col.sortable !== false : false"
+                :field="cell.field"
+                :frozen="cell.col?.frozen"
+                :style="{
+                  ...(cell.col ? {
+                    width: (cell.col.width ?? defaultColumnWidth) + 'px',
+                    minWidth: (cell.col.minWidth ?? 80) + 'px',
+                    textAlign: cell.col.align ?? 'left',
+                  } : { textAlign: 'center' }),
+                  ...(cell.col?.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {}),
+                }"
+              />
+            </PRow>
+          </PColumnGroup>
+        </template>
+
+        <!-- === Flat header mode (default -- checkbox column) === -->
         <PColumn
-          v-if="selectable && selectionMode === 'checkbox'"
+          v-if="!span.hasColumnGroups.value && selectable && selectionMode === 'checkbox'"
           selection-mode="multiple"
           :frozen="true"
           :style="{ width: '50px' }"
         />
 
-        <!-- Data columns -->
+        <!-- Data columns (uses bodyColumns for both modes) -->
         <PColumn
-          v-for="col in columns.visibleColumns.value"
-          :key="col.field"
+          v-for="col in bodyColumns"
+          :key="col.field!"
           :field="col.field"
-          :sortable="col.sortable !== false"
+          :sortable="!span.hasColumnGroups.value ? col.sortable !== false : false"
           :frozen="col.frozen"
           :style="{
             width: (col.width ?? defaultColumnWidth) + 'px',
@@ -387,8 +463,8 @@ defineExpose({
             ...(col.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {}),
           }"
         >
-          <!-- Header with context menu trigger -->
-          <template #header>
+          <!-- Header (flat mode only -- grouped mode uses PColumnGroup above) -->
+          <template v-if="!span.hasColumnGroups.value" #header>
             <div
               class="flex items-center gap-1 w-full font-bold"
               @contextmenu.prevent="menus.onHeaderContextMenu($event, col)"
@@ -401,10 +477,14 @@ defineExpose({
 
           <!-- Body -->
           <template #body="{ data, index }">
-            <div :data-field="col.field" class="cell-content relative">
+            <div
+              :data-field="col.field"
+              class="cell-content relative"
+              v-row-span="col.rowSpan ? span.getBodyRowSpan(data, col.field!, index) : 1"
+            >
               <!-- ProcFlag indicator (first visible column only) -->
               <span
-                v-if="col === columns.visibleColumns.value[0] && data.procFlag && data.procFlag !== 'S'"
+                v-if="col === bodyColumns[0] && data.procFlag && data.procFlag !== 'S'"
                 class="absolute top-1 left-0 w-1.5 h-1.5 rounded-full"
                 :class="{
                   'bg-green-500': data.procFlag === 'I',
@@ -413,36 +493,36 @@ defineExpose({
                 :title="`procFlag: ${data.procFlag}`"
               />
               <slot :name="`body-${col.field}`" :data="data" :column="col" :index="index">
-                <template v-if="(col.editType === 'checkbox' || col.editType === 'toggle') && editable && edit.isCellEditable(data, col.field)">
-                  <div class="flex items-center justify-center" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
+                <template v-if="(col.editType === 'checkbox' || col.editType === 'toggle') && editable && edit.isCellEditable(data, col.field!)">
+                  <div class="flex items-center justify-center" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field!) }">
                     <PCheckbox
                       v-if="col.editType === 'checkbox'"
-                      :model-value="data[col.field]"
+                      :model-value="data[col.field!]"
                       :binary="true"
-                      :disabled="edit.isCellDisabled(data, col.field)"
+                      :disabled="edit.isCellDisabled(data, col.field!)"
                       v-bind="col.editProps"
-                      @update:model-value="(val: any) => edit.onInlineToggle(data, col.field, val)"
+                      @update:model-value="(val: any) => edit.onInlineToggle(data, col.field!, val)"
                     />
                     <PToggleSwitch
                       v-else
-                      :model-value="data[col.field]"
-                      :disabled="edit.isCellDisabled(data, col.field)"
+                      :model-value="data[col.field!]"
+                      :disabled="edit.isCellDisabled(data, col.field!)"
                       v-bind="col.editProps"
-                      @update:model-value="(val: any) => edit.onInlineToggle(data, col.field, val)"
+                      @update:model-value="(val: any) => edit.onInlineToggle(data, col.field!, val)"
                     />
                   </div>
                 </template>
                 <template v-else-if="col.editType === 'checkbox' || col.editType === 'toggle'">
-                  <div class="flex items-center justify-center" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
+                  <div class="flex items-center justify-center" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field!) }">
                     <i
                       class="pi text-sm"
-                      :class="data[col.field] ? 'pi-check-circle text-green-500' : 'pi-times-circle text-surface-400'"
+                      :class="data[col.field!] ? 'pi-check-circle text-green-500' : 'pi-times-circle text-surface-400'"
                     />
                   </div>
                 </template>
-                <span v-else class="cell-text" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field) }">
-                  <component v-if="col.render" :is="() => col.render!(data[col.field], data, col)" />
-                  <template v-else>{{ edit.getCellDisplayValue(data[col.field], data, col) }}</template>
+                <span v-else class="cell-text" :class="{ 'opacity-50': edit.isCellDisabled(data, col.field!) }">
+                  <component v-if="col.render" :is="() => col.render!(data[col.field!], data, col)" />
+                  <template v-else>{{ edit.getCellDisplayValue(data[col.field!], data, col) }}</template>
                 </span>
               </slot>
             </div>
@@ -472,10 +552,10 @@ defineExpose({
 
           <!-- Footer -->
           <template v-if="showFooter" #footer>
-            <slot :name="`footer-${col.field}`" :column="col" :value="footer.footerValues.value[col.field]">
-              <template v-if="footer.footerValues.value[col.field]">
+            <slot :name="`footer-${col.field}`" :column="col" :value="footer.footerValues.value[col.field!]">
+              <template v-if="footer.footerValues.value[col.field!]">
                 <span class="font-semibold" :class="{ 'text-right block': col.align === 'right' || ['number'].includes(col.editType ?? '') }">
-                  {{ footer?.footerValues?.value[col.field]?.formatted }}
+                  {{ footer?.footerValues?.value[col.field!]?.formatted }}
                 </span>
               </template>
               <template v-else-if="footer.firstNonAggColumn.value === col.field">
@@ -800,5 +880,10 @@ defineExpose({
 :deep(.p-paginator .p-paginator-last .p-icon) {
   width: 0.65rem;
   height: 0.65rem;
+}
+
+/* Merged rowSpan cells: vertical alignment */
+:deep(td[rowspan]) {
+  vertical-align: middle;
 }
 </style>
