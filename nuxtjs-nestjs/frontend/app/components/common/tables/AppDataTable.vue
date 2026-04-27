@@ -206,6 +206,22 @@ function resolveHeaderCellGroup(cell: HeaderCell): number | null {
   return cols.findIndex(col => col.children?.length && col.header === cell.header)
 }
 
+/** Flat list for column manager dialog: groups become section headers, leaves are toggleable. */
+const columnManagerItems = computed(() => {
+  const items: Array<{ col: ColumnDef; isGroup: boolean; groupHeader?: string }> = []
+  for (const col of columns.columnState) {
+    if (col.children?.length) {
+      items.push({ col, isGroup: true })
+      for (const child of col.children) {
+        items.push({ col: child, isGroup: false, groupHeader: col.header })
+      }
+    } else {
+      items.push({ col, isGroup: false })
+    }
+  }
+  return items
+})
+
 const selection = useTableSelection({
   selectable: selectableRef,
   selectionMode: selectionModeRef,
@@ -465,21 +481,6 @@ defineExpose({
                 :sortable="cell.col ? cell.col.sortable !== false : false"
                 :field="cell.field"
                 :frozen="cell.col?.frozen"
-                :pt="{
-                  root: {
-                    ...columnDrag.getDragAttrs(cell, ri),
-                    class: columnDrag.isActive.value ? [
-                      {
-                        'column-drag-over-left': columnDrag.dragOverGroupIndex.value !== null
-                          && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
-                          && columnDrag.dragDirection.value === 'left',
-                        'column-drag-over-right': columnDrag.dragOverGroupIndex.value !== null
-                          && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
-                          && columnDrag.dragDirection.value === 'right',
-                      },
-                    ] : [],
-                  },
-                }"
                 :style="{
                   ...(cell.col ? {
                     width: (cell.col.width ?? defaultColumnWidth) + 'px',
@@ -487,12 +488,21 @@ defineExpose({
                     textAlign: cell.col.align ?? 'left',
                   } : { textAlign: 'center' }),
                   ...(cell.col?.frozen ? { borderRight: '0.5px solid var(--p-datatable-body-cell-border-color)' } : {}),
-                  ...(columnDrag.isActive.value && !cell.col?.frozen ? { cursor: 'grab' } : {}),
                 }"
               >
                 <template #header>
                   <div
-                    class="flex items-center gap-1 w-full font-bold"
+                    v-bind="columnDrag.getDragAttrs(cell, ri)"
+                    class="flex items-center gap-1 w-full font-bold grouped-header-cell"
+                    :class="{
+                      'column-drag-over-left': columnDrag.dragOverGroupIndex.value !== null
+                        && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
+                        && columnDrag.dragDirection.value === 'left',
+                      'column-drag-over-right': columnDrag.dragOverGroupIndex.value !== null
+                        && resolveHeaderCellGroup(cell) === columnDrag.dragOverGroupIndex.value
+                        && columnDrag.dragDirection.value === 'right',
+                    }"
+                    :style="columnDrag.isActive.value && !cell.col?.frozen ? { cursor: 'grab' } : {}"
                     @contextmenu.prevent="cell.col ? menus.onHeaderContextMenu($event, cell.col) : undefined"
                   >
                     <slot :name="cell.field ? `header-${cell.field}` : undefined" :column="cell.col">
@@ -684,32 +694,28 @@ defineExpose({
       :draggable="false"
     >
       <div class="flex flex-col gap-1">
-        <div
-          v-for="(col, idx) in columns.columnState"
-          :key="col.field"
-          class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800"
-        >
-          <PCheckbox
-            :model-value="!col.hidden"
-            :binary="true"
-            @update:model-value="() => columns.toggleColumnVisibility(col.field!)"
-          />
-          <span class="flex-1 text-sm truncate">{{ col.header }}</span>
-          <button
-            class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
-            :disabled="idx === 0"
-            @click="columns.moveColumnUp(col.field!)"
+        <template v-for="(item, idx) in columnManagerItems" :key="item.col.field ?? `group-${idx}`">
+          <!-- Group header (non-toggleable section label) -->
+          <div
+            v-if="item.isGroup"
+            class="flex items-center gap-2 px-2 py-1.5 mt-1 text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wide"
           >
-            <i class="pi pi-chevron-up text-xs" />
-          </button>
-          <button
-            class="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 disabled:opacity-30 disabled:cursor-default"
-            :disabled="idx === columns.columnState.length - 1"
-            @click="columns.moveColumnDown(col.field!)"
+            {{ item.col.header }}
+          </div>
+          <!-- Leaf column (toggleable) -->
+          <div
+            v-else
+            class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-100 dark:hover:bg-surface-800"
+            :class="{ 'ml-4': item.groupHeader }"
           >
-            <i class="pi pi-chevron-down text-xs" />
-          </button>
-        </div>
+            <PCheckbox
+              :model-value="!item.col.hidden"
+              :binary="true"
+              @update:model-value="() => columns.toggleColumnVisibility(item.col.field!)"
+            />
+            <span class="flex-1 text-sm truncate">{{ item.col.header }}</span>
+          </div>
+        </template>
       </div>
       <div class="flex gap-2 mt-4 pt-3 border-t border-surface-200 dark:border-surface-700">
         <PButton
@@ -952,15 +958,15 @@ defineExpose({
 }
 
 /* Column drag-and-drop visual feedback */
-:deep(.column-drag-source) {
-  opacity: 0.4 !important;
+.grouped-header-cell.column-drag-source {
+  opacity: 0.4;
 }
 
-:deep(.column-drag-over-left) {
-  border-left: 2.5px solid var(--p-primary-color) !important;
+.grouped-header-cell.column-drag-over-left {
+  border-left: 2.5px solid var(--p-primary-color);
 }
 
-:deep(.column-drag-over-right) {
-  border-right: 2.5px solid var(--p-primary-color) !important;
+.grouped-header-cell.column-drag-over-right {
+  border-right: 2.5px solid var(--p-primary-color);
 }
 </style>

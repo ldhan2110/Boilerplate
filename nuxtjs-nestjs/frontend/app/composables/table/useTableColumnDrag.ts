@@ -100,9 +100,9 @@ export function useTableColumnDrag(options: UseTableColumnDragOptions): UseTable
     e.dataTransfer!.effectAllowed = 'move'
     e.dataTransfer!.setData('text/plain', JSON.stringify(source))
 
-    // Add visual class to source th
-    const th = (e.target as HTMLElement).closest('th')
-    if (th) th.classList.add('column-drag-source')
+    // Add visual class to the dragged element (the header div)
+    const el = (e.target as HTMLElement).closest('.grouped-header-cell') || (e.target as HTMLElement)
+    el.classList.add('column-drag-source')
   }
 
   function onDragOver(e: DragEvent, cell: HeaderCell) {
@@ -131,10 +131,10 @@ export function useTableColumnDrag(options: UseTableColumnDragOptions): UseTable
   }
 
   function onDragLeave(e: DragEvent) {
-    // Only clear if leaving the th entirely
+    // Only clear if leaving the header cell div entirely
     const relatedTarget = e.relatedTarget as HTMLElement | null
-    const th = (e.target as HTMLElement).closest('th')
-    if (th && relatedTarget && th.contains(relatedTarget)) return
+    const el = (e.target as HTMLElement).closest('.grouped-header-cell') || (e.target as HTMLElement)
+    if (el && relatedTarget && el.contains(relatedTarget)) return
     dragOverGroupIndex.value = null
     dragDirection.value = null
   }
