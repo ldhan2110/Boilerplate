@@ -82,7 +82,7 @@ const classes = computed(() => {
 const style = computed(() => {
   if (!useAutoFill.value) return undefined
   return {
-    'grid-template-columns': `repeat(auto-fill, minmax(${props.minChildWidth}, 1fr))`,
+    'grid-template-columns': `repeat(auto-fit, minmax(${props.minChildWidth}, 1fr))`,
   }
 })
 </script>
