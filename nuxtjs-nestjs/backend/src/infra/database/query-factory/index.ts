@@ -5,7 +5,7 @@ export { RawQueryChain } from './raw-query-chain';
 export { QueryFactoryModule } from './query-factory.module';
 export type { PaginationInput, SortInput, MutationWhere } from './types';
 export { TransactionContext } from './transaction-context';
-export { InsertChain } from './chains/insert-chain';
+export { InsertChain, ReturningInsertChain } from './chains/insert-chain';
 export { UpdateChain } from './chains/update-chain';
 export { DeleteChain } from './chains/delete-chain';
 export { UpsertChain } from './chains/upsert-chain';
