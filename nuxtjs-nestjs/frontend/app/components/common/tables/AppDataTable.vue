@@ -599,9 +599,9 @@ defineExpose({
       <PDataTable
         ref="dataTableRef"
         v-model:selection="selectedRowsModel"
-        :value="pagination.displayedRows.value"
+        :value="loading ? [] : pagination.displayedRows.value"
         :data-key="rowKey"
-        :loading="loading"
+        :loading="false"
         :show-gridlines="showGridlines"
         :striped-rows="stripedRows"
         :resizable-columns="resizableColumns"
@@ -625,8 +625,32 @@ defineExpose({
         @cell-edit-complete="onCellEditCompleteWithValidation"
         @row-contextmenu="menus.onRowContextMenu"
       >
+        <!-- Skeleton loading -->
+        <template v-if="loading" #empty>
+          <div class="flex flex-col">
+            <div
+              v-for="r in pageSize"
+              :key="r"
+              class="flex gap-2 py-2 px-3"
+            >
+              <PSkeleton
+                v-if="selectable && selectionMode === 'checkbox'"
+                width="1.25rem"
+                height="1.25rem"
+                class="shrink-0"
+              />
+              <PSkeleton
+                v-for="col in bodyColumns"
+                :key="col.field!"
+                height="1rem"
+                class="flex-1"
+              />
+            </div>
+          </div>
+        </template>
+
         <!-- Empty slot -->
-        <template #empty>
+        <template v-else #empty>
           <slot name="empty">
             <div class="text-center py-8 text-surface-400">
               {{ $t('table.noData') }}

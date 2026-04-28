@@ -27,7 +27,7 @@ const headingWidth = `${randBetween(rng, 35, 50)}%`
 const subtitleWidth = `${randBetween(rng, 20, 30)}%`
 
 // Cards
-const cardCount = randBetween(rng, 2, 4)
+const cardCount = randBetween(rng, 5, 8)
 const cards = Array.from({ length: cardCount }, () => {
   const lineCount = randBetween(rng, 3, 6)
   const lines = Array.from({ length: lineCount }, (_, i) => ({
@@ -39,7 +39,7 @@ const cards = Array.from({ length: cardCount }, () => {
 </script>
 
 <template>
-  <div class="animate-pulse">
+  <div class="animate-pulse min-h-full">
     <!-- Heading skeleton -->
     <div class="mb-6">
       <PSkeleton
@@ -60,7 +60,7 @@ const cards = Array.from({ length: cardCount }, () => {
       <div
         v-for="(card, ci) in cards"
         :key="ci"
-        class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-5"
+        class="rounded-lg bg-surface-0 dark:bg-surface-900 p-5"
       >
         <div class="flex flex-col gap-3">
           <PSkeleton

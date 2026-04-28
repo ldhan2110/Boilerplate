@@ -38,6 +38,7 @@ declare module 'vue' {
     PRadioButton: typeof import('primevue/radiobutton')['default']
     PRow: typeof import('primevue/row')['default']
     PSelect: typeof import('primevue/select')['default']
+    PSkeleton: typeof import('primevue/skeleton')['default']
     PTextarea: typeof import('primevue/textarea')['default']
     PToast: typeof import('primevue/toast')['default']
     PToggleSwitch: typeof import('primevue/toggleswitch')['default']
