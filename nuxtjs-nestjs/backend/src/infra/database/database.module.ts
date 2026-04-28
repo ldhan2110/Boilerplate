@@ -1,16 +1,13 @@
 import { Global, Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TenantModule } from '@infra/tenant';
 import { QueryFactoryModule } from './query-factory';
-import { PostgresConfigModule } from './configs';
-import { ALL_ENTITIES } from './query-factory/entity-registry';
 
 @Global()
 @Module({
   imports: [
-    PostgresConfigModule,
+    TenantModule,
     QueryFactoryModule,
-    TypeOrmModule.forFeature(ALL_ENTITIES),
   ],
-  exports: [QueryFactoryModule, TypeOrmModule],
+  exports: [TenantModule, QueryFactoryModule],
 })
 export class DatabaseModule {}
