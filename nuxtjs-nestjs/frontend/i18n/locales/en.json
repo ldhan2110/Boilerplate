@@ -54,7 +54,8 @@
     "unsavedChangesMessage": "You have unsaved changes. Do you want to discard them?",
     "discard": "Discard",
     "cancel": "Cancel",
-    "ok": "OK"
+    "ok": "OK",
+    "backToHome": "Back to Home"
   },
   "dialog": {
     "success": "Success",
@@ -106,5 +107,9 @@
     "min": "Minimum value is {min}",
     "max": "Maximum value is {max}",
     "pattern": "Invalid format"
+  },
+  "error": {
+    "forbidden": "Access Denied",
+    "forbiddenMessage": "You do not have permission to access this page."
   }
 }
