@@ -1,0 +1,17 @@
+node_modules
+.output
+.nuxt
+.nitro
+.cache
+dist
+.git
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+logs
+.code-review-graph
+.codesight
+.superpowers
+docs
