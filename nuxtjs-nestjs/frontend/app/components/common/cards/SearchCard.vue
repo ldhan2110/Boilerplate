@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { Form } from '@primevue/forms'
-
 type ResponsiveCols = {
   base?: number
   sm?: number
@@ -9,21 +7,8 @@ type ResponsiveCols = {
   xl?: number
 }
 
-interface AppFormBinding {
-  formProps: ComputedRef<Record<string, unknown>>
-  formRef: ShallowRef<InstanceType<typeof Form> | null>
-  field: (name: string) => Record<string, unknown>
-  values: Record<string, unknown>
-  isDirty: ComputedRef<boolean>
-  isSubmitting: Ref<boolean>
-  resetForm: () => void
-  guardClose: () => Promise<boolean>
-  setFieldValue: (name: string, value: unknown) => void
-  setFieldsValues: (newValues: Record<string, unknown>) => void
-}
-
 interface SearchCardProps {
-  form: AppFormBinding
+  form: ReturnType<typeof useAppForm>
   autoSearch?: boolean
   debounce?: number
   cols?: number | ResponsiveCols
@@ -66,11 +51,11 @@ const gridMinChildWidth = computed(() => (!props.cols ? props.minChildWidth : un
 
 // Form submit handler — only used when autoSearch is false
 const wrappedFormProps = computed(() => {
-  if (props.autoSearch) return props.form.formProps
+  if (props.autoSearch) return props.form.formProps.value
   return {
-    ...props.form.formProps,
+    ...props.form.formProps.value,
     onSubmit: (e: { valid: boolean, values: Record<string, unknown> }) => {
-      props.form.formProps.onSubmit?.(e)
+      props.form.formProps.value.onSubmit?.(e)
       if (e.valid) {
         emit('search', { ...props.form.values })
       }
