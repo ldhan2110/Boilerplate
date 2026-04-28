@@ -10,7 +10,7 @@ interface PermissionGateProps {
 
 const props = withDefaults(defineProps<PermissionGateProps>(), {
   behavior: 'hide',
-  redirectTo: '/403',
+  redirectTo: '/403'
 })
 
 const { hasPermission } = useAppPermission()
