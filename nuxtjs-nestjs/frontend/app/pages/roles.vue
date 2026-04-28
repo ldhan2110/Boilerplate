@@ -1,4 +1,5 @@
 <script setup lang="ts">
+usePageReady()
 const { t } = useI18n()
 </script>
 

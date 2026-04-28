@@ -1,4 +1,5 @@
 <script setup lang="ts">
+usePageReady()
 import { z } from 'zod'
 import { Form } from '@primevue/forms'
 
