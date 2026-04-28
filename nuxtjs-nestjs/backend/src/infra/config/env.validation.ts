@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsEnum, IsNumber, IsString, MinLength, validateSync } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString, MinLength, validateSync } from 'class-validator';
 
 enum Environment {
   Development = 'development',
@@ -29,6 +29,43 @@ class EnvironmentVariables {
 
   @IsString()
   DB_NAME: string;
+
+  // Metadata Database (tenant config storage)
+  @IsString()
+  METADATA_DB_HOST: string;
+
+  @IsNumber()
+  METADATA_DB_PORT: number;
+
+  @IsString()
+  METADATA_DB_USERNAME: string;
+
+  @IsString()
+  METADATA_DB_PASSWORD: string;
+
+  @IsString()
+  METADATA_DB_NAME: string;
+
+  // Tenant pool settings (optional with defaults)
+  @IsOptional()
+  @IsNumber()
+  TENANT_POOL_MIN: number = 5;
+
+  @IsOptional()
+  @IsNumber()
+  TENANT_POOL_MAX: number = 20;
+
+  @IsOptional()
+  @IsNumber()
+  TENANT_POOL_IDLE_MS: number = 600000;
+
+  @IsOptional()
+  @IsNumber()
+  TENANT_POOL_EVICTION_MS: number = 3600000;
+
+  @IsOptional()
+  @IsNumber()
+  TENANT_POOL_CONNECT_TIMEOUT: number = 30000;
 
   // JWT
   @IsString()
