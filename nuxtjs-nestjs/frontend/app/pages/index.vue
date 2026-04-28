@@ -2,6 +2,7 @@
 import { z } from 'zod'
 import { Form } from '@primevue/forms'
 
+import { ABILITY_ACTION, ABILITY_SUBJECT } from '~/utils/constants'
 import type { ColumnDef, EditSaveEvent, PageEvent, SortEvent } from '~/types/table'
 import { formatDate, formatTime, formatDateTime } from '~/utils/date'
 
@@ -32,7 +33,6 @@ function handleSearch(values: Record<string, unknown>) {
   console.log('SearchCard search:', values)
   toast.showInfo(`Search: ${JSON.stringify(values)}`)
 }
-
 
 const loading = ref(false)
 
@@ -395,6 +395,94 @@ function handleSaveToBackend() {
       </p>
     </div>
 
+    <!-- PermissionGate Demo -->
+    <div class="flex flex-col gap-4 mb-6">
+      <PCard>
+        <template #title>
+          <span class="text-base">PermissionGate Demo</span>
+        </template>
+        <template #content>
+          <div class="flex flex-col gap-6">
+            <!-- Hide (default) — single permission -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                behavior="hide" (default) — single permission
+              </p>
+              <CommonAuthPermissionGate :permission="{ action: ABILITY_ACTION.READ, subject: ABILITY_SUBJECT.USER }">
+                <Button
+                  label="Visible to users with read:User"
+                  variant="info"
+                />
+              </CommonAuthPermissionGate>
+            </div>
+
+            <!-- Hide — multiple permissions (ANY match) -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                behavior="hide" — multiple permissions (ANY match = visible)
+              </p>
+              <CommonAuthPermissionGate
+                :permission="[
+                  { action: ABILITY_ACTION.CREATE, subject: ABILITY_SUBJECT.USER },
+                  { action: ABILITY_ACTION.UPDATE, subject: ABILITY_SUBJECT.USER }
+                ]"
+              >
+                <Button
+                  label="Visible if create:User OR update:User"
+                  variant="success"
+                />
+              </CommonAuthPermissionGate>
+            </div>
+
+            <!-- Disable -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                behavior="disable" — greyed out, no interaction
+              </p>
+              <CommonAuthPermissionGate
+                :permission="{ action: ABILITY_ACTION.DELETE, subject: ABILITY_SUBJECT.USER }"
+                behavior="disable"
+              >
+                <Button
+                  label="Delete User (disabled without permission)"
+                  variant="danger"
+                />
+              </CommonAuthPermissionGate>
+            </div>
+
+            <!-- Placeholder -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                behavior="placeholder" — shows fallback slot
+              </p>
+              <CommonAuthPermissionGate
+                :permission="{ action: ABILITY_ACTION.MANAGE, subject: ABILITY_SUBJECT.ALL }"
+                behavior="placeholder"
+              >
+                <div class="p-3 bg-green-50 dark:bg-green-900/30 rounded text-green-700 dark:text-green-300 text-sm">
+                  Admin Panel Content
+                </div>
+                <template #fallback>
+                  <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded text-gray-500 dark:text-gray-400 text-sm">
+                    You need admin access to view this section.
+                  </div>
+                </template>
+              </CommonAuthPermissionGate>
+            </div>
+
+            <!-- Programmatic check -->
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                Programmatic: useAppPermission().hasPermission()
+              </p>
+              <pre class="text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded p-3">hasPermission('read', 'User') = {{ useAppPermission().hasPermission('read', 'User') }}
+hasPermission('manage', 'all') = {{ useAppPermission().hasPermission('manage', 'all') }}</pre>
+            </div>
+          </div>
+        </template>
+      </PCard>
+    </div>
+
     <!-- Input Components Showcase -->
     <div class="flex flex-col gap-4">
       <!-- SearchCard Demo -->
@@ -415,7 +503,6 @@ function handleSaveToBackend() {
                 :debounce="400"
                 :cols="{ base: 1, sm: 2, md: 3 }"
                 @search="handleSearch"
-
               >
                 <Input
                   v-bind="searchForm.field('name')"

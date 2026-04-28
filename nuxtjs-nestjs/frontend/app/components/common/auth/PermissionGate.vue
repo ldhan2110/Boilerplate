@@ -1,9 +1,13 @@
 <script lang="ts" setup>
 import type { AbilityAction, AbilitySubject } from '~/utils/constants'
 
-interface PermissionGateProps {
+interface PermissionRule {
   action: AbilityAction
   subject: AbilitySubject
+}
+
+interface PermissionGateProps {
+  permission: PermissionRule | PermissionRule[]
   behavior?: 'hide' | 'disable' | 'placeholder' | 'redirect'
   redirectTo?: string
 }
@@ -15,7 +19,10 @@ const props = withDefaults(defineProps<PermissionGateProps>(), {
 
 const { hasPermission } = useAppPermission()
 
-const permitted = computed(() => hasPermission(props.action, props.subject))
+const permitted = computed(() => {
+  const perms = Array.isArray(props.permission) ? props.permission : [props.permission]
+  return perms.some(p => hasPermission(p.action, p.subject))
+})
 
 watch(
   permitted,

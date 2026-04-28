@@ -1,5 +1,3 @@
-import type { RawRuleOf, PureAbility } from '@casl/ability'
-
 export const ABILITY_ACTION = {
   CREATE: 'create',
   READ: 'read',
@@ -19,15 +17,15 @@ export const ABILITY_SUBJECT = {
 export type AbilityAction = typeof ABILITY_ACTION[keyof typeof ABILITY_ACTION]
 export type AbilitySubject = typeof ABILITY_SUBJECT[keyof typeof ABILITY_SUBJECT] | 'all'
 
-export type AppAbility = PureAbility<[AbilityAction, AbilitySubject]>
+export type AbilityTuple = [AbilityAction, AbilitySubject]
 
-export const ROLE_PERMISSIONS: Record<string, RawRuleOf<AppAbility>[]> = {
+export const ROLE_PERMISSIONS: Record<string, AbilityTuple[]> = {
   admin: [
-    { action: 'manage', subject: 'all' }
+    ['manage', 'all']
   ],
   user: [
-    { action: 'read', subject: 'User' },
-    { action: 'read', subject: 'Program' },
-    { action: 'read', subject: 'Setting' }
+    ['read', 'User'],
+    ['read', 'Program'],
+    ['read', 'Setting']
   ]
 }

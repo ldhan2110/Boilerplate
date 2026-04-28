@@ -1,10 +1,10 @@
 import { PureAbility } from '@casl/ability'
 import { abilitiesPlugin } from '@casl/vue'
 import { ROLE_PERMISSIONS } from '~/utils/constants'
-import type { AppAbility } from '~/utils/constants'
+import type { AbilityAction, AbilitySubject } from '~/utils/constants'
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const ability = new PureAbility<AppAbility extends PureAbility<infer R> ? R : never>([])
+  const ability = new PureAbility<[AbilityAction, AbilitySubject]>([])
   nuxtApp.vueApp.use(abilitiesPlugin, ability, { useGlobalProperties: true })
 
   const userStore = useUserStore()
@@ -12,10 +12,10 @@ export default defineNuxtPlugin((nuxtApp) => {
   watch(
     () => userStore.profile,
     (profile) => {
-      const rules = profile?.roleNm
+      const tuples = profile?.roleNm
         ? ROLE_PERMISSIONS[profile.roleNm] ?? []
         : []
-      ability.update(rules)
+      ability.update(tuples.map(([action, subject]) => ({ action, subject })))
     },
     { immediate: true }
   )

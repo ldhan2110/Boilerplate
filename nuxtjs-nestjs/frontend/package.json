@@ -11,6 +11,8 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@casl/ability": "^6.8.1",
+    "@casl/vue": "^2.2.6",
     "@nuxtjs/i18n": "^10.2.4",
     "@pinia/nuxt": "^0.11.3",
     "@primeuix/themes": "^2.0.3",
