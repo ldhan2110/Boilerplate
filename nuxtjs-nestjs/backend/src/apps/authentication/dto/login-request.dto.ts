@@ -6,4 +6,7 @@ export class LoginRequestDto {
 
   @IsString()
   password: string;
+
+  @IsString()
+  tenantId: string;
 }

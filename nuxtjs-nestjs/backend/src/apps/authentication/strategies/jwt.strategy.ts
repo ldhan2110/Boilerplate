@@ -10,6 +10,7 @@ import { AuthCacheService } from '@module/authentication/services/auth-cache.ser
 export interface JwtPayload {
   sub: string;
   username: string;
+  tenantId: string;
 }
 
 @Injectable()
@@ -40,6 +41,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (!user || !user.useFlg) {
       throw new BizException('AUT000004', 'ERROR', 'Unauthorized');
     }
-    return user;
+    return { ...user, tenantId: payload.tenantId };
   }
 }
