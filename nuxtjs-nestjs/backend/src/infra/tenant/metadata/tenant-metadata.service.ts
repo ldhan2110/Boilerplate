@@ -15,8 +15,8 @@ export class TenantMetadataService {
       .select(TenantDbConfig, 'cfg')
       .innerJoin(TenantMaster, 'mst', 'cfg.tent_id = mst.tent_id')
       .andWhereStrict('mst.tentId = :tenantId', { tenantId })
-      .andWhereStrict('mst.useFlg = true')
-      .andWhereStrict('cfg.useFlg = true')
+      .andWhereStrict("mst.useFlg = 'Y'")
+      .andWhereStrict("cfg.useFlg = 'Y'")
       .andWhereStrict('cfg.priority = 1')
       .getOne();
   }
@@ -25,7 +25,7 @@ export class TenantMetadataService {
     const count = await this.qf
       .select(TenantMaster, 'mst')
       .andWhereStrict('mst.tentId = :tenantId', { tenantId })
-      .andWhereStrict('mst.useFlg = true')
+      .andWhereStrict("mst.useFlg = 'Y'")
       .getCount();
     return count > 0;
   }
