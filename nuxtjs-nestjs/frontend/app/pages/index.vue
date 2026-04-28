@@ -408,12 +408,12 @@ function handleSaveToBackend() {
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
                 behavior="hide" (default) — single permission
               </p>
-              <CommonAuthPermissionGate :permission="{ action: ABILITY_ACTION.READ, subject: ABILITY_SUBJECT.USER }">
+              <PermissionGate :permission="{ action: ABILITY_ACTION.READ, subject: ABILITY_SUBJECT.USER }">
                 <Button
                   label="Visible to users with read:User"
                   variant="info"
                 />
-              </CommonAuthPermissionGate>
+              </PermissionGate>
             </div>
 
             <!-- Hide — multiple permissions (ANY match) -->
@@ -421,7 +421,7 @@ function handleSaveToBackend() {
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
                 behavior="hide" — multiple permissions (ANY match = visible)
               </p>
-              <CommonAuthPermissionGate
+              <PermissionGate
                 :permission="[
                   { action: ABILITY_ACTION.CREATE, subject: ABILITY_SUBJECT.USER },
                   { action: ABILITY_ACTION.UPDATE, subject: ABILITY_SUBJECT.USER }
@@ -431,7 +431,7 @@ function handleSaveToBackend() {
                   label="Visible if create:User OR update:User"
                   variant="success"
                 />
-              </CommonAuthPermissionGate>
+              </PermissionGate>
             </div>
 
             <!-- Disable -->
@@ -439,7 +439,7 @@ function handleSaveToBackend() {
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
                 behavior="disable" — greyed out, no interaction
               </p>
-              <CommonAuthPermissionGate
+              <PermissionGate
                 :permission="{ action: ABILITY_ACTION.DELETE, subject: ABILITY_SUBJECT.USER }"
                 behavior="disable"
               >
@@ -447,7 +447,7 @@ function handleSaveToBackend() {
                   label="Delete User (disabled without permission)"
                   variant="danger"
                 />
-              </CommonAuthPermissionGate>
+              </PermissionGate>
             </div>
 
             <!-- Placeholder -->
@@ -455,7 +455,7 @@ function handleSaveToBackend() {
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
                 behavior="placeholder" — shows fallback slot
               </p>
-              <CommonAuthPermissionGate
+              <PermissionGate
                 :permission="{ action: ABILITY_ACTION.MANAGE, subject: ABILITY_SUBJECT.ALL }"
                 behavior="placeholder"
               >
@@ -467,7 +467,7 @@ function handleSaveToBackend() {
                     You need admin access to view this section.
                   </div>
                 </template>
-              </CommonAuthPermissionGate>
+              </PermissionGate>
             </div>
 
             <!-- Programmatic check -->
