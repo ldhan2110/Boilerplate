@@ -40,8 +40,10 @@ export class AuthService {
       throw new BizException('AUT000001', 'ERROR', 'Invalid credentials');
     }
 
-    const accessToken = this.generateAccessToken(user);
-    const refreshToken = this.generateRefreshToken(user);
+    const tenantId = req.tenantId;
+
+    const accessToken = this.generateAccessToken(user, tenantId);
+    const refreshToken = this.generateRefreshToken(user, tenantId);
 
     // Register token in Redis cache if available
     if (this.authCacheService) {
@@ -79,23 +81,23 @@ export class AuthService {
     }
 
     return {
-      accessToken: this.generateAccessToken(user),
+      accessToken: this.generateAccessToken(user, payload.tenantId),
       accessExpireIn: this.accessExpireMs,
-      refreshToken: this.generateRefreshToken(user),
+      refreshToken: this.generateRefreshToken(user, payload.tenantId),
       refreshExpireIn: this.refreshExpireMs,
     };
   }
 
-  private generateAccessToken(user: User): string {
-    const payload: JwtPayload = { sub: user.usrId, username: user.usrId };
+  private generateAccessToken(user: User, tenantId: string): string {
+    const payload: JwtPayload = { sub: user.usrId, username: user.usrId, tenantId };
     return this.jwtService.sign(payload, {
       secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
       expiresIn: Math.floor(this.accessExpireMs / 1000),
     });
   }
 
-  private generateRefreshToken(user: User): string {
-    const payload: JwtPayload = { sub: user.usrId, username: user.usrId };
+  private generateRefreshToken(user: User, tenantId: string): string {
+    const payload: JwtPayload = { sub: user.usrId, username: user.usrId, tenantId };
     return this.jwtService.sign(payload, {
       secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
       expiresIn: Math.floor(this.refreshExpireMs / 1000),
