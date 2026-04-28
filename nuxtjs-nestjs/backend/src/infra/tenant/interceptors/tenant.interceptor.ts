@@ -23,16 +23,10 @@ export class TenantInterceptor implements NestInterceptor {
       return next.handle();
     }
 
+    // Pre-warm DataSource in cache (async)
     await this.manager.getDataSource(tenantId);
 
-    return new Observable((subscriber) => {
-      TenantContext.run(tenantId, () => {
-        next.handle().subscribe({
-          next: (value) => subscriber.next(value),
-          error: (err) => subscriber.error(err),
-          complete: () => subscriber.complete(),
-        });
-      });
-    });
+    // Wrap entire handler + downstream pipeline in tenant context
+    return TenantContext.run(tenantId, () => next.handle());
   }
 }

@@ -9,6 +9,7 @@ import { DataSource } from 'typeorm';
 import { TenantMetadataService } from '../metadata/tenant-metadata.service';
 import { TenantDataSourceProperties } from './tenant-datasource.properties';
 import { TenantDbConfig } from '../metadata/entities/tenant-db-config.entity';
+import { ALL_ENTITIES } from '@infra/database/query-factory/entity-registry';
 
 interface CachedDataSource {
   dataSource: DataSource;
@@ -27,6 +28,7 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
     private readonly props: TenantDataSourceProperties,
   ) {
     this.evictionTimer = setInterval(() => this.evictIdle(), 60_000);
+    this.evictionTimer.unref();
   }
 
   async getDataSource(tenantId: string): Promise<DataSource> {
@@ -34,6 +36,12 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
     if (cached && cached.dataSource.isInitialized) {
       cached.lastAccess = Date.now();
       return cached.dataSource;
+    }
+
+    // Remove stale entry if exists but not initialized (connection dropped)
+    if (cached) {
+      cached.dataSource.destroy().catch(() => {});
+      this.cache.delete(tenantId);
     }
 
     const inflight = this.pending.get(tenantId);
@@ -67,8 +75,9 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
     try {
       await ds.initialize();
     } catch (err) {
+      this.logger.error(`Failed to connect to tenant '${tenantId}' database`, (err as Error).stack);
       throw new ServiceUnavailableException(
-        `Failed to connect to tenant '${tenantId}' database: ${(err as Error).message}`,
+        `Tenant '${tenantId}' database is currently unavailable. Please try again later.`,
       );
     }
 
@@ -85,7 +94,7 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
       database: config.dbNm,
       username: config.dbUsrNm,
       password: config.dbPwd,
-      entities: [],
+      entities: ALL_ENTITIES,
       synchronize: false,
       connectTimeoutMS: this.props.connectTimeoutMs,
       extra: {
