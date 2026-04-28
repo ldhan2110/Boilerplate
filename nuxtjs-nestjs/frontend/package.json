@@ -8,7 +8,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "generate:api": "openapi-ts"
   },
   "dependencies": {
     "@casl/ability": "^6.8.1",
@@ -35,6 +36,7 @@
     "@nuxt/eslint": "^1.15.2",
     "@tailwindcss/vite": "^4.2.4",
     "@types/node": "25.6.0",
+    "dotenv": "^17.4.2",
     "eslint": "^10.2.0",
     "typescript": "^6.0.2",
     "vue-tsc": "^3.2.6"

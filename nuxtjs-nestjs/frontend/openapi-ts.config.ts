@@ -1,10 +1,11 @@
 import { defineConfig } from '@hey-api/openapi-ts';
+import { config } from 'dotenv';
+
+config();
 
 export default defineConfig({
-  input: `${process.env.NUXT_PUBLIC_API_URL}-docs`,
+  input: `${process.env.NUXT_PUBLIC_API_BASE}/api-json`,
   output: {
-    format: 'prettier',
-    lint: 'eslint',
     path: './app/types/api',
   },
   plugins: [
@@ -13,4 +14,5 @@ export default defineConfig({
       name: '@hey-api/typescript',
     },
   ],
+  postProcess: ['eslint', 'prettier'],
 });
