@@ -4,7 +4,9 @@ import { Role, RoleAuth } from '@infra/database/entities/administration';
 import { QueryFactory } from '@infra/database/query-factory';
 import { RoleAuthDto, RoleDto, RoleListDto, SearchRoleDto } from './dto';
 import { SuccessDto } from '@infra/common/dto';
+import { LogService } from '@infra/logger';
 
+@LogService()
 @Injectable()
 export class RolesService {
   constructor(private readonly qf: QueryFactory) {}

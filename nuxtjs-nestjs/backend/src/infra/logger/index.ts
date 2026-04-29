@@ -4,3 +4,4 @@ export { TypeOrmLogger } from './typeorm-logger';
 export { LoggerProperties } from './logger.properties';
 export { LoggerContext } from './logger-context';
 export { LoggerInterceptor } from './logger.interceptor';
+export { LogService } from './log-service.decorator';

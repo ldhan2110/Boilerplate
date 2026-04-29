@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { BizException } from '@infra/common/exceptions';
 import { Company } from '@infra/database/entities/administration';
 import { QueryFactory } from '@infra/database/query-factory';
+import { LogService } from '@infra/logger';
 import { CompanyInfoDto, CompanyInfoListDto, SearchCompanyDto } from './dto';
 
+@LogService()
 @Injectable()
 export class CompaniesService {
   constructor(private readonly qf: QueryFactory) {}

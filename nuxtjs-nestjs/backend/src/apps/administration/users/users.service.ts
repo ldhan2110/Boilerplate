@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '@infra/database/entities/administration';
 import { SuccessDto } from '@infra/common/dto';
 import { QueryFactory, TransactionContext } from '@infra/database/query-factory';
+import { LogService } from '@infra/logger';
 import {
   ChangeUserInfoDto,
   DeleteUserDto,
@@ -15,6 +16,7 @@ import {
 
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
+@LogService()
 @Injectable()
 export class UsersService {
   private readonly defaultPassword: string;

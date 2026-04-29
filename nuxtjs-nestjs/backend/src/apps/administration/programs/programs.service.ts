@@ -8,6 +8,7 @@ import {
 } from '@infra/database/entities/administration';
 import { QueryFactory, TransactionContext } from '@infra/database/query-factory';
 import { PermissionDto, ProgramDto, ProgramListDto, SearchProgramDto } from './dto';
+import { LogService } from '@infra/logger';
 
 // ─── Domain constants ────────────────────────────────────────────────────────
 const VIEW_PERMISSION = 'VIEW';
@@ -21,6 +22,7 @@ const ERR_PARENT_NOT_MENU = 'ADM000008';      // parent must be MENU type
 const ERR_ROLE_AUTH_EXISTS = 'ADM000011';     // role-auth refs prevent deletion
 const ERR_EMPTY_LIST = 'COM000008';           // list must not be empty
 
+@LogService()
 @Injectable()
 export class ProgramsService {
   constructor(private readonly qf: QueryFactory) {}
