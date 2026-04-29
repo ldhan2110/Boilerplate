@@ -67,6 +67,35 @@ class EnvironmentVariables {
   @IsNumber()
   TENANT_POOL_CONNECT_TIMEOUT: number = 30000;
 
+  // Logger
+  @IsOptional()
+  @IsString()
+  LOG_LEVEL: string = 'debug';
+
+  @IsOptional()
+  @IsString()
+  LOG_DIR: string = 'logs';
+
+  @IsOptional()
+  @IsNumber()
+  LOG_MAX_DAYS: number = 30;
+
+  @IsOptional()
+  @IsString()
+  LOG_SQL: string = 'true';
+
+  @IsOptional()
+  @IsString()
+  LOG_CONSOLE: string = 'true';
+
+  @IsOptional()
+  @IsString()
+  LOG_FILE: string = 'true';
+
+  @IsOptional()
+  @IsNumber()
+  LOG_SLOW_QUERY_MS: number = 1000;
+
   // JWT
   @IsString()
   @MinLength(32)
