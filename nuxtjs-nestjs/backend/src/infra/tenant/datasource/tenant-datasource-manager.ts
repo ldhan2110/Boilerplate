@@ -10,6 +10,7 @@ import { TenantMetadataService } from '../metadata/tenant-metadata.service';
 import { TenantDataSourceProperties } from './tenant-datasource.properties';
 import { TenantDbConfig } from '../metadata/entities/tenant-db-config.entity';
 import { ALL_ENTITIES } from '@infra/database/query-factory/entity-registry';
+import { TypeOrmLogger } from '@infra/logger';
 
 interface CachedDataSource {
   dataSource: DataSource;
@@ -26,6 +27,7 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
   constructor(
     private readonly metadataService: TenantMetadataService,
     private readonly props: TenantDataSourceProperties,
+    private readonly typeOrmLogger: TypeOrmLogger,
   ) {
     this.evictionTimer = setInterval(() => this.evictIdle(), 60_000);
     this.evictionTimer.unref();
@@ -66,7 +68,6 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
   }
 
   private async initDataSource(tenantId: string): Promise<DataSource> {
-    console.log(`Initializing DataSource for tenant '${tenantId}'`);
     const config = await this.metadataService.getTenantDbConfig(tenantId);
     if (!config) {
       throw new NotFoundException(`Tenant '${tenantId}' not found or inactive`);
@@ -97,6 +98,9 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
       password: config.dbPwd,
       entities: ALL_ENTITIES,
       synchronize: false,
+      logging: true,
+      maxQueryExecutionTime: 1000,
+      logger: this.typeOrmLogger,
       connectTimeoutMS: this.props.connectTimeoutMs,
       extra: {
         min: this.props.poolMin,

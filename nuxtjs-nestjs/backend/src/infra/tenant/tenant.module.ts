@@ -10,6 +10,7 @@ import { TenantDataSourceManager } from './datasource/tenant-datasource-manager'
 import { createRoutingDataSource } from './datasource/tenant-routing-datasource';
 import { TenantInterceptor } from './interceptors/tenant.interceptor';
 import { ALL_ENTITIES } from '@infra/database/query-factory/entity-registry';
+import { TypeOrmLogger } from '@infra/logger';
 
 @Global()
 @Module({
@@ -19,8 +20,8 @@ import { ALL_ENTITIES } from '@infra/database/query-factory/entity-registry';
     // (bootstrap, health checks, public endpoints without tenant context)
     TypeOrmModule.forRootAsync({
       name: 'default-app',
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+      inject: [ConfigService, TypeOrmLogger],
+      useFactory: (config: ConfigService, typeOrmLogger: TypeOrmLogger) => ({
         type: 'postgres' as const,
         host: config.get<string>('DB_HOST'),
         port: config.get<number>('DB_PORT'),
@@ -29,7 +30,9 @@ import { ALL_ENTITIES } from '@infra/database/query-factory/entity-registry';
         database: config.get<string>('DB_NAME'),
         entities: ALL_ENTITIES,
         synchronize: config.get<string>('DB_SYNCHRONIZE') === 'true',
-        logging: config.get<string>('DB_LOGGING') === 'true',
+        logging: true,
+        maxQueryExecutionTime: 1000,
+        logger: typeOrmLogger,
       }),
     }),
   ],

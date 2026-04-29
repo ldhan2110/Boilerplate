@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule, getDataSourceToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { QueryFactory } from '@infra/database/query-factory/query-factory.service';
+import { TypeOrmLogger } from '@infra/logger';
 import { METADATA_QUERY_FACTORY } from './metadata-query-factory';
 import { TenantMaster } from './entities/tenant-master.entity';
 import { TenantDbConfig } from './entities/tenant-db-config.entity';
@@ -11,8 +12,8 @@ import { TenantDbConfig } from './entities/tenant-db-config.entity';
   imports: [
     TypeOrmModule.forRootAsync({
       name: 'metadata',
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+      inject: [ConfigService, TypeOrmLogger],
+      useFactory: (config: ConfigService, typeOrmLogger: TypeOrmLogger) => ({
         type: 'postgres' as const,
         host: config.get<string>('METADATA_DB_HOST'),
         port: config.get<number>('METADATA_DB_PORT'),
@@ -21,7 +22,9 @@ import { TenantDbConfig } from './entities/tenant-db-config.entity';
         database: config.get<string>('METADATA_DB_NAME'),
         entities: [TenantMaster, TenantDbConfig],
         synchronize: false,
-        logging: config.get<string>('DB_LOGGING') === 'true',
+        logging: true,
+        maxQueryExecutionTime: 1000,
+        logger: typeOrmLogger,
       }),
     }),
     TypeOrmModule.forFeature([TenantMaster, TenantDbConfig], 'metadata'),
