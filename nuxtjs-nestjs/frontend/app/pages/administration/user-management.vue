@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { z } from 'zod'
 import type { ColumnDef, CellConfig, PageEvent, SortEvent } from '~/types/table'
-import type { UserInfoDto, UserInfoListDto } from '~/types/'
-import { apiClient } from '~/services/apiClient'
+import type { SuccessDto, UserInfoDto, UserInfoListDto } from '~/types/'
 
+const toast = useAppToast();
 const { t } = useI18n()
 
 // --- Search form ---
@@ -20,7 +20,7 @@ const searchForm = useAppForm({
 })
 
 const statusOptions = [
-  { label: t('common.all', 'All'), value: null },
+  { label: t('common.all', 'All'), value: '' },
   { label: t('common.active', 'Active'), value: true },
   { label: t('common.inactive', 'Inactive'), value: false }
 ]
@@ -34,7 +34,7 @@ const pagination = ref<PageEvent>({ page: 1, pageSize: 25 })
 const sortState = ref<SortEvent | null>(null)
 
 // --- Load data ---
-const { loading, execute: loadUsers } = useApi<UserInfoListDto>('/api/adm/user/getListUserInfo', {
+const { loading, execute: loadUsers } = useApi<UserInfoListDto>(QUERY_KEY.ADMINISTRATION.USERS.LIST, {
   method: 'POST'
 })
 
@@ -147,39 +147,35 @@ function cellConfig(row: any, field: string): CellConfig | void {
 }
 
 // --- Save ---
-const isSaving = ref(false)
+const { loading: isSaving, execute: saveUsers } = useApi<SuccessDto>(QUERY_KEY.ADMINISTRATION.USERS.SAVE, {
+  method: 'POST',
+  onSuccess: async () => {
+    toast.showSuccess(t('common.saveSuccess', 'Saved successfully'))
+    clearChanges()
+    await fetchData()
+  },
+  onError: () => {
+    toast.showError(t('common.saveError', 'Failed to save'))
+  }
+})
 
 async function onSave() {
   const errors = validate()
   if (errors.length > 0) return
-
   const changed = getRows(['I', 'U', 'D'])
-  if (changed.length === 0) return
-
-  isSaving.value = true
-  try {
-    const inserts = changed.filter(r => r.procFlag === 'I')
-    const updates = changed.filter(r => r.procFlag === 'U')
-    const deletes = changed.filter(r => r.procFlag === 'D')
-
-    const promises: Promise<any>[] = [
-      ...inserts.map(row => apiClient.post('/api/adm/user/createUser', row)),
-      ...updates.map(row => apiClient.post('/api/adm/user/updateUser', row)),
-    ]
-    if (deletes.length > 0) {
-      promises.push(apiClient.post('/api/adm/user/deleteUser', {
-        usrIds: deletes.map(r => r.usrId)
-      }))
-    }
-    await Promise.all(promises)
-
-    clearChanges()
-    await fetchData()
+  if (changed.length === 0) {
+    toast.showInfo(t('common.noChanges', 'No changes to save'))
+    return
   }
-  finally {
-    isSaving.value = false
-  }
+  await saveUsers(changed)
 }
+
+function handleAddUser() {
+  tableRef.value?.insertRow({
+    useFlg: 'Y'
+  })
+}
+
 </script>
 
 <template>
@@ -205,28 +201,36 @@ async function onSave() {
     </SearchCard>
 
     <PCard class="p-0">
-      <Flex justify-content="end" class="p-3">
-        <SaveButton :loading="isSaving" @click="onSave" />
-      </Flex>
-    </PCard>
+      <template #content>
+        <Flex justify="end" class="pb-2" gap="2">
+            <Button
+              :label="t('adm.user.add')"
+              icon="pi pi-plus"
+              class="p-button-sm p-button-outlined"
+              @click="handleAddUser"
+            />
+            <SaveButton :label="t('common.save')" :loading="isSaving" @click="onSave" />
+        </Flex>
 
-    <!-- Table -->
-    <AppDataTable
-      ref="tableRef"
-      :rows="rows"
-      :columns="columns"
-      :total-records="totalRecords"
-      :loading="loading"
-      row-key="usrId"
-      :editable="true"
-      :selectable="true"
-      selection-mode="checkbox"
-      pagination-mode="server"
-      sort-backend="server"
-      :cell-config="cellConfig"
-      @page="onPage"
-      @sort="onSort"
-      @refresh="fetchData"
-    />
+        <!-- Table -->
+        <AppDataTable
+          ref="tableRef"
+          :rows="rows"
+          :columns="columns"
+          :total-records="totalRecords"
+          :loading="loading"
+          row-key="usrId"
+          :editable="true"
+          :selectable="true"
+          selection-mode="checkbox"
+          pagination-mode="server"
+          sort-backend="server"
+          :cell-config="cellConfig"
+          @page="onPage"
+          @sort="onSort"
+          @refresh="fetchData"
+        />
+      </template>
+    </PCard>
   </div>
 </template>

@@ -22,8 +22,8 @@ export class BaseDto {
   updatedAt?: Date;
 
   @IsOptional()
-  @IsBoolean()
-  useFlg?: boolean;
+  @IsString()
+  useFlg?: string;
 
   @IsOptional()
   @IsString()

@@ -53,6 +53,7 @@
     "required": "Trường này là bắt buộc",
     "optional": "Tùy chọn",
     "search": "Tìm kiếm...",
+    "noChanges": "Không có thay đổi nào để lưu",
     "noResults": "Không tìm thấy kết quả",
     "selectPlaceholder": "Chọn một mục",
     "datePlaceholder": "Chọn ngày",
@@ -61,7 +62,8 @@
     "discard": "Bỏ qua",
     "cancel": "Hủy",
     "ok": "OK",
-    "backToHome": "Về trang chủ"
+    "backToHome": "Về trang chủ",
+    "status": "Trạng thái"
   },
   "dialog": {
     "success": "Thành công",
@@ -117,5 +119,10 @@
   "error": {
     "forbidden": "Truy cập bị từ chối",
     "forbiddenMessage": "Bạn không có quyền truy cập trang này."
+  },
+  "adm": {
+    "user": {
+      "add": "Thêm người dùng"
+    }
   }
 }

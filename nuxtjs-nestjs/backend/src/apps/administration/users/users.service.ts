@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { User } from '@infra/database/entities/administration';
 import { SuccessDto } from '@infra/common/dto';
-import { QueryFactory } from '@infra/database/query-factory';
+import { QueryFactory, TransactionContext } from '@infra/database/query-factory';
 import {
   ChangeUserInfoDto,
   DeleteUserDto,
@@ -122,7 +122,60 @@ export class UsersService {
   }
 
   // ---------------------------------------------------------------------------
-  // Admin: create / update
+  // Admin: bulk save (I/U/D by procFlag)
+  // ---------------------------------------------------------------------------
+
+  async saveUsers(list: UserInfoDto[]): Promise<SuccessDto> {
+    if (!list || list.length === 0) {
+      throw new BizException('COM000008', 'ERROR');
+    }
+
+    await this.qf.transaction(async (tx) => {
+      for (const dto of list) {
+        switch (dto.procFlag) {
+          case 'I':
+            await this.insertUser(tx, dto);
+            break;
+          case 'U':
+            await this.updateUserInTx(tx, dto);
+            break;
+          case 'D':
+            await tx.update(User).where({ usrId: dto.usrId! }).set({ useFlg: 'N' }).execute();
+            break;
+          default:
+            throw new BizException('COM000009', 'ERROR', `Unknown procFlag: ${dto.procFlag}`);
+        }
+      }
+    });
+
+    return SuccessDto.of(true, list.length);
+  }
+
+  private async insertUser(tx: TransactionContext, dto: UserInfoDto): Promise<void> {
+    if (dto.usrId) {
+      const existing = await tx.findOne(User, { usrId: dto.usrId });
+      if (existing) {
+        throw new BizException('ADM000001', 'ERROR');
+      }
+    }
+
+    const hashed = await bcrypt.hash(this.defaultPassword, 10);
+    const usrId = dto.usrId || await tx.genId('USR', 'seq_usr');
+
+    await tx.insert(User).values({
+      ...dto,
+      usrId,
+      usrPwd: hashed,
+    }).execute();
+  }
+
+  private async updateUserInTx(tx: TransactionContext, dto: UserInfoDto): Promise<void> {
+    const { usrId, procFlag, ...rest } = dto;
+    await tx.update(User).where({ usrId: usrId! }).set(rest as Partial<User>).execute();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Admin: create / update (kept for direct use by other services)
   // ---------------------------------------------------------------------------
 
   async createUser(dto: UserInfoDto): Promise<SuccessDto> {
@@ -134,10 +187,9 @@ export class UsersService {
     }
 
     const hashed = await bcrypt.hash(this.defaultPassword, 10);
+    const usrId = dto.usrId || await this.qf.transaction(async (tx) => tx.genId('USR', 'seq_usr'));
 
     await this.qf.transaction(async (tx) => {
-      const usrId = await tx.genId('USR', 'seq_usr');
-
       await tx.insert(User).values({
         ...dto,
         usrId,
@@ -241,7 +293,7 @@ export class UsersService {
 
     await this.qf.transaction(async (tx) => {
       for (const usrId of usrIds) {
-        await tx.update(User).where({ usrId }).set({ useFlg: false }).execute();
+        await tx.update(User).where({ usrId }).set({ useFlg: 'N' }).execute();
       }
     });
 

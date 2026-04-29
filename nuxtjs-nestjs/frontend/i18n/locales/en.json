@@ -52,6 +52,7 @@
     "required": "This field is required",
     "optional": "Optional",
     "search": "Search...",
+    "noChanges": "No changes to save",
     "noResults": "No results found",
     "selectPlaceholder": "Select an option",
     "datePlaceholder": "Select a date",
@@ -60,7 +61,8 @@
     "discard": "Discard",
     "cancel": "Cancel",
     "ok": "OK",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "status": "Status"
   },
   "dialog": {
     "success": "Success",
@@ -116,5 +118,10 @@
   "error": {
     "forbidden": "Access Denied",
     "forbiddenMessage": "You do not have permission to access this page."
+  },
+  "adm": {
+    "user": {
+      "add": "Add User"
+    }
   }
 }

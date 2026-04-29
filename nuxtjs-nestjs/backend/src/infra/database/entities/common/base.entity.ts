@@ -30,7 +30,7 @@ export class BaseEntity {
   @Expose()
   updatedBy: string;
 
-  @Column({ name: COLUMN_DEFAULT.useFlag, nullable: false, default: true })
+  @Column({ name: COLUMN_DEFAULT.useFlag, nullable: false, default: 'Y' })
   @Expose()
-  useFlg: boolean;
+  useFlg: string;
 }

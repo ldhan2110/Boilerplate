@@ -17,7 +17,7 @@
 </script>
 
 <template>
-  <PToolbar class="rounded-lg">
+  <PToolbar class="rounded-lg p-4">
     <template v-if="$slots.start" #start>
       <slot name="start" />
     </template>

@@ -154,7 +154,7 @@ export class RolesService {
         roleCd,
         roleNm,
         roleDesc,
-        useFlg: useFlg ?? true,
+        useFlg: useFlg ?? 'Y',
         createdBy: createdBy ?? 'SYSTEM',
         updatedBy: updatedBy ?? createdBy ?? 'SYSTEM',
       }).execute();

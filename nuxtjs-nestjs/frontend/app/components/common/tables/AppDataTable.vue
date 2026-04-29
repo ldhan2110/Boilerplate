@@ -401,7 +401,7 @@ function insertRow(defaultValues?: Partial<any>): any {
     blank[props.rowKey] = key
     blank.procFlag = 'I'
   }
-  rowsRef.value.push(blank)
+  rowsRef.value.unshift(blank)
   triggerRef(rowsRef)
   procFlag.markInsert(key)
   // Validate required fields on new row

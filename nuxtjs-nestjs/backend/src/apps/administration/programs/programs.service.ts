@@ -71,7 +71,7 @@ export class ProgramsService {
       prntPgmId: r['prnt_pgm_id'] as string,
       dspOrder: r['dsp_order'] as number,
       pgmRmk: r['pgm_rmk'] as string,
-      useFlg: r['use_flg'] as boolean,
+      useFlg: r['use_flg'] as string,
       level: r['level'] as number,
       treeKey: r['tree_key'] as string,
       treePath: r['tree_path'] as string,
@@ -129,7 +129,7 @@ export class ProgramsService {
         prntPgmId: dto.prntPgmId ?? undefined,
         dspOrder: dto.dspOrder ?? 9999,
         pgmRmk: dto.pgmRmk,
-        useFlg: dto.useFlg ?? true,
+        useFlg: dto.useFlg ?? 'Y',
         createdBy: 'SYSTEM',
         updatedBy: 'SYSTEM',
       }).execute();

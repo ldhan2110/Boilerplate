@@ -91,7 +91,7 @@ export class CompaniesService {
         coId,
         coNm: dto.coNm,
         tmZn: dto.tmZn,
-        useFlg: dto.useFlg ?? true,
+        useFlg: dto.useFlg ?? 'Y',
         createdBy: dto.createdBy ?? 'SYSTEM',
         updatedBy: dto.updatedBy ?? 'SYSTEM',
       }).execute();
