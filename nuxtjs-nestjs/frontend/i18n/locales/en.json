@@ -15,7 +15,8 @@
     "signingIn": "Signing in...",
     "tenantIdRequired": "Tenant ID is required",
     "usernameRequired": "Username is required",
-    "passwordTooShort": "Password must be at least 4 characters"
+    "passwordTooShort": "Password must be at least 4 characters",
+    "login.loginFailed": "Login failed. Please check your credentials and try again."
   },
   "sidebar": {
     "dashboard": "Dashboard",

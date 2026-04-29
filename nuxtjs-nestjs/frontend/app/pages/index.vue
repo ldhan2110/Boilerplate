@@ -573,7 +573,7 @@ hasPermission('manage', 'all') = {{ useAppPermission().hasPermission('manage', '
         </template>
         <template #content>
           <ClientOnly>
-            <Form
+            <PForm
               ref="formRef"
               v-bind="formProps"
               v-slot="$form"
@@ -837,7 +837,7 @@ hasPermission('manage', 'all') = {{ useAppPermission().hasPermission('manage', '
                   </details>
                 </div>
               </Flex>
-            </Form>
+            </PForm>
           </ClientOnly>
         </template>
       </PCard>

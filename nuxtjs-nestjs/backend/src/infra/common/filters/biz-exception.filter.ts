@@ -7,13 +7,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { BizException, BizErrorType } from '@infra/common/exceptions';
-
-interface BizErrorResponse {
-  errorCode: string;
-  errorType: BizErrorType;
-  errorMessage: string;
-}
+import { BizException } from '@infra/common/exceptions';
+import { ErrorDto } from '../dto';
 
 @Catch()
 export class BizExceptionFilter implements ExceptionFilter {
@@ -29,7 +24,7 @@ export class BizExceptionFilter implements ExceptionFilter {
 
   private resolve(exception: unknown): {
     status: number;
-    body: BizErrorResponse;
+    body: ErrorDto;
   } {
     // 1. BizException — first-class business error
     if (exception instanceof BizException) {
@@ -38,11 +33,11 @@ export class BizExceptionFilter implements ExceptionFilter {
           exception.errorType === 'WARN'
             ? HttpStatus.BAD_REQUEST
             : HttpStatus.INTERNAL_SERVER_ERROR,
-        body: {
+        body: new ErrorDto({
           errorCode: exception.errorCode,
           errorType: exception.errorType,
           errorMessage: exception.errorMessage ?? '',
-        },
+        }),
       };
     }
 
@@ -58,11 +53,11 @@ export class BizExceptionFilter implements ExceptionFilter {
 
       return {
         status,
-        body: {
+        body: new ErrorDto({
           errorCode: `HTTP${String(status).padStart(3, '0')}`,
           errorType: 'ERROR',
           errorMessage,
-        },
+        }),
       };
     }
 
@@ -73,11 +68,11 @@ export class BizExceptionFilter implements ExceptionFilter {
     );
     return {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
-      body: {
+      body: new ErrorDto({
         errorCode: 'SYS000001',
         errorType: 'ERROR',
         errorMessage: 'Internal server error',
-      },
+      }),
     };
   }
 }

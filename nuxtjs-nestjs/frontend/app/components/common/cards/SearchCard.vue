@@ -67,7 +67,7 @@ const wrappedFormProps = computed(() => {
 <template>
   <PCard>
     <template #content>
-      <Form
+      <PForm
         :ref="form.formRef"
         v-bind="wrappedFormProps"
       >
@@ -98,7 +98,7 @@ const wrappedFormProps = computed(() => {
             @click="form.resetForm(); emit('search', { ...form.values })"
           />
         </div>
-      </Form>
+      </PForm>
     </template>
   </PCard>
 </template>

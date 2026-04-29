@@ -22,7 +22,13 @@ const { formProps, formRef, field , values, isSubmitting } = useAppForm<typeof l
     password: ''
   },
   onSubmit: async (values) => {
-    console.log(values);
+    userStore.login(values)
+      .then(() => {
+        navigateTo('/')
+      })
+      .catch((err) => {
+        error.value = err.message || t('login.loginFailed')
+      })
   },
   guard: false
 })

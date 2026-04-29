@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import type {
   UserProfile,
   UserPreferences,
-  LoginResponse,
   UserMeResponse
 } from '~/types'
 import {
@@ -12,6 +11,7 @@ import {
 } from '~/types'
 import { storage } from '~/utils/storage'
 import { apiClient } from '~/services/apiClient'
+import type { LoginRequestDto, LoginResponseDto } from '~/types/api'
 
 const STORAGE_KEYS = {
   refreshToken: 'refresh_token',
@@ -83,15 +83,13 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // --- Actions ---
-  async function login(username: string, password: string): Promise<boolean> {
+  async function login(request: LoginRequestDto): Promise<boolean> {
     try {
-      const data = await apiClient.post<LoginResponse>('/api/auth/login', { username, password })
-
+      const data = await apiClient.post<LoginResponseDto>(QUERY_KEY.AUTHENTICATION.LOGIN, request)
       accessToken.value = data.accessToken
       accessExpireIn.value = data.accessExpireIn
       storage.setString(STORAGE_KEYS.refreshToken, data.refreshToken)
       scheduleRefresh()
-
       await fetchProfile()
       return true
     } catch {
@@ -101,28 +99,26 @@ export const useUserStore = defineStore('user', () => {
 
   async function fetchProfile(): Promise<void> {
     try {
-      const me = await apiClient.get<UserMeResponse>('/api/auth/me')
+      const me = await apiClient.get<UserMeResponse>(QUERY_KEY.AUTHENTICATION.PROFILE)
       profile.value = mapProfileFromBackend(me)
       persistProfile()
 
       const backendPrefs = mapBackendPreferences(me)
       preferences.value = backendPrefs
       persistPreferences()
-    } catch {
+    } catch(error: any) {
       // Profile fetch failed — use cached data if available
+      console.log('Failed to fetch profile, using cached data if available', error)
     }
   }
 
   async function refreshTokens(): Promise<boolean> {
-    const config = useRuntimeConfig()
     const storedRefresh = storage.getString(STORAGE_KEYS.refreshToken)
     if (!storedRefresh) return false
 
     try {
-      const data = await $fetch<LoginResponse>('/api/auth/refresh-token', {
-        baseURL: config.public.apiBase as string,
-        method: 'POST',
-        body: { refreshToken: storedRefresh }
+      const data = await apiClient.post<LoginResponseDto>(QUERY_KEY.AUTHENTICATION.REFRESH, {
+        refreshToken: storedRefresh
       })
 
       accessToken.value = data.accessToken
@@ -138,7 +134,7 @@ export const useUserStore = defineStore('user', () => {
 
   async function logout(): Promise<void> {
     try {
-      await apiClient.post('/api/auth/logout')
+      await apiClient.post(QUERY_KEY.AUTHENTICATION.LOGOUT)
     } catch {
       // Best effort — clear state regardless
     }

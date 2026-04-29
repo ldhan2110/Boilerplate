@@ -16,7 +16,8 @@
     "signingIn": "Đang đăng nhập...",
     "tenantIdRequired": "Vui lòng nhập mã khách hàng",
     "usernameRequired": "Vui lòng nhập tên đăng nhập",
-    "passwordTooShort": "Mật khẩu phải có ít nhất 4 ký tự"
+    "passwordTooShort": "Mật khẩu phải có ít nhất 4 ký tự",
+    "login.loginFailed": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập và thử lại."
   },
   "sidebar": {
     "dashboard": "Bảng điều khiển",

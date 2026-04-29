@@ -6,6 +6,8 @@ interface UseApiOptions {
   body?: Record<string, any> | null
   headers?: Record<string, string>
   immediate?: boolean
+  onSuccess?: (data: any) => void
+  onError?: (error: Error) => void
 }
 
 export function useApi<T>(url: string, options: UseApiOptions = {}) {
@@ -48,8 +50,15 @@ export function useApi<T>(url: string, options: UseApiOptions = {}) {
       }
 
       data.value = result
+
+      if (options.onSuccess) {
+        options.onSuccess(result)
+      }
       return result
     } catch (e: any) {
+      if (options.onError) {
+        options.onError(e.response?._data || e)
+      }
       if (e.name === 'AbortError') return null
       error.value = e
       return null
