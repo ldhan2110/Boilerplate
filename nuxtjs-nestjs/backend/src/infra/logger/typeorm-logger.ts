@@ -1,6 +1,7 @@
 import { Logger as TypeOrmLoggerInterface } from 'typeorm';
 import * as winston from 'winston';
 import { LoggerProperties } from './logger.properties';
+import { LoggerContext } from './logger-context';
 
 export function interpolateParams(
   sql: string,
@@ -40,10 +41,14 @@ export class TypeOrmLogger implements TypeOrmLoggerInterface {
     private readonly props: LoggerProperties,
   ) {}
 
+  private getContext(fallback: string): string {
+    return LoggerContext.getCaller() ?? fallback;
+  }
+
   logQuery(query: string, parameters?: any[]): void {
     if (!this.props.logSql) return;
     const interpolated = interpolateParams(query, parameters);
-    this.winstonLogger.debug(interpolated, { context: 'TypeORM:Query' });
+    this.winstonLogger.debug(interpolated, { context: this.getContext('TypeORM:Query') });
   }
 
   logQueryError(
@@ -54,14 +59,14 @@ export class TypeOrmLogger implements TypeOrmLoggerInterface {
     const interpolated = interpolateParams(query, parameters);
     const errMsg = error instanceof Error ? error.message : error;
     this.winstonLogger.error(`${errMsg}\n  Query: ${interpolated}`, {
-      context: 'TypeORM:QueryError',
+      context: this.getContext('TypeORM:QueryError'),
     });
   }
 
   logQuerySlow(time: number, query: string, parameters?: any[]): void {
     const interpolated = interpolateParams(query, parameters);
     this.winstonLogger.warn(`${time}ms\n  ${interpolated}`, {
-      context: 'TypeORM:SlowQuery',
+      context: this.getContext('TypeORM:SlowQuery'),
     });
   }
 
