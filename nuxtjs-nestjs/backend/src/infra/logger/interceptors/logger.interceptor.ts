@@ -5,7 +5,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { LoggerContext } from './logger-context';
+import { LoggerContext } from '../configs/logger-context';
 
 @Injectable()
 export class LoggerInterceptor implements NestInterceptor {

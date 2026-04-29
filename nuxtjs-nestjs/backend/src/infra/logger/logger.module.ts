@@ -1,9 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import * as winston from 'winston';
-import { LoggerProperties } from './logger.properties';
-import { AppLogger } from './app-logger.service';
-import { TypeOrmLogger } from './typeorm-logger';
-import { createWinstonLogger } from './winston.factory';
+import { LoggerProperties, TypeOrmLogger, createWinstonLogger } from './configs';
+import { AppLogger } from './services';
 
 export const WINSTON_LOGGER = Symbol('WINSTON_LOGGER');
 

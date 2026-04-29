@@ -1,4 +1,4 @@
-import { LoggerContext } from './logger-context';
+import { LoggerContext } from '../configs/logger-context';
 
 /**
  * Class decorator that wraps every method in LoggerContext.run()
