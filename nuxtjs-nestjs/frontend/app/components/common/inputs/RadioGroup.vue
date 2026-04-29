@@ -37,7 +37,8 @@ const emit = defineEmits<{
 
 const { t, te } = useI18n()
 
-const groupId = computed(() => props.id || `radiogroup-${useId()}`)
+const _uid = useId()
+const groupId = computed(() => props.id || `radiogroup-${_uid}`)
 
 function getOptionLabel(option: unknown): string {
   if (props.optionLabel && typeof option === 'object' && option !== null) {

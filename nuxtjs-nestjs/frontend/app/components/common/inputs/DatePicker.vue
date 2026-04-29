@@ -57,7 +57,8 @@ const emit = defineEmits<{
 
 const { t, te } = useI18n()
 
-const inputId = computed(() => props.id || `datepicker-${useId()}`)
+const _uid = useId()
+const inputId = computed(() => props.id || `datepicker-${_uid}`)
 
 const defaultPlaceholders: Record<DatePickerVariant, string> = {
   date: 'common.datePlaceholder',

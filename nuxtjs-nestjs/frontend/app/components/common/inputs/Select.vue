@@ -49,7 +49,8 @@ const emit = defineEmits<{
 
 const { t, te } = useI18n()
 
-const inputId = computed(() => props.id || `select-${useId()}`)
+const _uid = useId()
+const inputId = computed(() => props.id || `select-${_uid}`)
 
 function resolve(value: string | undefined, fallbackKey?: string): string | undefined {
   const v = value || fallbackKey

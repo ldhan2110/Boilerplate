@@ -30,7 +30,8 @@ const emit = defineEmits<{
 
 const { t, te } = useI18n()
 
-const inputId = computed(() => props.id || `toggle-${useId()}`)
+const _uid = useId()
+const inputId = computed(() => props.id || `toggle-${_uid}`)
 
 const resolvedLabel = computed(() => {
   if (!props.label) return undefined

@@ -5,49 +5,302 @@ export type ClientOptions = {
 };
 
 export type LoginRequestDto = {
-    [key: string]: unknown;
+    username: string;
+    password: string;
+    tenantId: string;
+};
+
+export type LoginResponseDto = {
+    accessToken: string;
+    accessExpireIn: number;
+    refreshToken: string;
+    refreshExpireIn: number;
 };
 
 export type RefreshTokenRequestDto = {
-    [key: string]: unknown;
+    refreshToken: string;
+};
+
+export type RefreshTokenResponseDto = {
+    accessToken: string;
+    accessExpireIn: number;
+    refreshToken: string;
+    refreshExpireIn: number;
+};
+
+export type PaginationDto = {
+    pageSize: number;
+    current: number;
+};
+
+export type SortDto = {
+    sortField?: string;
+    sortType?: 'ASC' | 'DESC';
+};
+
+export type DynamicFilterDto = {
+    field: string;
+    operator: 'EQUALS' | 'NOT_EQUALS' | 'GREATER_THAN' | 'GREATER_THAN_OR_EQUAL' | 'LESS_THAN' | 'LESS_THAN_OR_EQUAL' | 'LIKE' | 'IN' | 'BETWEEN';
+    value?: string;
+    valueTo?: string;
+    valueType?: 'STRING' | 'NUMBER' | 'DATE' | 'BOOLEAN';
 };
 
 export type SearchUserDto = {
-    [key: string]: unknown;
+    usrId?: string;
+    usrNm?: string;
+    searchText?: string;
+    pagination?: PaginationDto;
+    sort?: SortDto;
+    sorts?: Array<SortDto>;
+    filters?: Array<DynamicFilterDto>;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
 };
 
 export type UserInfoDto = {
-    [key: string]: unknown;
+    usrId?: string;
+    usrNm?: string;
+    usrPwd?: string;
+    usrEml?: string;
+    usrPhn?: string;
+    usrAddr?: string;
+    usrDesc?: string;
+    usrFileId?: string;
+    roleId?: string;
+    roleNm?: string;
+    langVal?: string;
+    sysModVal?: string;
+    dtFmtVal?: string;
+    sysColrVal?: string;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
+};
+
+export type UserInfoListDto = {
+    userInfo: Array<UserInfoDto>;
+    total: number;
+};
+
+export type SuccessDto = {
+    success: boolean;
+    rows?: number;
 };
 
 export type ChangeUserInfoDto = {
-    [key: string]: unknown;
+    usrId?: string;
+    usrNm?: string;
+    usrPwd?: string;
+    usrEml?: string;
+    usrPhn?: string;
+    usrAddr?: string;
+    usrDesc?: string;
+    usrFileId?: string;
+    roleId?: string;
+    roleNm?: string;
+    langVal?: string;
+    sysModVal?: string;
+    dtFmtVal?: string;
+    sysColrVal?: string;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
+    oldPassword?: string;
+    newPassword?: string;
+    confirmNewPassword?: string;
 };
 
 export type SearchCompanyDto = {
-    [key: string]: unknown;
+    coNm?: string;
+    taxCd?: string;
+    coTpCd?: string;
+    coNtn?: string;
+    searchText?: string;
+    pagination?: PaginationDto;
+    sort?: SortDto;
+    sorts?: Array<SortDto>;
+    filters?: Array<DynamicFilterDto>;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
 };
 
 export type CompanyInfoDto = {
-    [key: string]: unknown;
+    coNm?: string;
+    coTpCd?: string;
+    coFrgnNm?: string;
+    taxCd?: string;
+    taxOfc?: string;
+    coLoclNm?: string;
+    coAddrVal1?: string;
+    coAddrVal2?: string;
+    coAddrVal3?: string;
+    emlAddr?: string;
+    faxNo?: string;
+    phnNo?: string;
+    slRep?: string;
+    webAddr?: string;
+    coDesc?: string;
+    coAnvDt?: string;
+    coSz?: string;
+    coNtn?: string;
+    empeSz?: string;
+    currCd?: string;
+    coIndusZn?: string;
+    coProd?: string;
+    tmZn?: string;
+    bankTpCd?: string;
+    bankAcctNo?: string;
+    bankNm?: string;
+    chtrCapiVal?: string;
+    estbDt?: string;
+    lgoFileId?: string;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
+};
+
+export type CompanyInfoListDto = {
+    companyInfo: Array<CompanyInfoDto>;
+    total: number;
 };
 
 export type SearchProgramDto = {
-    [key: string]: unknown;
+    pgmId?: string;
+    pgmCd?: string;
+    pgmNm?: string;
+    pgmTpCd?: string;
+    searchText?: string;
+    pagination?: PaginationDto;
+    sort?: SortDto;
+    sorts?: Array<SortDto>;
+    filters?: Array<DynamicFilterDto>;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
+};
+
+export type PermissionDto = {
+    permId?: string;
+    permCd?: string;
+    permNm?: string;
+    pgmId?: string;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
 };
 
 export type ProgramDto = {
     level?: number;
     treeKey?: string;
     treePath?: string;
+    pgmId?: string;
+    pgmCd?: string;
+    pgmNm?: string;
+    pgmTpCd?: 'MENU' | 'UI';
+    prntPgmId?: string;
+    dspOrder?: number;
+    pgmRmk?: string;
+    permList?: Array<PermissionDto>;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
+};
+
+export type ProgramListDto = {
+    programList: Array<ProgramDto>;
+    total: number;
 };
 
 export type SearchRoleDto = {
-    [key: string]: unknown;
+    roleId?: string;
+    roleCd?: string;
+    roleNm?: string;
+    pgmId?: string;
+    permId?: string;
+    searchText?: string;
+    pagination?: PaginationDto;
+    sort?: SortDto;
+    sorts?: Array<SortDto>;
+    filters?: Array<DynamicFilterDto>;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
+};
+
+export type RoleAuthDto = {
+    roleId?: string;
+    pgmId?: string;
+    permId?: string;
+    pgmCd?: string;
+    pgmTpCd?: string;
+    permCd?: string;
+    activeYn?: boolean;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
 };
 
 export type RoleDto = {
-    [key: string]: unknown;
+    roleId?: string;
+    roleCd?: string;
+    roleNm?: string;
+    roleDesc?: string;
+    roleAuthList?: Array<RoleAuthDto>;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
+};
+
+export type RoleListDto = {
+    roleList: Array<RoleDto>;
+    total: number;
 };
 
 export type AuthControllerLoginData = {
@@ -58,8 +311,10 @@ export type AuthControllerLoginData = {
 };
 
 export type AuthControllerLoginResponses = {
-    200: unknown;
+    200: LoginResponseDto;
 };
+
+export type AuthControllerLoginResponse = AuthControllerLoginResponses[keyof AuthControllerLoginResponses];
 
 export type AuthControllerRefreshTokenData = {
     body: RefreshTokenRequestDto;
@@ -69,8 +324,10 @@ export type AuthControllerRefreshTokenData = {
 };
 
 export type AuthControllerRefreshTokenResponses = {
-    200: unknown;
+    200: RefreshTokenResponseDto;
 };
+
+export type AuthControllerRefreshTokenResponse = AuthControllerRefreshTokenResponses[keyof AuthControllerRefreshTokenResponses];
 
 export type AuthControllerLogoutData = {
     body?: never;
@@ -102,8 +359,10 @@ export type UsersControllerGetListUserInfoData = {
 };
 
 export type UsersControllerGetListUserInfoResponses = {
-    200: unknown;
+    200: UserInfoListDto;
 };
+
+export type UsersControllerGetListUserInfoResponse = UsersControllerGetListUserInfoResponses[keyof UsersControllerGetListUserInfoResponses];
 
 export type UsersControllerGetUserInfoData = {
     body: SearchUserDto;
@@ -113,8 +372,12 @@ export type UsersControllerGetUserInfoData = {
 };
 
 export type UsersControllerGetUserInfoResponses = {
-    200: unknown;
+    200: {
+        [key: string]: unknown;
+    };
 };
+
+export type UsersControllerGetUserInfoResponse = UsersControllerGetUserInfoResponses[keyof UsersControllerGetUserInfoResponses];
 
 export type UsersControllerCreateUserData = {
     body: UserInfoDto;
@@ -124,8 +387,10 @@ export type UsersControllerCreateUserData = {
 };
 
 export type UsersControllerCreateUserResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type UsersControllerCreateUserResponse = UsersControllerCreateUserResponses[keyof UsersControllerCreateUserResponses];
 
 export type UsersControllerUpdateUserData = {
     body: UserInfoDto;
@@ -135,8 +400,10 @@ export type UsersControllerUpdateUserData = {
 };
 
 export type UsersControllerUpdateUserResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type UsersControllerUpdateUserResponse = UsersControllerUpdateUserResponses[keyof UsersControllerUpdateUserResponses];
 
 export type UsersControllerChangeUserInfoData = {
     body: ChangeUserInfoDto;
@@ -146,8 +413,10 @@ export type UsersControllerChangeUserInfoData = {
 };
 
 export type UsersControllerChangeUserInfoResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type UsersControllerChangeUserInfoResponse = UsersControllerChangeUserInfoResponses[keyof UsersControllerChangeUserInfoResponses];
 
 export type UsersControllerResetUserPasswordData = {
     body: Array<string>;
@@ -157,8 +426,10 @@ export type UsersControllerResetUserPasswordData = {
 };
 
 export type UsersControllerResetUserPasswordResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type UsersControllerResetUserPasswordResponse = UsersControllerResetUserPasswordResponses[keyof UsersControllerResetUserPasswordResponses];
 
 export type UsersControllerSaveUserSettingData = {
     body: UserInfoDto;
@@ -168,8 +439,10 @@ export type UsersControllerSaveUserSettingData = {
 };
 
 export type UsersControllerSaveUserSettingResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type UsersControllerSaveUserSettingResponse = UsersControllerSaveUserSettingResponses[keyof UsersControllerSaveUserSettingResponses];
 
 export type CompaniesControllerGetListCompanyInfoData = {
     body: SearchCompanyDto;
@@ -179,8 +452,10 @@ export type CompaniesControllerGetListCompanyInfoData = {
 };
 
 export type CompaniesControllerGetListCompanyInfoResponses = {
-    200: unknown;
+    200: CompanyInfoListDto;
 };
+
+export type CompaniesControllerGetListCompanyInfoResponse = CompaniesControllerGetListCompanyInfoResponses[keyof CompaniesControllerGetListCompanyInfoResponses];
 
 export type CompaniesControllerGetCompanyInfoData = {
     body: SearchCompanyDto;
@@ -190,8 +465,12 @@ export type CompaniesControllerGetCompanyInfoData = {
 };
 
 export type CompaniesControllerGetCompanyInfoResponses = {
-    200: unknown;
+    200: {
+        [key: string]: unknown;
+    };
 };
+
+export type CompaniesControllerGetCompanyInfoResponse = CompaniesControllerGetCompanyInfoResponses[keyof CompaniesControllerGetCompanyInfoResponses];
 
 export type CompaniesControllerCreateCompanyData = {
     body: CompanyInfoDto;
@@ -201,8 +480,10 @@ export type CompaniesControllerCreateCompanyData = {
 };
 
 export type CompaniesControllerCreateCompanyResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type CompaniesControllerCreateCompanyResponse = CompaniesControllerCreateCompanyResponses[keyof CompaniesControllerCreateCompanyResponses];
 
 export type CompaniesControllerUpdateCompanyData = {
     body: CompanyInfoDto;
@@ -212,8 +493,10 @@ export type CompaniesControllerUpdateCompanyData = {
 };
 
 export type CompaniesControllerUpdateCompanyResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type CompaniesControllerUpdateCompanyResponse = CompaniesControllerUpdateCompanyResponses[keyof CompaniesControllerUpdateCompanyResponses];
 
 export type ProgramsControllerGetProgramListData = {
     body: SearchProgramDto;
@@ -223,8 +506,10 @@ export type ProgramsControllerGetProgramListData = {
 };
 
 export type ProgramsControllerGetProgramListResponses = {
-    200: unknown;
+    200: ProgramListDto;
 };
+
+export type ProgramsControllerGetProgramListResponse = ProgramsControllerGetProgramListResponses[keyof ProgramsControllerGetProgramListResponses];
 
 export type ProgramsControllerGetProgramData = {
     body: SearchProgramDto;
@@ -234,8 +519,12 @@ export type ProgramsControllerGetProgramData = {
 };
 
 export type ProgramsControllerGetProgramResponses = {
-    200: unknown;
+    200: {
+        [key: string]: unknown;
+    };
 };
+
+export type ProgramsControllerGetProgramResponse = ProgramsControllerGetProgramResponses[keyof ProgramsControllerGetProgramResponses];
 
 export type ProgramsControllerInsertProgramData = {
     body: ProgramDto;
@@ -245,8 +534,10 @@ export type ProgramsControllerInsertProgramData = {
 };
 
 export type ProgramsControllerInsertProgramResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type ProgramsControllerInsertProgramResponse = ProgramsControllerInsertProgramResponses[keyof ProgramsControllerInsertProgramResponses];
 
 export type ProgramsControllerUpdateProgramData = {
     body: ProgramDto;
@@ -256,8 +547,10 @@ export type ProgramsControllerUpdateProgramData = {
 };
 
 export type ProgramsControllerUpdateProgramResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type ProgramsControllerUpdateProgramResponse = ProgramsControllerUpdateProgramResponses[keyof ProgramsControllerUpdateProgramResponses];
 
 export type ProgramsControllerDeleteProgramsData = {
     body: Array<string>;
@@ -267,8 +560,10 @@ export type ProgramsControllerDeleteProgramsData = {
 };
 
 export type ProgramsControllerDeleteProgramsResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type ProgramsControllerDeleteProgramsResponse = ProgramsControllerDeleteProgramsResponses[keyof ProgramsControllerDeleteProgramsResponses];
 
 export type ProgramsControllerGetPermissionByProgramData = {
     body: SearchProgramDto;
@@ -278,8 +573,10 @@ export type ProgramsControllerGetPermissionByProgramData = {
 };
 
 export type ProgramsControllerGetPermissionByProgramResponses = {
-    200: unknown;
+    200: Array<PermissionDto>;
 };
+
+export type ProgramsControllerGetPermissionByProgramResponse = ProgramsControllerGetPermissionByProgramResponses[keyof ProgramsControllerGetPermissionByProgramResponses];
 
 export type ProgramsControllerSavePermissionsByProgramData = {
     body: Array<string>;
@@ -289,8 +586,10 @@ export type ProgramsControllerSavePermissionsByProgramData = {
 };
 
 export type ProgramsControllerSavePermissionsByProgramResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type ProgramsControllerSavePermissionsByProgramResponse = ProgramsControllerSavePermissionsByProgramResponses[keyof ProgramsControllerSavePermissionsByProgramResponses];
 
 export type RolesControllerGetRoleListData = {
     body: SearchRoleDto;
@@ -300,8 +599,10 @@ export type RolesControllerGetRoleListData = {
 };
 
 export type RolesControllerGetRoleListResponses = {
-    200: unknown;
+    200: RoleListDto;
 };
+
+export type RolesControllerGetRoleListResponse = RolesControllerGetRoleListResponses[keyof RolesControllerGetRoleListResponses];
 
 export type RolesControllerGetRoleData = {
     body: SearchRoleDto;
@@ -311,8 +612,10 @@ export type RolesControllerGetRoleData = {
 };
 
 export type RolesControllerGetRoleResponses = {
-    200: unknown;
+    200: RoleDto;
 };
+
+export type RolesControllerGetRoleResponse = RolesControllerGetRoleResponses[keyof RolesControllerGetRoleResponses];
 
 export type RolesControllerInsertRoleData = {
     body: RoleDto;
@@ -322,8 +625,10 @@ export type RolesControllerInsertRoleData = {
 };
 
 export type RolesControllerInsertRoleResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type RolesControllerInsertRoleResponse = RolesControllerInsertRoleResponses[keyof RolesControllerInsertRoleResponses];
 
 export type RolesControllerUpdateRoleData = {
     body: RoleDto;
@@ -333,5 +638,7 @@ export type RolesControllerUpdateRoleData = {
 };
 
 export type RolesControllerUpdateRoleResponses = {
-    200: unknown;
+    200: SuccessDto;
 };
+
+export type RolesControllerUpdateRoleResponse = RolesControllerUpdateRoleResponses[keyof RolesControllerUpdateRoleResponses];

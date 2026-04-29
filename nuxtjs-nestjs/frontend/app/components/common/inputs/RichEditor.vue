@@ -26,7 +26,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
-const inputId = computed(() => props.id || `editor-${useId()}`)
+const _uid = useId()
+const inputId = computed(() => props.id || `editor-${_uid}`)
 
 const editorStyle = computed(() => ({
   height: `${props.height}px`,

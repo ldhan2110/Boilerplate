@@ -46,7 +46,8 @@ const emit = defineEmits<{
 
 const { t, te } = useI18n()
 
-const inputId = computed(() => props.id || `input-${useId()}`)
+const _uid = useId()
+const inputId = computed(() => props.id || `input-${_uid}`)
 
 const resolvedPlaceholder = computed(() => {
   if (!props.placeholder) return undefined

@@ -3,15 +3,19 @@
   "login": {
     "welcome": "Welcome back",
     "subtitle": "Sign in to your account",
-    "email": "Email",
     "emailPlaceholder": "you{'@'}example.com",
+    "username": "Username",
+    "tenantId": "Tenant ID",
     "password": "Password",
     "forgotPassword": "Forgot password?",
     "rememberMe": "Remember me",
     "signIn": "Sign in",
     "invalidCredentials": "Invalid username or password",
     "loginError": "An error occurred. Please try again.",
-    "signingIn": "Signing in..."
+    "signingIn": "Signing in...",
+    "tenantIdRequired": "Tenant ID is required",
+    "usernameRequired": "Username is required",
+    "passwordTooShort": "Password must be at least 6 characters"
   },
   "sidebar": {
     "dashboard": "Dashboard",
