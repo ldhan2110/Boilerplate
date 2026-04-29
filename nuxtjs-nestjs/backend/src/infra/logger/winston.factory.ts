@@ -2,18 +2,31 @@ import * as winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import { LoggerProperties } from './logger.properties';
 
-const { combine, timestamp, printf, colorize } = winston.format;
+const { combine, timestamp, printf } = winston.format;
+
+const LEVEL_COLORS: Record<string, string> = {
+  error: '\x1b[31m',   // red
+  warn: '\x1b[33m',    // yellow
+  info: '\x1b[32m',    // green
+  debug: '\x1b[36m',   // cyan
+  verbose: '\x1b[35m', // magenta
+};
+const RESET = '\x1b[0m';
 
 /**
  * Log format: [LEVEL][Context][HH:mm:ss.SSS]: message
  * File format: [LEVEL][Context][YYYY-MM-DD HH:mm:ss.SSS]: message
  */
-function createLogFormat(includeDate: boolean) {
+function createLogFormat(includeDate: boolean, colorize: boolean) {
   return printf(({ level, message, timestamp: ts, context }) => {
     const ctx = context ? `[${context}]` : '';
-    const upperLevel = `[${level.toUpperCase()}]`;
+    const rawLevel = level.replace(/\x1b\[\d+m/g, '');
+    const upperLevel = rawLevel.toUpperCase();
+    const levelTag = colorize
+      ? `${LEVEL_COLORS[rawLevel] ?? ''}[${upperLevel}]${RESET}`
+      : `[${upperLevel}]`;
     const time = includeDate ? `[${ts}]` : `[${(ts as string).split(' ')[1]}]`;
-    return `${upperLevel}${ctx}${time}: ${message}`;
+    return `${levelTag}${ctx}${time}: ${message}`;
   });
 }
 
@@ -24,9 +37,8 @@ export function createWinstonLogger(props: LoggerProperties): winston.Logger {
     transports.push(
       new winston.transports.Console({
         format: combine(
-          colorize({ level: true }),
           timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-          createLogFormat(false),
+          createLogFormat(false, true),
         ),
       }),
     );
@@ -41,7 +53,7 @@ export function createWinstonLogger(props: LoggerProperties): winston.Logger {
         maxFiles: `${props.maxDays}d`,
         format: combine(
           timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-          createLogFormat(true),
+          createLogFormat(true, false),
         ),
       }),
     );
@@ -55,7 +67,7 @@ export function createWinstonLogger(props: LoggerProperties): winston.Logger {
         level: 'error',
         format: combine(
           timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-          createLogFormat(true),
+          createLogFormat(true, false),
         ),
       }),
     );
