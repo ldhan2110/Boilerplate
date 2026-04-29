@@ -717,6 +717,7 @@ defineExpose({
                       :column="cell.col"
                     >
                       {{ cell.header }}
+                      <span v-if="cell.col?.validators?.required" class="text-red-500 ml-0.5">*</span>
                     </slot>
                   </div>
                 </template>
@@ -761,6 +762,7 @@ defineExpose({
                 :column="col"
               >
                 {{ col.header }}
+                <span v-if="col.validators?.required" class="text-red-500 ml-0.5">*</span>
               </slot>
             </div>
           </template>
