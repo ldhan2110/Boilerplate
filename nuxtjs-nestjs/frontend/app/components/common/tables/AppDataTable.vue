@@ -430,11 +430,19 @@ function deleteSelected(): void {
 }
 
 function getRow(key: string | number): any | undefined {
-  return procFlag.getRowByKey(key)
+  return procFlag.getRowByKey(key).map((r:any) => {
+    const copy = { ...r }
+    delete copy[ROW_ID]
+    return copy
+  })[0]
 }
 
 function getRows(flags?: ProcFlag[]): any[] {
-  return procFlag.getRowsByFlag(flags)
+  return procFlag.getRowsByFlag(flags).map(r => {
+    const copy = { ...r }
+    delete copy[ROW_ID]
+    return copy
+  })
 }
 
 function hasChanges(): boolean {
