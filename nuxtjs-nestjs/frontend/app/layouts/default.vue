@@ -1,10 +1,3 @@
-<script setup lang="ts">
-const registered = useState<boolean>('page-ready-registered', () => false)
-const isReady = useState<boolean>('page-ready', () => false)
-
-const showSkeleton = computed(() => registered.value && !isReady.value)
-</script>
-
 <template>
   <div class="flex flex-col h-screen bg-gray-50 dark:bg-gray-950">
     <LayoutAppHeader />
@@ -16,32 +9,10 @@ const showSkeleton = computed(() => registered.value && !isReady.value)
         <div class="px-4 pt-3 lg:px-6 lg:pt-4">
           <LayoutAppBreadcrumb />
         </div>
-        <div class="p-4 lg:p-6 pt-2 lg:pt-3 relative">
-          <Transition name="skeleton-fade">
-            <PageSkeleton
-              v-if="showSkeleton"
-              class="absolute inset-0 z-10 p-4 lg:p-6 pt-2 lg:pt-3"
-            />
-          </Transition>
-          <div
-            :class="{ 'invisible': showSkeleton }"
-          >
-            <slot />
-          </div>
+        <div class="p-4 lg:p-6 pt-2 lg:pt-3">
+          <slot />
         </div>
       </main>
     </div>
   </div>
 </template>
-
-<style scoped>
-.skeleton-fade-enter-active,
-.skeleton-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.skeleton-fade-enter-from,
-.skeleton-fade-leave-to {
-  opacity: 0;
-}
-</style>

@@ -8,13 +8,14 @@ import {
 import { SuccessDto } from '@infra/common/dto';
 import {
   ChangeUserInfoDto,
+  DeleteUserDto,
   SearchUserDto,
   UserInfoDto,
   UserInfoListDto,
 } from './dto';
 import { UsersService } from './users.service';
 
-@Controller('api/adm/user')
+@Controller('/adm/user')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -58,6 +59,13 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   resetUserPassword(@Body() users: UserInfoDto[]): Promise<SuccessDto> {
     return this.usersService.resetUserPassword(users);
+  }
+
+  // POST /api/adm/user/deleteUser
+  @Post('deleteUser')
+  @HttpCode(HttpStatus.OK)
+  deleteUser(@Body() dto: DeleteUserDto): Promise<SuccessDto> {
+    return this.usersService.deleteUser(dto);
   }
 
   // POST /api/adm/user/saveUserSetting

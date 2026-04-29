@@ -7,6 +7,7 @@ import { SuccessDto } from '@infra/common/dto';
 import { QueryFactory } from '@infra/database/query-factory';
 import {
   ChangeUserInfoDto,
+  DeleteUserDto,
   SearchUserDto,
   UserInfoDto,
   UserInfoListDto,
@@ -58,7 +59,7 @@ export class UsersService {
   // ---------------------------------------------------------------------------
 
   async getListUserInfo(dto: SearchUserDto): Promise<UserInfoListDto> {
-    const { usrId, usrNm, pagination } = dto;
+    const { usrId, usrNm, searchText, useFlg, pagination } = dto;
 
     const columns = [
       'u.usrId   AS "usrId"',
@@ -69,18 +70,22 @@ export class UsersService {
       'u.usrDesc AS "usrDesc"',
       'u.usrFileId AS "usrFileId"',
       'u.roleId  AS "roleId"',
-      'u.roleNm  AS "roleNm"',
-      'u.langVal AS "langVal"',
-      'u.sysModVal AS "sysModVal"',
-      'u.dtFmtVal  AS "dtFmtVal"',
-      'u.sysColrVal AS "sysColrVal"',
       'u.useFlg  AS "useFlg"',
     ];
 
-    const [raw, total] = await this.qf
+    const qb = this.qf
       .select(User, 'u', columns)
       .andWhere('u.usrId ILIKE :usrId', { usrId: usrId ? `%${usrId}%` : undefined })
       .andWhere('u.usrNm ILIKE :usrNm', { usrNm: usrNm ? `%${usrNm}%` : undefined })
+      .andWhere('use_flg = :useFlg', { useFlg: useFlg !== undefined ? useFlg : undefined });
+
+    if (searchText) {
+      qb.andWhere('(u.usrId ILIKE :searchText OR u.usrNm ILIKE :searchText)', {
+        searchText: `%${searchText}%`,
+      });
+    }
+
+    const [raw, total] = await qb
       .paginate(pagination)
       .getRawManyAndCount<UserInfoDto>();
 
@@ -225,6 +230,22 @@ export class UsersService {
     });
 
     return SuccessDto.of(true, users.length);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Admin: soft delete
+  // ---------------------------------------------------------------------------
+
+  async deleteUser(dto: DeleteUserDto): Promise<SuccessDto> {
+    const { usrIds } = dto;
+
+    await this.qf.transaction(async (tx) => {
+      for (const usrId of usrIds) {
+        await tx.update(User).where({ usrId }).set({ useFlg: false }).execute();
+      }
+    });
+
+    return SuccessDto.of(true, usrIds.length);
   }
 
   // ---------------------------------------------------------------------------

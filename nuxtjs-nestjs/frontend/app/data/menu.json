@@ -1,32 +1,11 @@
 [
   { "id": "dashboard", "label": "sidebar.dashboard", "icon": "dashboard", "to": "/" },
   {
-    "id": "users",
+    "id": "administration",
     "label": "sidebar.users",
     "icon": "users",
     "children": [
-      { "id": "users-list", "label": "sidebar.usersList", "to": "/users" },
-      { "id": "users-create", "label": "sidebar.usersCreate", "to": "/users/create" }
-    ]
-  },
-  {
-    "id": "programs",
-    "label": "sidebar.programs",
-    "icon": "clipboard",
-    "children": [
-      { "id": "programs-list", "label": "sidebar.programsList", "to": "/programs" },
-      { "id": "programs-create", "label": "sidebar.programsCreate", "to": "/programs/create" }
-    ]
-  },
-  { "id": "roles", "label": "sidebar.roles", "icon": "shield", "to": "/roles" },
-  {
-    "id": "settings",
-    "label": "sidebar.settings",
-    "icon": "settings",
-    "children": [
-      { "id": "settings-general", "label": "sidebar.settingsGeneral", "to": "/settings" },
-      { "id": "settings-security", "label": "sidebar.settingsSecurity", "to": "/settings/security" },
-      { "id": "settings-notifications", "label": "sidebar.settingsNotifications", "to": "/settings/notifications" }
+      { "id": "users-list", "label": "sidebar.usersList", "to": "/administration/user-management" }
     ]
   }
 ]

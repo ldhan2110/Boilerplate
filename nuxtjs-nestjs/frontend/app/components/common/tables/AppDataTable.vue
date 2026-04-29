@@ -801,7 +801,7 @@ defineExpose({
                   >
                     <i
                       class="pi text-sm"
-                      :class="data[col.field!] ? 'pi-check-circle text-green-500' : 'pi-times-circle text-surface-400'"
+                      :class="(col.editProps?.trueValue !== undefined ? data[col.field!] === col.editProps.trueValue : data[col.field!]) ? 'pi-check-circle text-green-500' : 'pi-times-circle text-surface-400'"
                     />
                   </div>
                 </template>

@@ -23,9 +23,7 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css', 'primeicons/primeicons.css'],
 
-  routeRules: {
-    '/': { ssr: false }
-  },
+  ssr: false,
 
   compatibilityDate: '2025-01-15',
 
