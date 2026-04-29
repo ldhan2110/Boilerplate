@@ -16,6 +16,8 @@ interface RichEditorProps {
   disabled?: boolean
   /** HTML id */
   id?: string
+  /** PrimeVue Form field name — enables validation integration */
+  name?: string
 }
 
 const props = withDefaults(defineProps<RichEditorProps>(), {
@@ -41,6 +43,7 @@ const editorStyle = computed(() => ({
     :hint="hint"
     :required="required"
     :input-id="inputId"
+    :name="name"
   >
     <ClientOnly>
       <PEditor

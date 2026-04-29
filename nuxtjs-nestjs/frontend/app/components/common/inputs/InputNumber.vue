@@ -20,6 +20,8 @@ interface InputNumberProps {
   id?: string
   /** Use FloatLabel instead of stacked label */
   floatLabel?: boolean
+  /** PrimeVue Form field name — enables validation integration */
+  name?: string
   /** Number format mode */
   mode?: 'decimal' | 'currency'
   /** Currency code (ISO 4217) — required when mode is 'currency' */
@@ -79,9 +81,11 @@ const hasError = computed(() => !!props.error)
     :required="required"
     :input-id="inputId"
     :float-label="floatLabel"
+    :name="name"
   >
     <PInputNumber
       :id="inputId"
+      :name="name"
       :model-value="modelValue"
       :placeholder="resolvedPlaceholder"
       :mode="mode"

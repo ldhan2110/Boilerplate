@@ -15,7 +15,7 @@
     "signingIn": "Signing in...",
     "tenantIdRequired": "Tenant ID is required",
     "usernameRequired": "Username is required",
-    "passwordTooShort": "Password must be at least 6 characters"
+    "passwordTooShort": "Password must be at least 4 characters"
   },
   "sidebar": {
     "dashboard": "Dashboard",

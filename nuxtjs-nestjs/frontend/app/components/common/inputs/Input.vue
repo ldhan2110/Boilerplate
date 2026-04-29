@@ -31,6 +31,8 @@ interface InputProps {
   autoResize?: boolean
   /** Use FloatLabel instead of stacked label */
   floatLabel?: boolean
+  /** PrimeVue Form field name — enables validation integration */
+  name?: string
 }
 
 const props = withDefaults(defineProps<InputProps>(), {
@@ -71,10 +73,12 @@ const computedType = computed(() => {
     :required="required"
     :input-id="inputId"
     :float-label="floatLabel"
+    :name="name"
   >
     <PTextarea
       v-if="variant === 'textarea'"
       :id="inputId"
+      :name="name"
       :model-value="modelValue as string"
       :placeholder="resolvedPlaceholder"
       :rows="rows"
@@ -89,6 +93,7 @@ const computedType = computed(() => {
     <div v-else-if="type === 'password'" class="relative" :class="{ 'w-full': fluid }">
       <PInputText
         :id="inputId"
+        :name="name"
         :model-value="modelValue as string"
         :type="computedType"
         :placeholder="resolvedPlaceholder"
@@ -110,6 +115,7 @@ const computedType = computed(() => {
     <PInputText
       v-else
       :id="inputId"
+      :name="name"
       :model-value="modelValue as string"
       :type="type"
       :placeholder="resolvedPlaceholder"

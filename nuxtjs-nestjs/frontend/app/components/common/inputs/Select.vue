@@ -34,6 +34,8 @@ interface SelectProps {
   multiple?: boolean
   /** Use FloatLabel instead of stacked label */
   floatLabel?: boolean
+  /** PrimeVue Form field name — enables validation integration */
+  name?: string
 }
 
 const props = withDefaults(defineProps<SelectProps>(), {
@@ -72,10 +74,12 @@ const hasError = computed(() => !!props.error)
     :required="required"
     :input-id="inputId"
     :float-label="floatLabel"
+    :name="name"
   >
     <PMultiSelect
       v-if="multiple"
       :id="inputId"
+      :name="name"
       :model-value="modelValue"
       :options="options"
       :option-label="optionLabel"
@@ -95,6 +99,7 @@ const hasError = computed(() => !!props.error)
     <PSelect
       v-else
       :id="inputId"
+      :name="name"
       :model-value="modelValue"
       :options="options"
       :option-label="optionLabel"

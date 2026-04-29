@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { z } from 'zod'
-import type { LoginRequestDto } from '~/types/api'
 
 definePageMeta({
   layout: false
@@ -12,10 +11,10 @@ const userStore = useUserStore()
 const loginFormSchema = z.object({
   tenantId: z.string().min(1, { message: t('login.tenantIdRequired') }),
   username: z.string().min(1, { message: t('login.usernameRequired') }),
-  password: z.string().min(6, { message: t('login.passwordTooShort') })
+  password: z.string().min(1, { message: t('login.passwordTooShort') })
 })
 
-const { formProps, formRef, field , values} = useAppForm<typeof loginFormSchema>({
+const { formProps, formRef, field , values, isSubmitting } = useAppForm<typeof loginFormSchema>({
   schema: loginFormSchema,
   initialValues: {
     tenantId: '',
@@ -28,7 +27,6 @@ const { formProps, formRef, field , values} = useAppForm<typeof loginFormSchema>
   guard: false
 })
 
-const loading = ref(false)
 const error = ref('')
 
 </script>
@@ -61,50 +59,50 @@ const error = ref('')
           </div>
 
           <!-- Form -->
-          <PForm ref="formRef" v-bind="formProps"  v-slot="$form">
-            <Flex direction="col" gap="4" class="p-4">
-              <div class="flex flex-col">
-                <Input
-                    v-bind="field('tenantId')"
-                    :label="t('login.tenantId')"
-                    prefix-icon="pi pi-building"
-                    required
+            <PForm ref="formRef" v-bind="formProps"  v-slot="$form">
+              <Flex direction="col" gap="4" class="p-4">
+                <div class="flex flex-col">
+                  <Input
+                      v-bind="field('tenantId')"
+                      :label="t('login.tenantId')"
+                      prefix-icon="pi pi-building"
+                      required
+                  />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <Input
+                      v-bind="field('username')"
+                      :label="t('login.username')"
+                      prefix-icon="pi pi-envelope"
+                      required
+                  />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <Input
+                      v-bind="field('password')"
+                      :label="t('login.password')"
+                      type="password"
+                      prefix-icon="pi pi-envelope"
+                      required
+                  />
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <PCheckbox inputId="remember-me" :binary="true" />
+                  <label for="remember-me" class="text-sm">{{ t('login.rememberMe') }}</label>
+                </div>
+
+                <PButton
+                  :label="isSubmitting ? t('login.signingIn') : t('login.signIn')"
+                  type="submit"
+                  class="w-full"
+                  :loading="isSubmitting"
+                  :disabled="isSubmitting || !values.username || !values.password || !values.tenantId"
                 />
-              </div>
-
-              <div class="flex flex-col gap-2">
-                <Input
-                    v-bind="field('username')"
-                    :label="t('login.username')"
-                    prefix-icon="pi pi-envelope"
-                    required
-                />
-              </div>
-
-              <div class="flex flex-col gap-2">
-                <Input
-                    v-bind="field('password')"
-                    :label="t('login.password')"
-                    type="password"
-                    prefix-icon="pi pi-envelope"
-                    required
-                />
-              </div>
-
-              <div class="flex items-center gap-2">
-                <PCheckbox inputId="remember-me" :binary="true" />
-                <label for="remember-me" class="text-sm">{{ t('login.rememberMe') }}</label>
-              </div>
-
-              <PButton
-                :label="loading ? t('login.signingIn') : t('login.signIn')"
-                type="submit"
-                class="w-full"
-                :loading="loading"
-                :disabled="loading || !values.username || !values.password || !values.tenantId"
-              />
-            </Flex>
-          </PForm>
+              </Flex>
+            </PForm>
 
           <!-- Language switcher -->
           <div class="mt-6 flex justify-center">

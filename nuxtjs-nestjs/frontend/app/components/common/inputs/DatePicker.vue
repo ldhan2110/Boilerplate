@@ -40,6 +40,8 @@ interface DatePickerProps {
   id?: string
   /** Use FloatLabel instead of stacked label */
   floatLabel?: boolean
+  /** PrimeVue Form field name — enables validation integration */
+  name?: string
 }
 
 const props = withDefaults(defineProps<DatePickerProps>(), {
@@ -162,9 +164,11 @@ onMounted(() => {
     :required="required"
     :input-id="inputId"
     :float-label="floatLabel"
+    :name="name"
   >
     <PDatePicker
       :id="inputId"
+      :name="name"
       ref="pickerRef"
       :model-value="internalValue"
       :placeholder="resolvedPlaceholder"

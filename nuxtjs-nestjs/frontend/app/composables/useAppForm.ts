@@ -91,8 +91,6 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
       modelValue: values[name] as any,
       'onUpdate:modelValue': (value: any) => {
         values[name] = value
-        // Sync value to PrimeVue Form's internal state for validation
-        formRef.value?.$form?.setFieldValue?.(name, value)
       },
       name
     }

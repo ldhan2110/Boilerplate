@@ -16,7 +16,7 @@
     "signingIn": "Đang đăng nhập...",
     "tenantIdRequired": "Vui lòng nhập mã khách hàng",
     "usernameRequired": "Vui lòng nhập tên đăng nhập",
-    "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự"
+    "passwordTooShort": "Mật khẩu phải có ít nhất 4 ký tự"
   },
   "sidebar": {
     "dashboard": "Bảng điều khiển",
