@@ -1,4 +1,5 @@
-import type { LoginResponse } from '~/types'
+
+import type { ErrorDto } from '~/types/api'
 
 let _baseURL: string | null = null
 

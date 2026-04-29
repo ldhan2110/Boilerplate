@@ -1,5 +1,6 @@
 import { onUnmounted } from 'vue'
 import { apiClient } from '~/services'
+import type { ErrorDto } from '~/types/api'
 
 interface UseApiOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
@@ -55,7 +56,7 @@ export function useApi<T>(url: string, options: UseApiOptions = {}) {
         options.onSuccess(result)
       }
       return result
-    } catch (e: any) {
+    } catch (e: ErrorDto | any) {
       if (options.onError) {
         options.onError(e.response?._data || e)
       }

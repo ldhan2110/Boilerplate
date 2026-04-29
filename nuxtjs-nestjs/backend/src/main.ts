@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { BizExceptionFilter } from '@infra/common/filters';
+import { ErrorDto } from '@infra/common/dto';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -38,7 +39,37 @@ async function bootstrap() {
       'access-token',
     )
     .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, configSwagger);
+  const documentFactory = () => {
+    const document = SwaggerModule.createDocument(app, configSwagger, {
+      extraModels: [ErrorDto],
+    });
+
+    // Add ErrorDto as global error response on all endpoints
+    for (const path of Object.values(document.paths)) {
+      for (const method of Object.values(path)) {
+        if (typeof method === 'object' && method.responses) {
+          method.responses['400'] = {
+            description: 'Business/validation error',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorDto' },
+              },
+            },
+          };
+          method.responses['500'] = {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorDto' },
+              },
+            },
+          };
+        }
+      }
+    }
+
+    return document;
+  };
   SwaggerModule.setup('api/docs', app, documentFactory);
 
 

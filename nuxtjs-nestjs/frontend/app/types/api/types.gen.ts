@@ -317,6 +317,12 @@ export type RoleListDto = {
     total: number;
 };
 
+export type ErrorDto = {
+    errorCode: string;
+    errorType: 'ERROR' | 'WARN';
+    errorMessage?: string;
+};
+
 export type AuthControllerLoginData = {
     body: LoginRequestDto;
     path?: never;

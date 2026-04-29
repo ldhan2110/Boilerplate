@@ -134,6 +134,7 @@ export const useUserStore = defineStore('user', () => {
   async function logout(): Promise<void> {
     try {
       await apiClient.post(QUERY_KEY.AUTHENTICATION.LOGOUT)
+      clearState()
       navigateTo('/login')
     } catch {
       // Best effort — clear state regardless
