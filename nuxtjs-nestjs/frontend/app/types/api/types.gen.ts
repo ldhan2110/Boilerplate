@@ -28,6 +28,25 @@ export type RefreshTokenResponseDto = {
     refreshExpireIn: number;
 };
 
+export type UpdatePreferencesDto = {
+    langVal?: string;
+    sysModVal?: string;
+    dtFmtVal?: string;
+    sysColrVal?: string;
+    coId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    useFlg?: boolean;
+    procFlag?: string;
+};
+
+export type SuccessDto = {
+    success: boolean;
+    rows?: number;
+};
+
 export type PaginationDto = {
     pageSize: number;
     current: number;
@@ -90,11 +109,6 @@ export type UserInfoDto = {
 export type UserInfoListDto = {
     userInfo: Array<UserInfoDto>;
     total: number;
-};
-
-export type SuccessDto = {
-    success: boolean;
-    rows?: number;
 };
 
 export type ChangeUserInfoDto = {
@@ -350,6 +364,19 @@ export type AuthControllerMeData = {
 export type AuthControllerMeResponses = {
     200: unknown;
 };
+
+export type AuthControllerUpdatePreferencesData = {
+    body: UpdatePreferencesDto;
+    path?: never;
+    query?: never;
+    url: '/api/auth/preferences';
+};
+
+export type AuthControllerUpdatePreferencesResponses = {
+    200: SuccessDto;
+};
+
+export type AuthControllerUpdatePreferencesResponse = AuthControllerUpdatePreferencesResponses[keyof AuthControllerUpdatePreferencesResponses];
 
 export type UsersControllerGetListUserInfoData = {
     body: SearchUserDto;

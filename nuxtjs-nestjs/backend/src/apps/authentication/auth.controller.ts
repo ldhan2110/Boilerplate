@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -12,7 +13,7 @@ import type { Request } from 'express';
 import { User } from '@infra/database/entities/administration';
 import { AuthService } from './services/auth.service';
 import { CurrentUser, Public } from './decorators';
-import { LoginRequestDto, LoginResponseDto, RefreshTokenRequestDto, RefreshTokenResponseDto } from './dto';
+import { LoginRequestDto, LoginResponseDto, RefreshTokenRequestDto, RefreshTokenResponseDto, UpdatePreferencesDto } from './dto';
 import { LocalAuthGuard } from './guards';
 
 @Controller('/auth')
@@ -57,5 +58,14 @@ export class AuthController {
   me(@CurrentUser() user: User) {
     const { usrPwd: _, ...safeUser } = user;
     return safeUser;
+  }
+
+  @Patch('preferences')
+  @HttpCode(HttpStatus.OK)
+  updatePreferences(
+    @CurrentUser() user: User,
+    @Body() dto: UpdatePreferencesDto,
+  ) {
+    return this.authService.updatePreferences(user.usrId, dto);
   }
 }

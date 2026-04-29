@@ -6,6 +6,8 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { Request } from 'express';
 import { UsersService } from '@module/administration/users/users.service';
 import { AuthCacheService } from '@module/authentication/services/auth-cache.service';
+import { TenantDataSourceManager } from '@infra/tenant/datasource/tenant-datasource-manager';
+import { TenantContext } from '@infra/tenant/tenant-context';
 
 export interface JwtPayload {
   sub: string;
@@ -18,6 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     config: ConfigService,
     private readonly usersService: UsersService,
+    private readonly tenantManager: TenantDataSourceManager,
     @Optional() private readonly authCacheService?: AuthCacheService,
   ) {
     super({
@@ -37,7 +40,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       }
     }
 
-    const user = await this.usersService.findByUsrId(payload.sub);
+    // Pre-warm tenant DataSource and run user lookup within tenant context
+    await this.tenantManager.getDataSource(payload.tenantId);
+    const user = await TenantContext.run(payload.tenantId, () =>
+      this.usersService.findByUsrId(payload.sub),
+    );
     if (!user || !user.useFlg) {
       throw new BizException('AUT000004', 'ERROR', 'Unauthorized');
     }

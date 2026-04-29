@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 const COLUMN_DEFAULT = {
   createdAt: 'cre_dt',
@@ -10,6 +10,10 @@ const COLUMN_DEFAULT = {
 };
 
 export class BaseEntity {
+  @PrimaryColumn({ name: 'co_id', nullable: false })
+  @Expose()
+  coId: string;
+
   @CreateDateColumn({ name: COLUMN_DEFAULT.createdAt, type: 'timestamptz', nullable: false })
   @Expose()
   createdAt: Date;

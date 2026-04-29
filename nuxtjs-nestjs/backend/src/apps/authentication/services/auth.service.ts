@@ -6,10 +6,12 @@ import * as bcrypt from 'bcrypt';
 import { User } from '@infra/database/entities/administration';
 import { UsersService } from '@module/administration/users/users.service';
 import { JwtPayload } from '../strategies/jwt.strategy';
-import { LoginRequestDto, LoginResponseDto, RefreshTokenResponseDto, } from '../dto';
+import { LoginRequestDto, LoginResponseDto, RefreshTokenResponseDto, UpdatePreferencesDto } from '../dto';
 import { AuthCacheService } from './auth-cache.service';
 import { TenantDataSourceManager } from '@infra/tenant/datasource/tenant-datasource-manager';
 import { TenantContext } from '@infra/tenant/tenant-context';
+import { SuccessDto } from '@infra/common/dto';
+import { QueryFactory } from '@infra/database/query-factory';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +23,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly tenantManager: TenantDataSourceManager,
+    private readonly qf: QueryFactory,
     @Optional() private readonly authCacheService?: AuthCacheService,
   ) {
     this.accessExpireMs = config.getOrThrow<number>('JWT_ACCESS_EXPIRE_MS');
@@ -113,5 +116,19 @@ export class AuthService {
       secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
       expiresIn: Math.floor(this.refreshExpireMs / 1000),
     });
+  }
+
+  async updatePreferences(usrId: string, dto: UpdatePreferencesDto): Promise<SuccessDto> {
+    const updates: Partial<User> = {};
+    if (dto.langVal !== undefined) updates.langVal = dto.langVal;
+    if (dto.sysModVal !== undefined) updates.sysModVal = dto.sysModVal;
+    if (dto.dtFmtVal !== undefined) updates.dtFmtVal = dto.dtFmtVal;
+    if (dto.sysColrVal !== undefined) updates.sysColrVal = dto.sysColrVal;
+
+    await this.qf.transaction(async (tx) => {
+      await tx.update(User).where({ usrId }).set(updates).execute();
+    });
+
+    return SuccessDto.of(true, 1);
   }
 }
