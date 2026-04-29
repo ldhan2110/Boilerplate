@@ -217,6 +217,7 @@ function handleAddUser() {
           ref="tableRef"
           :rows="rows"
           :columns="columns"
+          :table-height="350"
           :total-records="totalRecords"
           :loading="loading"
           row-key="usrId"

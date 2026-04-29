@@ -6,10 +6,7 @@ import type {
   SortEvent,
   EditSaveEvent,
   ExportFormat,
-  ExportScope,
-  ProcFlag,
-  ValidationError
-} from '~/types/table'
+  ProcFlag} from '~/types/table'
 import type { HeaderCell } from '~/composables/table/useTableSpan'
 import {
   useTableColumns,
@@ -506,6 +503,13 @@ const menus = useTableMenus({
   resetTable
 })
 
+// Computed scroll height from tableHeight offset
+const computedScrollHeight = computed(() => {
+  if (props.tableHeight != null) return `calc(100vh - ${props.tableHeight}px)`
+  if (virtualScrollRef.value) return props.scrollHeight
+  return undefined
+})
+
 // Virtual scroll options
 const virtualScrollerOptions = computed(() => {
   if (!virtualScrollRef.value) return undefined
@@ -607,8 +611,8 @@ defineExpose({
         :resizable-columns="resizableColumns"
         column-resize-mode="expand"
         :reorderable-columns="reorderableColumns && !span.hasColumnGroups.value"
-        :scroll-height="tableHeight ?? (virtualScrollRef ? scrollHeight : undefined)"
-        :scrollable="!!tableHeight || stickyHeader || virtualScrollRef"
+        :scroll-height="computedScrollHeight"
+        :scrollable="!!computedScrollHeight || stickyHeader"
         :virtual-scroller-options="virtualScrollerOptions"
         :sort-field="sort.sortField.value"
         :sort-order="sort.sortOrder.value"

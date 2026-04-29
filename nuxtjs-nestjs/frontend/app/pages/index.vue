@@ -943,7 +943,7 @@ hasPermission('manage', 'all') = {{ useAppPermission().hasPermission('manage', '
             ref="tableRef"
             :rows="employees"
             :columns="tableColumns"
-            table-height="400px"
+            :table-height="200"
             data-mode="pagination"
             :page-size="10"
             pagination-mode="client"
@@ -992,7 +992,7 @@ hasPermission('manage', 'all') = {{ useAppPermission().hasPermission('manage', '
           <AppDataTable
             :rows="salesData"
             :columns="salesColumns"
-            table-height="400px"
+            :table-height="200"
             data-mode="pagination"
             :page-size="10"
             pagination-mode="client"

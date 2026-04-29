@@ -298,19 +298,30 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
         dataTableRef.value.virtualScroller.scrollToIndex(rowIndex)
       }
 
-      const rows = table.querySelectorAll('.p-datatable-tbody > tr')
-      const row = rows[rowIndex]
-      if (!row) return
+      // Complete any currently editing cell synchronously via Enter keydown.
+      // PrimeVue's outside-click uses setTimeout(..., 1) which causes a race:
+      // the new cell starts editing before the old one completes, sharing
+      // editingMeta[rowIndex].data and leaking values between cells.
+      // Enter triggers synchronous completeEdit — no race.
+      const editingTd = table.querySelector('td[data-p-cell-editing="true"]')
+      if (editingTd) {
+        editingTd.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'Enter',
+          code: 'Enter',
+          bubbles: true,
+          cancelable: true,
+        }))
+      }
 
-      // Find the target cell TD by data-field attribute (present in both #body and #editor)
-      const cell = row.querySelector(`[data-field="${field}"]`)?.closest('td')
-        ?? row.querySelector(`td[data-p-cell-editing]`)
+      // Wait one tick for PrimeVue to tear down old editor, then activate new cell
+      nextTick(() => {
+        const rows = table.querySelectorAll('.p-datatable-tbody > tr')
+        const row = rows[rowIndex]
+        if (!row) return
 
-      // Dispatch mousedown first — PrimeVue's BodyCell uses a document mousedown
-      // listener to detect "outside click" and complete the previous cell's edit.
-      // Without this, the old cell's editor never closes.
-      if (cell) {
-        cell.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
+        const cell = row.querySelector(`[data-field="${field}"]`)?.closest('td')
+        if (!cell) return
+
         cell.click()
         // PrimeVue needs one tick to switch to #editor, then another for the component to mount
         nextTick(() => {
@@ -320,7 +331,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
             focusEditorElement(container)
           })
         })
-      }
+      })
     })
   }
 

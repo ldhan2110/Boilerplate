@@ -108,7 +108,8 @@ export interface AppDataTableProps<T = any> {
   editableColumns?: string[]
   selectable?: boolean
   selectionMode?: SelectionMode
-  tableHeight?: string
+  /** Pixel offset from 100vh — table height becomes calc(100vh - Xpx). Responsive to zoom. */
+  tableHeight?: number
   showGridlines?: boolean
   stripedRows?: boolean
   resizableColumns?: boolean
