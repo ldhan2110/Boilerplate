@@ -102,6 +102,8 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
         min: this.props.poolMin,
         max: this.props.poolMax,
         idleTimeoutMillis: this.props.poolIdleMs,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000,
       },
     });
   }
