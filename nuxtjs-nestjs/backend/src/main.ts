@@ -5,10 +5,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { BizExceptionFilter } from '@infra/common/filters';
 import { ErrorDto } from '@infra/common/dto';
+import { AppLogger } from '@infra/logger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
+  const appLogger = app.get(AppLogger);
+  app.useLogger(appLogger);
   app.setGlobalPrefix('api');
 
   app.useGlobalPipes(
@@ -77,10 +80,7 @@ async function bootstrap() {
   const port = config.get('PORT');
   const env = config.get('NODE_ENV');
   await app.listen(port, async () => {
-    console.log(`==========================================`);
-    console.log(`        ENV: ${env}    `);
-    console.log(`🚀🚀 Server is running on the url: http://localhost:${port}/api  🚀🚀`);
-    console.log(`==========================================`);
+    appLogger.log(`ENV: ${env} | Server running on http://localhost:${port}/api`, 'Bootstrap');
   });
 }
 bootstrap();
