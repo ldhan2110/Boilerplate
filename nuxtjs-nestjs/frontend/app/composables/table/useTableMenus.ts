@@ -1,4 +1,5 @@
-import type { ColumnDef, EditSaveEvent, ExportFormat, ProcFlag } from '~/types/table'
+import type { ColumnDef, EditSaveEvent, ProcFlag } from '~/types/table'
+import { ROW_ID } from './useTableProcFlag'
 import type { UseTableColumnsReturn } from './useTableColumns'
 import type { UseTableSortReturn } from './useTableSort'
 import type { UseTableSelectionReturn } from './useTableSelection'
@@ -13,7 +14,6 @@ export interface UseTableMenusOptions {
   selection: UseTableSelectionReturn
   exportFn: UseTableExportReturn
   rows: Ref<any[]>
-  rowKey: Ref<string>
   emit: {
     editSave: (payload: EditSaveEvent) => void
     refresh: () => void | Promise<void>
@@ -54,7 +54,6 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
     selection,
     exportFn,
     rows,
-    rowKey,
     emit,
     rootRef,
     confirmAsync,
@@ -233,7 +232,7 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
       if (!col.field) continue
       blank[col.field] = null
     }
-    blank[rowKey.value] = genKey()
+    blank[ROW_ID] = genKey()
     return blank
   }
 
@@ -244,7 +243,7 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
     const insertIdx = position === 'above' ? idx : idx + 1
     rows.value.splice(insertIdx, 0, blank)
     triggerRef(rows)
-    procFlag.markInsert(blank[rowKey.value])
+    procFlag.markInsert(blank[ROW_ID])
     emit.editSave({ oldRow: null, newRow: blank })
   }
 
@@ -253,7 +252,7 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
     if (idx === -1) return
     const copy = JSON.parse(JSON.stringify(rightClickedRow.value))
     const newKey = genKey()
-    copy[rowKey.value] = newKey
+    copy[ROW_ID] = newKey
     rows.value.splice(idx + 1, 0, copy)
     triggerRef(rows)
     procFlag.markInsert(newKey)
@@ -265,7 +264,7 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
       message: t('table.deleteConfirmMessage'),
     })
     if (!confirmed) return
-    const key = rightClickedRow.value[rowKey.value]
+    const key = rightClickedRow.value[ROW_ID]
     procFlag.markDelete(key)
   }
 
@@ -274,7 +273,7 @@ export function useTableMenus(options: UseTableMenusOptions): UseTableMenusRetur
       message: t('table.deleteConfirmMessage'),
     })
     if (!confirmed) return
-    const keys = selection.selectedRows.value.map((r: any) => r[rowKey.value])
+    const keys = selection.selectedRows.value.map((r: any) => r[ROW_ID])
     for (const key of keys) {
       procFlag.markDelete(key)
     }

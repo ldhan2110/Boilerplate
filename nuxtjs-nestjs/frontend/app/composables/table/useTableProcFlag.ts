@@ -1,8 +1,10 @@
 import type { ProcFlag } from '~/types/table'
 
+/** Internal hidden row identifier injected into every row object */
+export const ROW_ID = '__rid__'
+
 export interface UseTableProcFlagOptions {
   rows: Ref<any[]>
-  rowKey: Ref<string>
   dirtyRows: Ref<Set<string | number>>
 }
 
@@ -26,7 +28,7 @@ export function generateTempKey(): string {
 }
 
 export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProcFlagReturn {
-  const { rows, rowKey, dirtyRows } = options
+  const { rows, dirtyRows } = options
 
   // Stash for D-flagged rows (removed from visible rows array)
   const deletedRows = ref<any[]>([])
@@ -54,7 +56,7 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
   // Watch dirtyRows — mark S rows as U when edited
   watch(dirtyRows, (dirty) => {
     for (const key of dirty) {
-      const row = rows.value.find((r: any) => r[rowKey.value] === key)
+      const row = rows.value.find((r: any) => r[ROW_ID] === key)
       if (row && row.procFlag === 'S') {
         row.procFlag = 'U'
       }
@@ -62,12 +64,12 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
   }, { deep: true })
 
   function markInsert(key: string | number) {
-    const row = rows.value.find((r: any) => r[rowKey.value] === key)
+    const row = rows.value.find((r: any) => r[ROW_ID] === key)
     if (row) row.procFlag = 'I'
   }
 
   function markUpdate(key: string | number) {
-    const row = rows.value.find((r: any) => r[rowKey.value] === key)
+    const row = rows.value.find((r: any) => r[ROW_ID] === key)
     // Only S -> U. I stays I, U stays U.
     if (row && row.procFlag === 'S') {
       row.procFlag = 'U'
@@ -75,7 +77,7 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
   }
 
   function markDelete(key: string | number) {
-    const row = rows.value.find((r: any) => r[rowKey.value] === key)
+    const row = rows.value.find((r: any) => r[ROW_ID] === key)
     if (!row) return
 
     if (row.procFlag === 'I') {
@@ -98,7 +100,7 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
   }
 
   function getFlag(key: string | number): ProcFlag {
-    const row = rows.value.find((r: any) => r[rowKey.value] === key)
+    const row = rows.value.find((r: any) => r[ROW_ID] === key)
     return row?.procFlag ?? 'S'
   }
 
@@ -124,10 +126,10 @@ export function useTableProcFlag(options: UseTableProcFlagOptions): UseTableProc
 
   function getRowByKey(key: string | number): any | undefined {
     // Check active rows
-    const row = rows.value.find((r: any) => r[rowKey.value] === key)
+    const row = rows.value.find((r: any) => r[ROW_ID] === key)
     if (row) return row
     // Check deleted stash
-    return deletedRows.value.find((r: any) => r[rowKey.value] === key)
+    return deletedRows.value.find((r: any) => r[ROW_ID] === key)
   }
 
   function hasChanges(): boolean {

@@ -11,7 +11,6 @@ export interface HeaderCell {
 export interface UseTableSpanOptions {
   columns: Ref<ColumnDef[]>
   displayedRows: Ref<any[]>
-  rowKey: Ref<string>
 }
 
 export interface UseTableSpanReturn {
@@ -96,7 +95,7 @@ function buildHeaderRows(columns: ColumnDef[], maxDepth: number): HeaderCell[][]
 }
 
 export function useTableSpan(options: UseTableSpanOptions): UseTableSpanReturn {
-  const { columns, displayedRows, rowKey } = options
+  const { columns, displayedRows } = options
 
   const hasColumnGroups = computed(() => {
     return columns.value.some(col => col.children?.length)

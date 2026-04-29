@@ -92,7 +92,6 @@ export interface AppDataTableProps<T = any> {
   columns: ColumnDef[]
   totalRecords?: number
   loading?: boolean
-  rowKey?: string
   dataMode?: DataMode
   virtualScroll?: boolean
   pageSize?: number

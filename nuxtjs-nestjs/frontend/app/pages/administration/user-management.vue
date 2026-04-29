@@ -220,7 +220,6 @@ function handleAddUser() {
           :table-height="350"
           :total-records="totalRecords"
           :loading="loading"
-          row-key="usrId"
           :editable="true"
           :selectable="true"
           selection-mode="checkbox"

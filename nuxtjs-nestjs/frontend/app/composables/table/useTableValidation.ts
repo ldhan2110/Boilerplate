@@ -1,9 +1,9 @@
 import type { ColumnDef, CellConfig, ValidationRules, ValidationError } from '~/types/table'
+import { ROW_ID } from './useTableProcFlag'
 
 export interface UseTableValidationOptions {
   rows: Ref<any[]>
   displayedRows: Ref<any[]>
-  rowKey: Ref<string>
   columnState: ColumnDef[]
   visibleColumns: Ref<ColumnDef[]>
   cellConfig: Ref<((row: any, field: string) => CellConfig | void) | undefined>
@@ -86,7 +86,6 @@ function runValidators(
 export function useTableValidation(options: UseTableValidationOptions): UseTableValidationReturn {
   const {
     displayedRows,
-    rowKey,
     columnState,
     visibleColumns,
     cellConfig,
@@ -107,7 +106,7 @@ export function useTableValidation(options: UseTableValidationOptions): UseTable
 
   function validateCell(row: any, field: string): string[] {
     const rules = resolveValidators(row, field)
-    const key = row[rowKey.value]
+    const key = row[ROW_ID]
 
     if (!rules) {
       // Clear any existing errors for this cell
@@ -153,7 +152,7 @@ export function useTableValidation(options: UseTableValidationOptions): UseTable
         if (msgs.length > 0) {
           errors.push({
             field: col.field,
-            rowKey: row[rowKey.value],
+            rowKey: row[ROW_ID],
             messages: msgs,
           })
         }
@@ -180,7 +179,7 @@ export function useTableValidation(options: UseTableValidationOptions): UseTable
   }
 
   function getCellErrors(row: any, field: string): string[] {
-    const key = row[rowKey.value]
+    const key = row[ROW_ID]
     return errorMap.value.get(key)?.get(field) ?? []
   }
 
@@ -196,7 +195,7 @@ export function useTableValidation(options: UseTableValidationOptions): UseTable
   const isValid = computed(() => errorMap.value.size === 0)
 
   function hasError(row: any, field: string): boolean {
-    return (errorMap.value.get(row[rowKey.value])?.get(field)?.length ?? 0) > 0
+    return (errorMap.value.get(row[ROW_ID])?.get(field)?.length ?? 0) > 0
   }
 
   return {

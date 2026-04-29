@@ -21,7 +21,8 @@ import {
   useTableProcFlag,
   useTableSpan,
   useTableColumnDrag,
-  generateTempKey
+  generateTempKey,
+  ROW_ID
 } from '~/composables/table'
 
 // --- v-row-span directive ---
@@ -52,7 +53,6 @@ function applyRowSpan(el: HTMLElement, span: number) {
 }
 
 const props = withDefaults(defineProps<AppDataTableProps>(), {
-  rowKey: 'id',
   dataMode: 'pagination',
   virtualScroll: false,
   pageSize: 25,
@@ -100,6 +100,14 @@ const dataTableRef = ref<any>(null)
 const rowsRef = shallowRef(props.rows)
 watch(() => props.rows, (val) => { rowsRef.value = val }, { flush: 'sync' })
 
+// Stamp internal row ID on every row
+function stampRowIds(rows: any[]) {
+  for (const row of rows) {
+    if (!row[ROW_ID]) row[ROW_ID] = generateTempKey()
+  }
+}
+watch(rowsRef, (rows) => stampRowIds(rows), { immediate: true, flush: 'sync' })
+
 const columnsRef = computed(() => props.columns)
 const totalRecordsRef = computed(() => props.totalRecords)
 const frozenColumnsRef = computed(() => props.frozenColumns)
@@ -118,7 +126,6 @@ const selectableRef = computed(() => props.selectable)
 const selectionModeRef = computed(() => props.selectionMode)
 const editableRef = computed(() => props.editable)
 const editableColumnsRef = computed(() => props.editableColumns)
-const rowKeyRef = computed(() => props.rowKey)
 const showFooterRef = computed(() => props.showFooter)
 const footerAggregationsRef = computed(() => props.footerAggregations)
 const headerContextMenuRef = computed(() => props.headerContextMenu)
@@ -162,8 +169,7 @@ const columnStateRef = computed(() => [...columns.columnState])
 
 const span = useTableSpan({
   columns: columnStateRef,
-  displayedRows: pagination.displayedRows,
-  rowKey: rowKeyRef
+  displayedRows: pagination.displayedRows
 })
 
 // Warn if virtual scroll + rowSpan used together (unsupported)
@@ -346,7 +352,6 @@ const edit = useTableEdit({
   visibleColumns: columns.visibleColumns,
   rows: rowsRef,
   displayedRows: pagination.displayedRows,
-  rowKey: rowKeyRef,
   cellConfig: cellConfigRef,
   dataTableRef,
   emit: {
@@ -359,7 +364,6 @@ const edit = useTableEdit({
 const validation = useTableValidation({
   rows: rowsRef,
   displayedRows: pagination.displayedRows,
-  rowKey: rowKeyRef,
   columnState: columns.columnState,
   visibleColumns: columns.visibleColumns,
   cellConfig: cellConfigRef,
@@ -369,7 +373,6 @@ const validation = useTableValidation({
 
 const procFlag = useTableProcFlag({
   rows: rowsRef,
-  rowKey: rowKeyRef,
   dirtyRows: edit.dirtyRows
 })
 
@@ -390,23 +393,17 @@ function insertRow(defaultValues?: Partial<any>): any {
     if (col.field) blank[col.field] = null
   }
   const key = generateTempKey()
-  blank[props.rowKey] = key
+  blank[ROW_ID] = key
   blank.procFlag = 'I'
   if (defaultValues) {
     Object.assign(blank, defaultValues)
-    // Ensure rowKey and procFlag are not overwritten by defaultValues
-    blank[props.rowKey] = key
+    // Ensure ROW_ID and procFlag are not overwritten by defaultValues
+    blank[ROW_ID] = key
     blank.procFlag = 'I'
   }
   rowsRef.value.unshift(blank)
   triggerRef(rowsRef)
   procFlag.markInsert(key)
-  // Validate required fields on new row
-  for (const col of columns.columnState) {
-    if (col.field && col.validators) {
-      validation.validateCell(blank, col.field)
-    }
-  }
   return blank
 }
 
@@ -425,7 +422,7 @@ function deleteRows(keys: (string | number)[]): void {
 }
 
 function deleteSelected(): void {
-  const keys = selection.selectedRows.value.map((r: any) => r[props.rowKey])
+  const keys = selection.selectedRows.value.map((r: any) => r[ROW_ID])
   for (const key of keys) {
     procFlag.markDelete(key)
   }
@@ -485,7 +482,6 @@ const menus = useTableMenus({
   selection,
   exportFn: exportTable,
   rows: rowsRef,
-  rowKey: rowKeyRef,
   emit: {
     editSave: payload => emit('row-edit-save', payload),
     refresh: () => emit('refresh'),
@@ -604,7 +600,7 @@ defineExpose({
         ref="dataTableRef"
         v-model:selection="selectedRowsModel"
         :value="loading ? [] : pagination.displayedRows.value"
-        :data-key="rowKey"
+        :data-key="ROW_ID"
         :loading="false"
         :show-gridlines="showGridlines"
         :striped-rows="stripedRows"

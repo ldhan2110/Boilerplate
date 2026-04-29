@@ -1,4 +1,5 @@
 import type { ColumnDef, CellConfig, EditSaveEvent } from '~/types/table'
+import { ROW_ID } from './useTableProcFlag'
 
 export interface UseTableEditOptions {
   editable: Ref<boolean | undefined>
@@ -7,7 +8,6 @@ export interface UseTableEditOptions {
   visibleColumns: Ref<ColumnDef[]>
   rows: Ref<any[]>
   displayedRows: Ref<any[]>
-  rowKey: Ref<string>
   cellConfig: Ref<((row: any, field: string) => CellConfig | void) | undefined>
   dataTableRef: Ref<any>
   emit: {
@@ -47,7 +47,6 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     visibleColumns,
     rows,
     displayedRows,
-    rowKey,
     cellConfig,
     dataTableRef,
     emit,
@@ -64,7 +63,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     if (!cellConfig.value) return map
 
     for (const row of displayedRows.value) {
-      const key = row[rowKey.value]
+      const key = row[ROW_ID]
       const rowConfigs: Record<string, CellConfig> = {}
       for (const col of visibleColumns.value) {
         if (!col.field) continue
@@ -79,7 +78,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
   })
 
   function getCellConfig(row: any, field: string): CellConfig | undefined {
-    const key = row[rowKey.value]
+    const key = row[ROW_ID]
     return cellConfigs.value.get(key)?.[field]
   }
 
@@ -351,7 +350,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
   function onCellEditComplete(event: any) {
     const { data, newData, field } = event
     const oldRow = JSON.parse(JSON.stringify(data))
-    const key = data[rowKey.value]
+    const key = data[ROW_ID]
 
     // Merge last editor-emitted value if PrimeVue's editingMeta missed it
     if (lastEditorValue && lastEditorValue.field === field) {
@@ -383,7 +382,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
         const groupRow = displayedRows.value[gi]
         if (!groupRow) continue
         groupRow[field] = newData[field]
-        const groupKey = groupRow[rowKey.value]
+        const groupKey = groupRow[ROW_ID]
         dirtyRows.value.add(groupKey)
         emit.editSave({
           oldRow: JSON.parse(JSON.stringify({ ...groupRow, [field]: oldRow[field] })),
@@ -416,7 +415,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     }
 
     row[field] = val
-    const key = row[rowKey.value]
+    const key = row[ROW_ID]
     dirtyRows.value.add(key)
 
     // Update all rows in the merge group
@@ -427,7 +426,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
         const groupRow = displayedRows.value[gi]
         if (!groupRow) continue
         groupRow[field] = val
-        const groupKey = groupRow[rowKey.value]
+        const groupKey = groupRow[ROW_ID]
         dirtyRows.value.add(groupKey)
         emit.editSave({
           oldRow: JSON.parse(JSON.stringify({ ...groupRow, [field]: oldRow[field] })),
@@ -445,7 +444,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
   }
 
   function getDirtyRows(): any[] {
-    return rows.value.filter(row => dirtyRows.value.has(row[rowKey.value]))
+    return rows.value.filter(row => dirtyRows.value.has(row[ROW_ID]))
   }
 
   function clearDirty(key?: string | number) {
