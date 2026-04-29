@@ -72,4 +72,9 @@ export class TypeOrmLogger implements TypeOrmLoggerInterface {
   logSchemaBuild(message: string): void {
     this.winstonLogger.debug(message, { context: 'TypeORM:Schema' });
   }
+
+  log(level: 'log' | 'info' | 'warn', message: any): void {
+    const winstonLevel = level === 'log' ? 'info' : level;
+    this.winstonLogger.log(winstonLevel, message, { context: 'TypeORM' });
+  }
 }
