@@ -34,6 +34,13 @@ const inputId = computed(() => props.id || `editor-${_uid}`)
 const editorStyle = computed(() => ({
   height: `${props.height}px`,
 }))
+
+/** Quill emits '<p><br></p>' (and variants) for empty content — normalize to empty string */
+const EMPTY_QUILL_RE = /^(<p>\s*(<br\s*\/?>)?\s*<\/p>\s*)+$/
+
+function onEditorUpdate(value: string) {
+  emit('update:modelValue', EMPTY_QUILL_RE.test(value) ? '' : value)
+}
 </script>
 
 <template>
@@ -51,7 +58,7 @@ const editorStyle = computed(() => ({
         :model-value="modelValue"
         :readonly="disabled"
         :editor-style="editorStyle"
-        @update:model-value="emit('update:modelValue', $event)"
+        @update:model-value="onEditorUpdate"
       />
       <template #fallback>
         <div
