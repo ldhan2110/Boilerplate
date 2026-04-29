@@ -102,7 +102,6 @@ export const useUserStore = defineStore('user', () => {
       const me = await apiClient.get<UserMeResponse>(QUERY_KEY.AUTHENTICATION.PROFILE)
       profile.value = mapProfileFromBackend(me)
       persistProfile()
-
       const backendPrefs = mapBackendPreferences(me)
       preferences.value = backendPrefs
       persistPreferences()
@@ -135,6 +134,7 @@ export const useUserStore = defineStore('user', () => {
   async function logout(): Promise<void> {
     try {
       await apiClient.post(QUERY_KEY.AUTHENTICATION.LOGOUT)
+      navigateTo('/login')
     } catch {
       // Best effort — clear state regardless
     }

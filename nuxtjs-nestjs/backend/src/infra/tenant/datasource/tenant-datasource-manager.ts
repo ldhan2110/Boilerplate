@@ -66,6 +66,7 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
   }
 
   private async initDataSource(tenantId: string): Promise<DataSource> {
+    console.log(`Initializing DataSource for tenant '${tenantId}'`);
     const config = await this.metadataService.getTenantDbConfig(tenantId);
     if (!config) {
       throw new NotFoundException(`Tenant '${tenantId}' not found or inactive`);

@@ -8,6 +8,8 @@ import { UsersService } from '@module/administration/users/users.service';
 import { JwtPayload } from '../strategies/jwt.strategy';
 import { LoginRequestDto, LoginResponseDto, RefreshTokenResponseDto, } from '../dto';
 import { AuthCacheService } from './auth-cache.service';
+import { TenantDataSourceManager } from '@infra/tenant/datasource/tenant-datasource-manager';
+import { TenantContext } from '@infra/tenant/tenant-context';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +20,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly tenantManager: TenantDataSourceManager,
     @Optional() private readonly authCacheService?: AuthCacheService,
   ) {
     this.accessExpireMs = config.getOrThrow<number>('JWT_ACCESS_EXPIRE_MS');
@@ -35,12 +38,17 @@ export class AuthService {
   }
 
   async login(req: LoginRequestDto): Promise<LoginResponseDto> {
-    const user = await this.validateUser(req.username, req.password);
+    const tenantId = req.tenantId;
+
+    // Pre-warm tenant DataSource and run user lookup within tenant context
+    // so QueryFactory routes to the correct tenant database
+    await this.tenantManager.getDataSource(tenantId);
+    const user = await TenantContext.run(tenantId, () =>
+      this.validateUser(req.username, req.password),
+    );
     if (!user) {
       throw new BizException('AUT000001', 'ERROR', 'Invalid credentials');
     }
-
-    const tenantId = req.tenantId;
 
     const accessToken = this.generateAccessToken(user, tenantId);
     const refreshToken = this.generateRefreshToken(user, tenantId);
@@ -75,7 +83,10 @@ export class AuthService {
       throw new BizException('AUT000001', 'ERROR', 'Refresh token expired or invalid');
     }
 
-    const user = await this.usersService.findById(payload.sub);
+    await this.tenantManager.getDataSource(payload.tenantId);
+    const user = await TenantContext.run(payload.tenantId, () =>
+      this.usersService.findById(payload.sub),
+    );
     if (!user || !user.useFlg) {
       throw new BizException('AUT000002', 'ERROR', 'User not found or inactive');
     }
