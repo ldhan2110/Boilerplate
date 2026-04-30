@@ -2,9 +2,11 @@ import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { Expose } from 'class-transformer';
 import { BaseEntity } from '../common/base.entity';
 import { RoleAuth } from './role-auth.entity';
+import { AutoId } from '../../decorators';
 
 @Entity('adm_role')
 export class Role extends BaseEntity {
+  @AutoId('ROLE')
   @PrimaryColumn({ name: 'role_id' })
   @Expose()
   roleId: string;

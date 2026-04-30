@@ -2,9 +2,11 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn } from 
 import { Expose } from 'class-transformer';
 import { BaseEntity } from '../common/base.entity';
 import { Permission } from './permission.entity';
+import { AutoId } from '../../decorators';
 
 @Entity('com_pgm')
 export class Program extends BaseEntity {
+  @AutoId('PGM')
   @PrimaryColumn({ name: 'pgm_id' })
   @Expose()
   pgmId: string;

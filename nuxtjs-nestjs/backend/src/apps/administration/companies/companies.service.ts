@@ -87,10 +87,8 @@ export class CompaniesService {
     }
 
     await this.qf.transaction(async (tx) => {
-      const coId = await tx.genId('CO', 'seq_co');
-
       await tx.insert(Company).values({
-        coId,
+        coId: dto.coId,
         coNm: dto.coNm,
         tmZn: dto.tmZn,
         useFlg: dto.useFlg ?? 'Y',

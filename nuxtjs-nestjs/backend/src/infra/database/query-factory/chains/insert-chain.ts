@@ -1,10 +1,11 @@
 import { DeepPartial, EntityManager, EntityTarget, ObjectLiteral, QueryRunner } from 'typeorm';
-import { generateIdExpression } from '@infra/common/utils';
+import { generateEntityIdExpression } from '@infra/common/utils';
+import { TenantContext } from '@infra/tenant/tenant-context';
+import { getAutoIdMeta } from '../../decorators';
 
 interface AutoIdConfig {
   field: string;
   prefix: string;
-  sequence: string;
 }
 
 /**
@@ -30,8 +31,8 @@ export class InsertChain<T extends ObjectLiteral> {
     return this;
   }
 
-  autoId(field: keyof T & string, prefix: string, sequence: string): this {
-    this.autoIdConfig = { field, prefix, sequence };
+  autoId(field: keyof T & string, prefix: string): this {
+    this.autoIdConfig = { field, prefix };
     return this;
   }
 
@@ -47,12 +48,30 @@ export class InsertChain<T extends ObjectLiteral> {
 
     let data = this.data;
 
-    // Auto-ID generation (only for single inserts, not arrays)
-    if (this.autoIdConfig && !Array.isArray(data)) {
-      const { field, prefix, sequence } = this.autoIdConfig;
-      const expr = generateIdExpression(prefix, sequence);
-      const [result] = await this.queryRunner.query(`SELECT ${expr} as id`);
-      (data as any)[field] = result.id;
+    // Resolve auto-ID config: explicit .autoId() takes precedence, then @AutoId decorator
+    const idConfig = this.autoIdConfig ?? getAutoIdMeta(this.entity as Function);
+
+    if (idConfig) {
+      const { field, prefix } = 'propertyKey' in idConfig
+        ? { field: idConfig.propertyKey, prefix: idConfig.prefix }
+        : idConfig;
+      const coId = TenantContext.requireTenantId();
+
+      if (Array.isArray(data)) {
+        for (const item of data) {
+          if (!(item as any)[field]) {
+            const expr = generateEntityIdExpression(coId, prefix);
+            const [result] = await this.queryRunner.query(`SELECT ${expr} as id`);
+            (item as any)[field] = result.id;
+          }
+        }
+      } else {
+        if (!(data as any)[field]) {
+          const expr = generateEntityIdExpression(coId, prefix);
+          const [result] = await this.queryRunner.query(`SELECT ${expr} as id`);
+          (data as any)[field] = result.id;
+        }
+      }
     }
 
     const entities = this.manager.create(this.entity, data as any);

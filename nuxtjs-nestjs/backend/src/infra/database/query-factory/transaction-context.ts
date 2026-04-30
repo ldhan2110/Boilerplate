@@ -12,7 +12,8 @@ import { InsertChain } from './chains/insert-chain';
 import { UpdateChain } from './chains/update-chain';
 import { DeleteChain } from './chains/delete-chain';
 import { UpsertChain } from './chains/upsert-chain';
-import { generateIdExpression } from '@infra/common/utils';
+import { generateEntityIdExpression } from '@infra/common/utils';
+import { TenantContext } from '@infra/tenant/tenant-context';
 
 /**
  * Transaction-scoped context passed to the callback of `QueryFactory.transaction()`.
@@ -68,8 +69,9 @@ export class TransactionContext {
 
   // ID generation
 
-  async genId(prefix: string, sequence: string): Promise<string> {
-    const expr = generateIdExpression(prefix, sequence);
+  async genId(prefix: string): Promise<string> {
+    const coId = TenantContext.requireTenantId();
+    const expr = generateEntityIdExpression(coId, prefix);
     const [result] = await this.queryRunner.query(`SELECT ${expr} as id`);
     return result.id;
   }

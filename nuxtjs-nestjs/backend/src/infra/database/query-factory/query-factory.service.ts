@@ -4,7 +4,8 @@ import { DataSource, EntityTarget, FindOptionsWhere, ObjectLiteral, Repository }
 import { QueryChain } from './query-chain';
 import { RawQueryChain } from './raw-query-chain';
 import { TransactionContext } from './transaction-context';
-import { generateIdExpression } from '@infra/common/utils';
+import { generateEntityIdExpression } from '@infra/common/utils';
+import { TenantContext } from '@infra/tenant/tenant-context';
 
 @Injectable()
 export class QueryFactory {
@@ -88,8 +89,9 @@ export class QueryFactory {
     return result;
   }
 
-  async genId(prefix: string, sequence: string): Promise<string> {
-    const expr = generateIdExpression(prefix, sequence);
+  async genId(prefix: string): Promise<string> {
+    const coId = TenantContext.requireTenantId();
+    const expr = generateEntityIdExpression(coId, prefix);
     const [result] = await this.dataSource.query(`SELECT ${expr} as id`);
     return result.id;
   }

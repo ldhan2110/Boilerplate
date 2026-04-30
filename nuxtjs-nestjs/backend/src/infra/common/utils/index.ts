@@ -1,6 +1,1 @@
-export {
-  generateId,
-  generateIdExpression,
-  generateNo,
-  generateNoExpression,
-} from './id-generator.util';
+export { generateEntityIdExpression } from './id-generator.util';

@@ -1,1 +1,0 @@
-export { PostgresConfigModule } from './postgres/postgres.config';

@@ -149,22 +149,19 @@ export class RolesService {
     }
 
     await this.qf.transaction(async (tx) => {
-      const roleId = await tx.genId('ROLE', 'seq_role');
-
-      await tx.insert(Role).values({
-        roleId,
+      const saved = await tx.insert(Role).values({
         roleCd,
         roleNm,
         roleDesc,
         useFlg: useFlg ?? 'Y',
         createdBy: createdBy ?? 'SYSTEM',
         updatedBy: updatedBy ?? createdBy ?? 'SYSTEM',
-      }).execute();
+      }).returning<Role>().execute();
 
       if (roleAuthList && roleAuthList.length > 0) {
         for (const item of roleAuthList) {
           await tx.insert(RoleAuth).values({
-            roleId,
+            roleId: saved.roleId,
             pgmId: item.pgmId,
             permId: item.permId,
             activeYn: item.activeYn ?? true,

@@ -45,10 +45,8 @@ export class UsersService {
     let created: User | undefined;
 
     await this.qf.transaction(async (tx) => {
-      const usrId = await tx.genId('USR', 'seq_usr');
       created = await tx.insert(User).values({
         ...data,
-        usrId,
         usrPwd: hashed,
       }).returning<User>().execute();
     });
@@ -162,11 +160,9 @@ export class UsersService {
     }
 
     const hashed = await bcrypt.hash(this.defaultPassword, 10);
-    const usrId = dto.usrId || await tx.genId('USR', 'seq_usr');
 
     await tx.insert(User).values({
       ...dto,
-      usrId,
       usrPwd: hashed,
     }).execute();
   }
@@ -189,12 +185,10 @@ export class UsersService {
     }
 
     const hashed = await bcrypt.hash(this.defaultPassword, 10);
-    const usrId = dto.usrId || await this.qf.transaction(async (tx) => tx.genId('USR', 'seq_usr'));
 
     await this.qf.transaction(async (tx) => {
       await tx.insert(User).values({
         ...dto,
-        usrId,
         usrPwd: hashed,
       }).execute();
     });

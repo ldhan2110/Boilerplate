@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity } from 'typeorm';
 import { Expose } from 'class-transformer';
 import { BaseEntity } from '../common/base.entity';
 

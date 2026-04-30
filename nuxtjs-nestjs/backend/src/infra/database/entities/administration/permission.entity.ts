@@ -2,9 +2,11 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Expose } from 'class-transformer';
 import { BaseEntity } from '../common/base.entity';
 import { Program } from './program.entity';
+import { AutoId } from '../../decorators';
 
 @Entity('com_perm')
 export class Permission extends BaseEntity {
+  @AutoId('PERM')
   @PrimaryColumn({ name: 'perm_id' })
   @Expose()
   permId: string;

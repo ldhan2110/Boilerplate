@@ -5,7 +5,8 @@ import {
   Permission,
   Role,
   RoleAuth,
-} from '@infra/database/entities/administration';
+  File,
+} from '@infra/database/entities';
 
 /**
  * Central registry of all TypeORM entities.
@@ -21,4 +22,5 @@ export const ALL_ENTITIES = [
   Permission,
   Role,
   RoleAuth,
+  File, 
 ];

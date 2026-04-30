@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Expose } from 'class-transformer';
 import { BaseEntity } from '../common/base.entity';
+import { AutoId } from '../../decorators';
 
 @Entity('adm_usr')
 export class User extends BaseEntity {

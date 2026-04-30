@@ -119,12 +119,8 @@ export class ProgramsService {
     let pgmId!: string;
 
     await this.qf.transaction(async (tx) => {
-      // 3. Generate PK
-      pgmId = await tx.genId('PGM', 'seq_pgm');
-
-      // 4. Persist program
-      await tx.insert(Program).values({
-        pgmId,
+      // 3. Persist program (@AutoId generates pgmId automatically)
+      const saved = await tx.insert(Program).values({
         pgmCd: dto.pgmCd,
         pgmNm: dto.pgmNm,
         pgmTpCd: dto.pgmTpCd,
@@ -134,12 +130,13 @@ export class ProgramsService {
         useFlg: dto.useFlg ?? 'Y',
         createdBy: 'SYSTEM',
         updatedBy: 'SYSTEM',
-      }).execute();
+      }).returning<Program>().execute();
+      pgmId = saved.pgmId;
 
-      // 5. Auto-insert VIEW permission
+      // 4. Auto-insert VIEW permission
       await this.insertViewPermission(tx, pgmId);
 
-      // 6. Inherit SUPERADMIN role-auths from parent
+      // 5. Inherit SUPERADMIN role-auths from parent
       await this.assignSuperAdminRoleInheritance(tx, pgmId, dto.prntPgmId);
     });
 
@@ -271,9 +268,7 @@ export class ProgramsService {
   }
 
   private async insertViewPermission(tx: TransactionContext, pgmId: string): Promise<void> {
-    const permId = await tx.genId('PERM', 'seq_perm');
     await tx.insert(Permission).values({
-      permId,
       permCd: VIEW_PERMISSION,
       permNm: VIEW_PERMISSION_NAME,
       pgmId,
@@ -339,18 +334,16 @@ export class ProgramsService {
   }
 
   private async insertPermission(tx: TransactionContext, dto: PermissionDto): Promise<void> {
-    const permId = await tx.genId('PERM', 'seq_perm');
-    await tx.insert(Permission).values({
-      permId,
+    const saved = await tx.insert(Permission).values({
       permCd: dto.permCd,
       permNm: dto.permNm,
       pgmId: dto.pgmId,
       createdBy: 'SYSTEM',
       updatedBy: 'SYSTEM',
-    }).execute();
+    }).returning<Permission>().execute();
 
     // Inherit SUPERADMIN role-auth for this permission if parent program has it
-    await this.assignSuperAdminPermissionInheritance(tx, dto.pgmId, permId);
+    await this.assignSuperAdminPermissionInheritance(tx, dto.pgmId, saved.permId);
   }
 
   /**
