@@ -1,26 +1,10 @@
-import {
-  Company,
-  User,
-  Program,
-  Permission,
-  Role,
-  RoleAuth,
-  File,
-} from '@infra/database/entities';
+import path from 'path';
 
 /**
- * Central registry of all TypeORM entities.
- * Registered globally in DatabaseModule so feature modules do not need
- * TypeOrmModule.forFeature() or @InjectRepository().
- *
- * When you create a new entity, add it here.
+ * Auto-scanned entity registry.
+ * Any *.entity.ts file under src/infra/database/entities/ is discovered automatically.
+ * No manual registration needed — just create the entity file.
  */
-export const ALL_ENTITIES = [
-  Company,
-  User,
-  Program,
-  Permission,
-  Role,
-  RoleAuth,
-  File, 
+export const ENTITY_GLOB = [
+  path.join(__dirname, '../entities/**/*.entity.{ts,js}'),
 ];

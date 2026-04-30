@@ -9,7 +9,7 @@ import { TenantDataSourceProperties } from './datasource/tenant-datasource.prope
 import { TenantDataSourceManager } from './datasource/tenant-datasource-manager';
 import { createRoutingDataSource } from './datasource/tenant-routing-datasource';
 import { TenantInterceptor } from './interceptors/tenant.interceptor';
-import { ALL_ENTITIES } from '@infra/database/query-factory/entity-registry';
+import { ENTITY_GLOB } from '@infra/database/query-factory/entity-registry';
 import { TypeOrmLogger } from '@infra/logger';
 
 @Global()
@@ -28,7 +28,7 @@ import { TypeOrmLogger } from '@infra/logger';
         username: config.get<string>('DB_USERNAME'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: ALL_ENTITIES,
+        entities: ENTITY_GLOB,
         synchronize: config.get<string>('DB_SYNCHRONIZE') === 'true',
         logging: true,
         maxQueryExecutionTime: 1000,

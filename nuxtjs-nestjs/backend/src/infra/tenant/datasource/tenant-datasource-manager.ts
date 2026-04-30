@@ -9,7 +9,7 @@ import { DataSource } from 'typeorm';
 import { TenantMetadataService } from '../metadata/tenant-metadata.service';
 import { TenantDataSourceProperties } from './tenant-datasource.properties';
 import { TenantDbConfig } from '../metadata/entities/tenant-db-config.entity';
-import { ALL_ENTITIES } from '@infra/database/query-factory/entity-registry';
+import { ENTITY_GLOB } from '@infra/database/query-factory/entity-registry';
 import { TypeOrmLogger } from '@infra/logger';
 
 interface CachedDataSource {
@@ -96,7 +96,7 @@ export class TenantDataSourceManager implements OnApplicationShutdown {
       database: config.dbNm,
       username: config.dbUsrNm,
       password: config.dbPwd,
-      entities: ALL_ENTITIES,
+      entities: ENTITY_GLOB,
       synchronize: false,
       logging: true,
       maxQueryExecutionTime: 1000,

@@ -9,4 +9,4 @@ export { InsertChain, ReturningInsertChain } from './chains/insert-chain';
 export { UpdateChain } from './chains/update-chain';
 export { DeleteChain } from './chains/delete-chain';
 export { UpsertChain } from './chains/upsert-chain';
-export { ALL_ENTITIES } from './entity-registry';
+export { ENTITY_GLOB } from './entity-registry';
