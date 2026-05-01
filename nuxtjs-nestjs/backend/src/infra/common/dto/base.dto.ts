@@ -7,6 +7,14 @@ export class BaseDto {
 
   @IsOptional()
   @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
+
+  @IsOptional()
+  @IsString()
   createdAt?: Date;
 
   @IsOptional()
