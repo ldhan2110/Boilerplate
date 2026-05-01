@@ -5,9 +5,8 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { TenantContext } from '../tenant-context';
+import { RequestContext } from '../request-context';
 import { TenantDataSourceManager } from '../datasource/tenant-datasource-manager';
-import { UserContext } from '@infra/user-context';
 
 @Injectable()
 export class RequestContextInterceptor implements NestInterceptor {
@@ -21,23 +20,12 @@ export class RequestContextInterceptor implements NestInterceptor {
     const tenantId: string | undefined = request.user?.tenantId;
     const userId: string | undefined = request.user?.usrId;
 
-    if (!tenantId && !userId) {
+    if (!tenantId) {
       return next.handle();
     }
 
-    let handler = () => next.handle();
+    await this.manager.getDataSource(tenantId);
 
-    if (userId) {
-      const inner = handler;
-      handler = () => UserContext.run(userId, inner);
-    }
-
-    if (tenantId) {
-      await this.manager.getDataSource(tenantId);
-      const inner = handler;
-      handler = () => TenantContext.run(tenantId, inner);
-    }
-
-    return handler();
+    return RequestContext.run({ tenantId, userId }, () => next.handle());
   }
 }

@@ -7,7 +7,7 @@ import type { Request } from 'express';
 import { UsersService } from '@module/administration/users/services/users.service';
 import { AuthCacheService } from '@module/authentication/services/auth-cache.service';
 import { TenantDataSourceManager } from '@infra/tenant/datasource/tenant-datasource-manager';
-import { TenantContext } from '@infra/tenant/tenant-context';
+import { RequestContext } from '@infra/tenant/request-context';
 
 export interface JwtPayload {
   sub: string;
@@ -42,7 +42,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     // Pre-warm tenant DataSource and run user lookup within tenant context
     await this.tenantManager.getDataSource(payload.tenantId);
-    const user = await TenantContext.run(payload.tenantId, () =>
+    const user = await RequestContext.run({ tenantId: payload.tenantId }, () =>
       this.usersService.findByUsrId(payload.sub),
     );
     if (!user || !user.useFlg) {

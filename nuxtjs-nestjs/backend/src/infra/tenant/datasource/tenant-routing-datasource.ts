@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { TenantContext } from '../tenant-context';
+import { RequestContext } from '../request-context';
 import { TenantDataSourceManager } from './tenant-datasource-manager';
 
 const logger = new Logger('TenantRoutingDataSource');
@@ -11,7 +11,7 @@ export function createRoutingDataSource(
 ): DataSource {
   return new Proxy(fallbackDs, {
     get(target, prop, receiver) {
-      const tenantId = TenantContext.getTenantId();
+      const tenantId = RequestContext.getTenantId();
       if (tenantId) {
         const tenantDs = manager.getDataSourceSync(tenantId);
         if (tenantDs) {

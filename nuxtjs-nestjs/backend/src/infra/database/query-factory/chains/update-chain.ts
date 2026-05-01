@@ -1,5 +1,5 @@
 import { BizException } from '@infra/common/exceptions';
-import { UserContext } from '@infra/user-context';
+import { RequestContext } from '@infra/tenant/request-context';
 import { DeepPartial, EntityManager, EntityTarget, FindOptionsWhere, ObjectLiteral } from 'typeorm';
 
 /**
@@ -77,7 +77,7 @@ export class UpdateChain<T extends ObjectLiteral> {
         }
       }
 
-      const currentUserId = UserContext.getUserId();
+      const currentUserId = RequestContext.getUserId();
       if (currentUserId && !(merged as any).updatedBy) {
         (merged as any).updatedBy = currentUserId;
       }
@@ -88,7 +88,7 @@ export class UpdateChain<T extends ObjectLiteral> {
 
     // set mode with object where
     if (this.objectWhere) {
-      const currentUserId = UserContext.getUserId();
+      const currentUserId = RequestContext.getUserId();
       if (currentUserId && !(this.setData as any)?.updatedBy) {
         (this.setData as any).updatedBy = currentUserId;
       }
@@ -98,7 +98,7 @@ export class UpdateChain<T extends ObjectLiteral> {
 
     // set mode with string where
     if (this.stringWhere) {
-      const currentUserId = UserContext.getUserId();
+      const currentUserId = RequestContext.getUserId();
       if (currentUserId && !(this.setData as any)?.updatedBy) {
         (this.setData as any).updatedBy = currentUserId;
       }

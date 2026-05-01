@@ -9,7 +9,7 @@ import { JwtPayload } from '../strategies/jwt.strategy';
 import { LoginRequestDto, LoginResponseDto, RefreshTokenResponseDto, UpdatePreferencesDto } from '../dto';
 import { AuthCacheService } from './auth-cache.service';
 import { TenantDataSourceManager } from '@infra/tenant/datasource/tenant-datasource-manager';
-import { TenantContext } from '@infra/tenant/tenant-context';
+import { RequestContext } from '@infra/tenant/request-context';
 import { SuccessDto } from '@infra/common/dto';
 import { QueryFactory } from '@infra/database/query-factory';
 import { LogService } from '@infra/logger';
@@ -48,7 +48,7 @@ export class AuthService {
     // Pre-warm tenant DataSource and run user lookup within tenant context
     // so QueryFactory routes to the correct tenant database
     await this.tenantManager.getDataSource(tenantId);
-    const user = await TenantContext.run(tenantId, () =>
+    const user = await RequestContext.run({ tenantId }, () =>
       this.validateUser(req.username, req.password),
     );
     if (!user) {
@@ -89,7 +89,7 @@ export class AuthService {
     }
 
     await this.tenantManager.getDataSource(payload.tenantId);
-    const user = await TenantContext.run(payload.tenantId, () =>
+    const user = await RequestContext.run({ tenantId: payload.tenantId }, () =>
       this.usersService.findById(payload.sub),
     );
     if (!user || !user.useFlg) {
