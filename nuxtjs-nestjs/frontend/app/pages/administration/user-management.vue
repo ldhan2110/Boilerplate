@@ -176,6 +176,10 @@ function handleAddUser() {
   })
 }
 
+function handleDeleteUser() {
+  tableRef.value?.deleteSelected();
+}
+
 </script>
 
 <template>
@@ -203,12 +207,8 @@ function handleAddUser() {
     <PCard class="p-0">
       <template #content>
         <Flex justify="end" class="pb-2" gap="2">
-            <Button
-              :label="t('adm.user.add')"
-              icon="pi pi-plus"
-              class="p-button-sm p-button-outlined"
-              @click="handleAddUser"
-            />
+            <DeleteButton :label="t('adm.user.delete')" @click="handleDeleteUser" v-if="tableRef?.hasSelectedRow()" />
+            <AddButton :label="t('adm.user.add')" @click="handleAddUser" />
             <SaveButton :label="t('common.save')" :loading="isSaving" @click="onSave" />
         </Flex>
 

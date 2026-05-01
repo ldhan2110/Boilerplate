@@ -12,7 +12,8 @@ import {
   SearchUserDto,
   UserInfoDto,
   UserInfoListDto,
-} from './dto';
+} from '../dtos';
+import { TenantContext } from '@infra/tenant';
 
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
@@ -38,20 +39,6 @@ export class UsersService {
 
   findById(usrId: string): Promise<User | null> {
     return this.qf.findOne(User, { usrId });
-  }
-
-  async create(data: Partial<User>): Promise<User> {
-    const hashed = await bcrypt.hash(data.usrPwd!, 10);
-    let created: User | undefined;
-
-    await this.qf.transaction(async (tx) => {
-      created = await tx.insert(User).values({
-        ...data,
-        usrPwd: hashed,
-      }).returning<User>().execute();
-    });
-
-    return created!;
   }
 
   // ---------------------------------------------------------------------------
@@ -163,6 +150,7 @@ export class UsersService {
 
     await tx.insert(User).values({
       ...dto,
+      coId: TenantContext.requireTenantId(),
       usrPwd: hashed,
     }).execute();
   }

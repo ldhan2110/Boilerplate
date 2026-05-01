@@ -11,8 +11,8 @@ import {
   SearchUserDto,
   UserInfoDto,
   UserInfoListDto,
-} from './dto';
-import { UsersService } from './users.service';
+} from '../dtos';
+import { UsersService } from '../services/users.service';
 
 @Controller('/adm/user')
 export class UsersController {

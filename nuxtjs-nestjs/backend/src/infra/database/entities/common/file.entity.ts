@@ -1,6 +1,7 @@
 import { Expose } from "class-transformer";
-import { BaseEntity, Column, PrimaryColumn } from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
 
+@Entity('tb_file')
 export class File extends BaseEntity {
   @PrimaryColumn({ name: 'file_id', nullable: false, length: 20 })
   @Expose()

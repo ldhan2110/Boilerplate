@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User } from '@infra/database/entities/administration';
-import { UsersService } from '@module/administration/users/users.service';
+import { UsersService } from '@module/administration/users/services/users.service';
 import { JwtPayload } from '../strategies/jwt.strategy';
 import { LoginRequestDto, LoginResponseDto, RefreshTokenResponseDto, UpdatePreferencesDto } from '../dto';
 import { AuthCacheService } from './auth-cache.service';

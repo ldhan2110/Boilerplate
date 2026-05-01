@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validate } from '@infra/config';
 import { LoggerModule } from '@infra/logger';
 import { DatabaseModule } from '@infra/database';
+import { FileModule } from '@infra/file';
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { DatabaseModule } from '@infra/database';
     }),
     LoggerModule,
     DatabaseModule,
+    FileModule,
   ],
-  exports: [ConfigModule, LoggerModule, DatabaseModule],
+  exports: [ConfigModule, LoggerModule, DatabaseModule, FileModule],
 })
 export class InfraModule {}

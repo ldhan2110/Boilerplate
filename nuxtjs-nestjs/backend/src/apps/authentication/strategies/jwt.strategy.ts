@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { Request } from 'express';
-import { UsersService } from '@module/administration/users/users.service';
+import { UsersService } from '@module/administration/users/services/users.service';
 import { AuthCacheService } from '@module/authentication/services/auth-cache.service';
 import { TenantDataSourceManager } from '@infra/tenant/datasource/tenant-datasource-manager';
 import { TenantContext } from '@infra/tenant/tenant-context';

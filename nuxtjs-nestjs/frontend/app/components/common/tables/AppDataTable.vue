@@ -445,6 +445,10 @@ function getRows(flags?: ProcFlag[]): any[] {
   })
 }
 
+function getSelectedRows(): any[] {
+  return selection.selectedRows.value;
+}
+
 function hasChanges(): boolean {
   return procFlag.hasChanges()
 }
@@ -453,6 +457,10 @@ function clearChanges(): void {
   procFlag.clearProcFlags()
   edit.clearDirty()
   validation.clearErrors()
+}
+
+function hasSelectedRow(): boolean {
+  return selection.hasSelection.value;
 }
 
 function resetTable(): void {
@@ -568,6 +576,8 @@ defineExpose({
   deleteSelected,
   getRow,
   getRows,
+  getSelectedRows,
+  hasSelectedRow,
   hasChanges,
   clearChanges,
   getFlag: procFlag.getFlag,

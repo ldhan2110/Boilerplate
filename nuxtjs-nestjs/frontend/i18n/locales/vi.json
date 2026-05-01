@@ -50,6 +50,7 @@
     "no": "Không",
     "confirmHeader": "Xác nhận",
     "confirmSaveMessage": "Bạn có chắc chắn muốn lưu không?",
+    "confirmDeleteMessage": "Bạn có chắc chắn muốn xoá dòng không?",
     "required": "Trường này là bắt buộc",
     "optional": "Tùy chọn",
     "search": "Tìm kiếm...",
@@ -122,7 +123,8 @@
   },
   "adm": {
     "user": {
-      "add": "Thêm người dùng"
+      "add": "Thêm người dùng",
+      "delete": "Xoá người dùng"
     }
   }
 }

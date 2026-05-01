@@ -110,6 +110,19 @@ class EnvironmentVariables {
 
   @IsNumber()
   JWT_REFRESH_EXPIRE_MS: number;
+
+  // File Upload
+  @IsOptional()
+  @IsString()
+  UPLOAD_DIR: string = 'uploads';
+
+  @IsOptional()
+  @IsNumber()
+  MAX_FILE_SIZE: number = 10485760;
+
+  @IsOptional()
+  @IsNumber()
+  MAX_FILE_COUNT: number = 5;
 }
 
 export function validate(config: Record<string, unknown>) {
