@@ -8,7 +8,7 @@ import { TenantMetadataService } from './metadata/tenant-metadata.service';
 import { TenantDataSourceProperties } from './datasource/tenant-datasource.properties';
 import { TenantDataSourceManager } from './datasource/tenant-datasource-manager';
 import { createRoutingDataSource } from './datasource/tenant-routing-datasource';
-import { TenantInterceptor } from './interceptors/tenant.interceptor';
+import { RequestContextInterceptor } from './interceptors/request-context.interceptor';
 import { ENTITY_GLOB } from '@infra/database/query-factory/entity-registry';
 import { TypeOrmLogger } from '@infra/logger';
 
@@ -50,7 +50,7 @@ import { TypeOrmLogger } from '@infra/logger';
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: TenantInterceptor,
+      useClass: RequestContextInterceptor,
     },
   ],
   exports: [DataSource, TenantDataSourceManager, TenantMetadataService],

@@ -18,7 +18,7 @@ export const TenantContext = {
   requireTenantId(): string {
     const tenantId = storage.getStore()?.tenantId;
     if (!tenantId) {
-      throw new Error('No tenant context. Ensure request passes through TenantInterceptor.');
+      throw new Error('No tenant context. Ensure request passes through RequestContextInterceptor.');
     }
     return tenantId;
   },

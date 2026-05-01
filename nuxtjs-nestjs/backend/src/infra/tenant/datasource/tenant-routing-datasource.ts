@@ -19,7 +19,7 @@ export function createRoutingDataSource(
         }
         logger.warn(
           `Tenant '${tenantId}' DataSource not in cache — falling back to default. ` +
-          `This indicates TenantInterceptor did not run.`,
+          `This indicates RequestContextInterceptor did not run.`,
         );
       }
       return Reflect.get(target, prop, receiver);

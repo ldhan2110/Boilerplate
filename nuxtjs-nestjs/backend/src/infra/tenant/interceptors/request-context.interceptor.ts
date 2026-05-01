@@ -7,9 +7,10 @@ import {
 import { Observable } from 'rxjs';
 import { TenantContext } from '../tenant-context';
 import { TenantDataSourceManager } from '../datasource/tenant-datasource-manager';
+import { UserContext } from '@infra/user-context';
 
 @Injectable()
-export class TenantInterceptor implements NestInterceptor {
+export class RequestContextInterceptor implements NestInterceptor {
   constructor(private readonly manager: TenantDataSourceManager) {}
 
   async intercept(
@@ -18,15 +19,25 @@ export class TenantInterceptor implements NestInterceptor {
   ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
     const tenantId: string | undefined = request.user?.tenantId;
+    const userId: string | undefined = request.user?.usrId;
 
-    if (!tenantId) {
+    if (!tenantId && !userId) {
       return next.handle();
     }
 
-    // Pre-warm DataSource in cache (async)
-    await this.manager.getDataSource(tenantId);
+    let handler = () => next.handle();
 
-    // Wrap entire handler + downstream pipeline in tenant context
-    return TenantContext.run(tenantId, () => next.handle());
+    if (userId) {
+      const inner = handler;
+      handler = () => UserContext.run(userId, inner);
+    }
+
+    if (tenantId) {
+      await this.manager.getDataSource(tenantId);
+      const inner = handler;
+      handler = () => TenantContext.run(tenantId, inner);
+    }
+
+    return handler();
   }
 }
