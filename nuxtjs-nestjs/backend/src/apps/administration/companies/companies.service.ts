@@ -11,20 +11,7 @@ export class CompaniesService {
   constructor(private readonly qf: QueryFactory) {}
 
   async getListCompanyInfo(dto: SearchCompanyDto): Promise<CompanyInfoListDto> {
-    const { searchText, pagination, sort, sorts, coId, coNm, useFlg, taxCd, coTpCd, coNtn } = dto;
-
-    const ALLOWED_FIELDS: Record<string, string> = {
-      coId: 'co.coId',
-      coNm: 'co.coNm',
-      taxCd: 'co.taxCd',
-      coTpCd: 'co.coTpCd',
-      coNtn: 'co.coNtn',
-      createdAt: 'co.createdAt',
-      updatedAt: 'co.updatedAt',
-    };
-
-    // Multi-sort takes precedence, then single sort
-    const appliedSorts = sorts?.length ? sorts : sort ? [sort] : undefined;
+    const { searchText, pagination, coId, coNm, useFlg, taxCd, coTpCd, coNtn } = dto;
 
     const chain = this.qf.select(Company, 'co');
 
@@ -48,7 +35,7 @@ export class CompaniesService {
         'co.useFlg = :useFlg',
         { useFlg: useFlg !== undefined && useFlg !== null ? useFlg : undefined },
       )
-      .orderByMany(appliedSorts, ALLOWED_FIELDS, { default: ['co.createdAt', 'DESC'] })
+      .sortBy(dto, { default: 'createdAt:DESC' })
       .paginate(pagination)
       .getManyAndCount();
 

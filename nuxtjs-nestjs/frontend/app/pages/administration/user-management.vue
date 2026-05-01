@@ -46,7 +46,12 @@ async function fetchData() {
   if (search.searchText) body.searchText = search.searchText
   if (search.useFlg !== null && search.useFlg !== undefined) body.useFlg = search.useFlg
   if (sortState.value) {
-    body.sort = { sortField: sortState.value.field, sortType: sortState.value.order === 1 ? 'ASC' : 'DESC' }
+    const meta = sortState.value.multiSortMeta
+    if (meta && meta.length > 1) {
+      body.sorts = meta.map(s => ({ sortField: s.field, sortType: s.order === 1 ? 'ASC' : 'DESC' }))
+    } else {
+      body.sort = { sortField: sortState.value.field, sortType: sortState.value.order === 1 ? 'ASC' : 'DESC' }
+    }
   }
 
   const result = await loadUsers(body)

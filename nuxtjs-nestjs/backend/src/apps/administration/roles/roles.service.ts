@@ -18,13 +18,6 @@ export class RolesService {
       useFlg?: boolean;
     };
 
-    const ALLOWED_FIELDS: Record<string, string> = {
-      updatedAt: 'role.updatedAt',
-      createdAt: 'role.createdAt',
-      roleCd: 'role.roleCd',
-      roleNm: 'role.roleNm',
-    };
-
     const columns = [
       'role.roleId',
       'role.roleCd',
@@ -45,11 +38,7 @@ export class RolesService {
         'role.useFlg = :useFlg',
         { useFlg: useFlg !== undefined && useFlg !== null ? useFlg : undefined },
       )
-      .orderByMany(
-        dto.sort ? [dto.sort] : undefined,
-        ALLOWED_FIELDS,
-        { default: ['role.updatedAt', 'DESC'] },
-      )
+      .sortBy(dto, { default: 'updatedAt:DESC' })
       .paginate(dto.pagination)
       .getManyAndCount();
 

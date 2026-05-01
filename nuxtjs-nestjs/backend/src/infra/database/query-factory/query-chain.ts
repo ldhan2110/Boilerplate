@@ -17,6 +17,15 @@ export interface OrderByManyOptions {
   default?: [string, 'ASC' | 'DESC'];
 }
 
+export interface SortByOptions {
+  /** Restrict sortable fields to this list (default: all entity columns). */
+  only?: string[];
+  /** Additional field mappings for joined tables / subquery aliases. */
+  extra?: Record<string, string>;
+  /** Fallback sort when no valid sort is resolved. Format: 'field:DIR' or [column, direction]. */
+  default?: string | [string, 'ASC' | 'DESC'];
+}
+
 /**
  * Fluent wrapper around TypeORM's SelectQueryBuilder.
  *
@@ -254,6 +263,54 @@ export class QueryChain<T extends ObjectLiteral> {
       this.qb.addOrderBy(whitelist[s.sortField!], s.sortType ?? 'ASC');
     }
     return this;
+  }
+
+  /**
+   * Auto-deriving sort from a DTO that has `sort` / `sorts` fields.
+   * Whitelist is built automatically from entity metadata + alias.
+   *
+   * @param dto     Object with optional `sort` and `sorts` properties.
+   * @param options Restrict fields, add joined-table mappings, or set defaults.
+   */
+  sortBy(
+    dto: { sort?: SortInput; sorts?: SortInput[] },
+    options?: SortByOptions,
+  ): this {
+    // Build whitelist from entity metadata
+    const alias = this.qb.alias;
+    const metadata = this.qb.expressionMap.mainAlias?.metadata;
+    let whitelist: SortWhitelist = {};
+
+    if (metadata) {
+      const columnNames = metadata.columns.map((c) => c.propertyName);
+      const allowed = options?.only ?? columnNames;
+      for (const field of allowed) {
+        if (columnNames.includes(field)) {
+          whitelist[field] = `${alias}.${field}`;
+        }
+      }
+    }
+
+    // Merge extra mappings (joined tables, subquery aliases)
+    if (options?.extra) {
+      whitelist = { ...whitelist, ...options.extra };
+    }
+
+    // Merge sort + sorts from DTO
+    const sorts = dto.sorts?.length ? dto.sorts : dto.sort ? [dto.sort] : undefined;
+
+    // Parse default option
+    let defaultSort: [string, 'ASC' | 'DESC'] | undefined;
+    if (options?.default) {
+      if (Array.isArray(options.default)) {
+        defaultSort = options.default;
+      } else {
+        const [field, dir] = options.default.split(':');
+        defaultSort = [`${alias}.${field}`, (dir as 'ASC' | 'DESC') ?? 'DESC'];
+      }
+    }
+
+    return this.orderByMany(sorts, whitelist, defaultSort ? { default: defaultSort } : undefined);
   }
 
   // ─── PAGINATION ─────────────────────────────────────────────────────────────
