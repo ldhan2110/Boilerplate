@@ -1,6 +1,7 @@
 import { DeepPartial, EntityManager, EntityTarget, ObjectLiteral, QueryRunner } from 'typeorm';
 import { generateEntityIdExpression } from '@infra/common/utils';
 import { TenantContext } from '@infra/tenant/tenant-context';
+import { UserContext } from '@infra/user-context';
 import { getAutoIdMeta } from '../../decorators';
 
 interface AutoIdConfig {
@@ -71,6 +72,26 @@ export class InsertChain<T extends ObjectLiteral> {
           const [result] = await this.queryRunner.query(`SELECT ${expr} as id`);
           (data as any)[field] = result.id;
         }
+      }
+    }
+
+    // Auto-inject context fields (skip if no context, explicit values win)
+    const tenantId = TenantContext.getTenantId();
+    const currentUserId = UserContext.getUserId();
+
+    if (Array.isArray(data)) {
+      for (const item of data) {
+        if (tenantId && !(item as any).coId) (item as any).coId = tenantId;
+        if (currentUserId) {
+          if (!(item as any).createdBy) (item as any).createdBy = currentUserId;
+          if (!(item as any).updatedBy) (item as any).updatedBy = currentUserId;
+        }
+      }
+    } else {
+      if (tenantId && !(data as any).coId) (data as any).coId = tenantId;
+      if (currentUserId) {
+        if (!(data as any).createdBy) (data as any).createdBy = currentUserId;
+        if (!(data as any).updatedBy) (data as any).updatedBy = currentUserId;
       }
     }
 
