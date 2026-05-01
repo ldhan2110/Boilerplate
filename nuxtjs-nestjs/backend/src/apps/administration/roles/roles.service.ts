@@ -141,7 +141,7 @@ export class RolesService {
   }
 
   async insertRole(dto: RoleDto): Promise<SuccessDto> {
-    const { roleCd, roleNm, roleDesc, useFlg, createdBy, updatedBy, roleAuthList } = dto;
+    const { roleCd, roleNm, roleDesc, useFlg, roleAuthList } = dto;
 
     const existing = await this.qf.findOne(Role, { roleCd });
     if (existing) {
@@ -154,8 +154,6 @@ export class RolesService {
         roleNm,
         roleDesc,
         useFlg: useFlg ?? 'Y',
-        createdBy: createdBy ?? 'SYSTEM',
-        updatedBy: updatedBy ?? createdBy ?? 'SYSTEM',
       }).returning<Role>().execute();
 
       if (roleAuthList && roleAuthList.length > 0) {
@@ -165,8 +163,6 @@ export class RolesService {
             pgmId: item.pgmId,
             permId: item.permId,
             activeYn: item.activeYn ?? true,
-            createdBy: createdBy ?? 'SYSTEM',
-            updatedBy: updatedBy ?? createdBy ?? 'SYSTEM',
           }).execute();
         }
       }
@@ -176,7 +172,7 @@ export class RolesService {
   }
 
   async updateRole(dto: RoleDto): Promise<SuccessDto> {
-    const { roleId, roleCd, roleNm, roleDesc, useFlg, updatedBy, roleAuthList } = dto;
+    const { roleId, roleCd, roleNm, roleDesc, useFlg, roleAuthList } = dto;
 
     await this.qf.transaction(async (tx) => {
       await tx.update(Role).where({ roleId }).set({
@@ -184,7 +180,6 @@ export class RolesService {
         roleNm,
         roleDesc,
         useFlg,
-        updatedBy: updatedBy ?? 'SYSTEM',
       }).execute();
 
       await tx.delete(RoleAuth).where({ roleId }).execute();
@@ -196,8 +191,6 @@ export class RolesService {
             pgmId: item.pgmId,
             permId: item.permId,
             activeYn: item.activeYn ?? true,
-            createdBy: updatedBy ?? 'SYSTEM',
-            updatedBy: updatedBy ?? 'SYSTEM',
           }).execute();
         }
       }

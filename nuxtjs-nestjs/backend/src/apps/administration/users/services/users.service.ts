@@ -13,7 +13,6 @@ import {
   UserInfoDto,
   UserInfoListDto,
 } from '../dtos';
-import { TenantContext } from '@infra/tenant';
 
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
@@ -150,7 +149,6 @@ export class UsersService {
 
     await tx.insert(User).values({
       ...dto,
-      coId: TenantContext.requireTenantId(),
       usrPwd: hashed,
     }).execute();
   }

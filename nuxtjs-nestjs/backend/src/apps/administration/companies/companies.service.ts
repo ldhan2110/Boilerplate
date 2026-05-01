@@ -92,8 +92,6 @@ export class CompaniesService {
         coNm: dto.coNm,
         tmZn: dto.tmZn,
         useFlg: dto.useFlg ?? 'Y',
-        createdBy: dto.createdBy ?? 'SYSTEM',
-        updatedBy: dto.updatedBy ?? 'SYSTEM',
       }).execute();
     });
   }
@@ -113,7 +111,6 @@ export class CompaniesService {
     const merged: Partial<Company> = {
       coNm: dto.coNm ?? existing.coNm,
       useFlg: dto.useFlg ?? existing.useFlg,
-      updatedBy: dto.updatedBy ?? 'SYSTEM',
     };
 
     await this.qf.transaction(async (tx) => {

@@ -128,8 +128,6 @@ export class ProgramsService {
         dspOrder: dto.dspOrder ?? 9999,
         pgmRmk: dto.pgmRmk,
         useFlg: dto.useFlg ?? 'Y',
-        createdBy: 'SYSTEM',
-        updatedBy: 'SYSTEM',
       }).returning<Program>().execute();
       pgmId = saved.pgmId;
 
@@ -160,7 +158,7 @@ export class ProgramsService {
       await this.validateParentIsMenu(targetParent);
     }
 
-    const updates: Partial<Program> = { updatedBy: 'SYSTEM' };
+    const updates: Partial<Program> = {};
     if (dto.pgmCd !== undefined) updates.pgmCd = dto.pgmCd;
     if (dto.pgmNm !== undefined) updates.pgmNm = dto.pgmNm;
     if (dto.pgmTpCd !== undefined) updates.pgmTpCd = dto.pgmTpCd;
@@ -272,8 +270,6 @@ export class ProgramsService {
       permCd: VIEW_PERMISSION,
       permNm: VIEW_PERMISSION_NAME,
       pgmId,
-      createdBy: 'SYSTEM',
-      updatedBy: 'SYSTEM',
     }).execute();
   }
 
@@ -320,8 +316,6 @@ export class ProgramsService {
         pgmId: newPgmId,
         permId: viewPerm.permId,
         activeYn: true,
-        createdBy: 'SYSTEM',
-        updatedBy: 'SYSTEM',
       }).execute();
     }
   }
@@ -338,8 +332,6 @@ export class ProgramsService {
       permCd: dto.permCd,
       permNm: dto.permNm,
       pgmId: dto.pgmId,
-      createdBy: 'SYSTEM',
-      updatedBy: 'SYSTEM',
     }).returning<Permission>().execute();
 
     // Inherit SUPERADMIN role-auth for this permission if parent program has it
@@ -380,14 +372,12 @@ export class ProgramsService {
         pgmId,
         permId: newPermId,
         activeYn: true,
-        createdBy: 'SYSTEM',
-        updatedBy: 'SYSTEM',
       }).execute();
     }
   }
 
   private async updatePermission(tx: TransactionContext, dto: PermissionDto): Promise<void> {
-    const updates: Partial<Permission> = { updatedBy: 'SYSTEM' };
+    const updates: Partial<Permission> = {};
     if (dto.permCd !== undefined) updates.permCd = dto.permCd;
     if (dto.permNm !== undefined) updates.permNm = dto.permNm;
 
