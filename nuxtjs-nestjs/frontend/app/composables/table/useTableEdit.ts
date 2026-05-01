@@ -19,7 +19,7 @@ export interface UseTableEditOptions {
 }
 
 export interface UseTableEditReturn {
-  activeCell: Ref<{ rowIndex: number; field: string } | null>
+  activeCell: Ref<{ rowKey: string | number; field: string } | null>
   dirtyRows: Ref<Set<string | number>>
   editingRows: Ref<any[]>
   cellConfigs: Ref<Map<string | number, Record<string, CellConfig>>>
@@ -27,7 +27,7 @@ export interface UseTableEditReturn {
   onCellEditInit: (event: any) => void
   onCellEditComplete: (event: any) => void
   onEditorValueChange: (field: string, value: any) => void
-  activateCell: (rowIndex: number, field: string) => void
+  activateCell: (rowKey: string | number, field: string) => void
   deactivateCell: () => void
   getDirtyRows: () => any[]
   clearDirty: (rowKey?: string | number) => void
@@ -54,7 +54,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     getMergeGroupIndices,
   } = options
 
-  const activeCell = ref<{ rowIndex: number; field: string } | null>(null)
+  const activeCell = ref<{ rowKey: string | number; field: string } | null>(null)
   const dirtyRows = ref(new Set<string | number>())
   const editingRows = ref<any[]>([])
 
@@ -123,18 +123,81 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     return displayedRows.value.map(() => editableCols.map(col => col.field!))
   }
 
-  function findCellPosition(rowIndex: number, field: string): { row: number; col: number } | null {
+  function findRowIndex(rowKey: string | number): number {
+    return displayedRows.value.findIndex(r => r[ROW_ID] === rowKey)
+  }
+
+  function findCellPosition(rowKey: string | number, field: string): { row: number; col: number } | null {
+    const rowIndex = findRowIndex(rowKey)
+    if (rowIndex === -1) return null
     const grid = getEditableGrid()
-    if (rowIndex < 0 || rowIndex >= grid.length) return null
+    if (rowIndex >= grid.length) return null
     const colIndex = grid[rowIndex]?.indexOf(field) ?? -1
     if (colIndex === -1) return null
     return { row: rowIndex, col: colIndex }
   }
 
+  function shouldNavigate(direction: 'left' | 'right'): boolean {
+    const el = document.activeElement as HTMLInputElement | HTMLTextAreaElement | null
+    if (!el || !('selectionStart' in el)) return true
+    const { selectionStart, selectionEnd, value } = el
+    if (selectionStart !== selectionEnd) return false
+    if (direction === 'left') return selectionStart === 0
+    if (direction === 'right') return selectionStart === value.length
+    return false
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (!editable.value || !activeCell.value) return
+
+    switch (e.key) {
+      case 'Tab':
+        e.preventDefault()
+        move(e.shiftKey ? 'prev' : 'next')
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        move('up')
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        move('down')
+        break
+      case 'ArrowLeft':
+        if (!shouldNavigate('left')) return
+        e.preventDefault()
+        move('left')
+        break
+      case 'ArrowRight':
+        if (!shouldNavigate('right')) return
+        e.preventDefault()
+        move('right')
+        break
+      case 'Enter': {
+        e.preventDefault()
+        const { rowKey, field } = activeCell.value
+        const col = visibleColumns.value.find(c => c.field === field)
+        if (col && (col.editType === 'checkbox' || col.editType === 'toggle')) {
+          const rowIndex = findRowIndex(rowKey)
+          const row = displayedRows.value[rowIndex]
+          if (row && isCellEditable(row, field) && !isCellDisabled(row, field)) {
+            onInlineToggle(row, field, !row[field])
+          }
+        } else {
+          move('down')
+        }
+        break
+      }
+      case 'Escape':
+        deactivateCell()
+        break
+    }
+  }
+
   function move(direction: 'next' | 'prev' | 'up' | 'down' | 'left' | 'right', depth = 0) {
     if (!activeCell.value || depth > 50) return
     const grid = getEditableGrid()
-    const pos = findCellPosition(activeCell.value.rowIndex, activeCell.value.field)
+    const pos = findCellPosition(activeCell.value.rowKey, activeCell.value.field)
     if (!pos) return
 
     let { row, col } = pos
@@ -145,18 +208,12 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     switch (direction) {
       case 'next':
         col++
-        if (col >= totalCols) {
-          col = 0
-          row++
-        }
+        if (col >= totalCols) { col = 0; row++ }
         if (row >= totalRows) return
         break
       case 'prev':
         col--
-        if (col < 0) {
-          col = totalCols - 1
-          row--
-        }
+        if (col < 0) { col = totalCols - 1; row-- }
         if (row < 0) return
         break
       case 'right':
@@ -180,99 +237,51 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     const targetField = grid[row]?.[col]
     if (!targetField) return
     const targetRow = displayedRows.value[row]
+    if (!targetRow) return
+    const targetKey = targetRow[ROW_ID]
 
-    // Skip cells hidden by rowSpan merge (span = 0)
-    if (getBodyRowSpan && targetField) {
+    if (getBodyRowSpan) {
       const spanVal = getBodyRowSpan(targetRow, targetField, row)
       if (spanVal === 0) {
-        activeCell.value = { rowIndex: row, field: targetField }
+        activeCell.value = { rowKey: targetKey, field: targetField }
         move(direction, depth + 1)
         return
       }
     }
 
     if (isCellDisabled(targetRow, targetField)) {
-      activeCell.value = { rowIndex: row, field: targetField }
+      activeCell.value = { rowKey: targetKey, field: targetField }
       move(direction, depth + 1)
       return
     }
 
-    activateCell(row, targetField)
+    activateCell(targetKey, targetField)
   }
 
   function onCellEditInit(event: any) {
-    const { index, field } = event
-    if (typeof index === 'number' && field) {
-      activeCell.value = { rowIndex: index, field }
-    }
-  }
-
-  function handleKeyDown(e: KeyboardEvent) {
-    if (!editable.value || !activeCell.value) return
-
-    switch (e.key) {
-      case 'Tab':
-        e.preventDefault()
-        move(e.shiftKey ? 'prev' : 'next')
-        break
-      case 'ArrowRight':
-        e.preventDefault()
-        move('right')
-        break
-      case 'ArrowLeft':
-        e.preventDefault()
-        move('left')
-        break
-      case 'ArrowDown':
-        e.preventDefault()
-        move('down')
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        move('up')
-        break
-      case 'Enter': {
-        e.preventDefault()
-        const { rowIndex, field } = activeCell.value
-        const col = visibleColumns.value.find(c => c.field === field)
-        if (col && (col.editType === 'checkbox' || col.editType === 'toggle')) {
-          const row = displayedRows.value[rowIndex]
-          if (row && isCellEditable(row, field) && !isCellDisabled(row, field)) {
-            onInlineToggle(row, field, !row[field])
-          }
-        } else {
-          move('down')
-        }
-        break
+    const { data, field } = event
+    if (data && field) {
+      const key = data[ROW_ID]
+      if (key !== undefined) {
+        activeCell.value = { rowKey: key, field }
       }
-      case 'Escape':
-        deactivateCell()
-        break
     }
   }
 
   function focusEditorElement(container: Element) {
-    // Checkbox / Toggle: focus the input inside the wrapper
+    // Checkbox / Toggle: focus the hidden input inside the wrapper
     const checkbox = container.querySelector<HTMLElement>('.p-checkbox input, .p-toggleswitch input')
-    if (checkbox) {
-      checkbox.focus()
-      return
-    }
+    if (checkbox) { checkbox.focus(); return }
 
     // PSelect / PMultiSelect: focusable element is a span[role="combobox"], not an input
     const combobox = container.querySelector<HTMLElement>('[role="combobox"]')
-    if (combobox) {
-      combobox.focus()
-      return
-    }
+    if (combobox) { combobox.focus(); return }
 
-    // PDatePicker: focusing the input opens the popup overlay via onFocus→showOnFocus.
-    // Prevent the popup by intercepting the focus event on the input, then focusing.
+    // PDatePicker: block focus event to prevent popup overlay via onFocus→showOnFocus
     const datePicker = container.querySelector<HTMLElement>('[data-pc-name="datepicker"]')
     if (datePicker) {
       const dateInput = datePicker.querySelector<HTMLInputElement>('input')
       if (dateInput) {
-        // Temporarily block the focus event from reaching DatePicker's onFocus handler
         const blocker = (e: FocusEvent) => e.stopImmediatePropagation()
         dateInput.addEventListener('focus', blocker, { capture: true, once: true })
         dateInput.focus()
@@ -282,59 +291,62 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
 
     // PInputText, PInputNumber: standard input element
     const input = container.querySelector<HTMLElement>('input, .p-inputtext')
-    if (input) {
-      input.focus()
+    if (input) { input.focus() }
+  }
+
+  function completeEditingCell(table: Element) {
+    const editingTd = table.querySelector('td[data-p-cell-editing="true"]')
+    if (editingTd) {
+      editingTd.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        bubbles: false,
+        cancelable: true,
+      }))
     }
   }
 
-  function activateCell(rowIndex: number, field: string) {
-    activeCell.value = { rowIndex, field }
+  function activateCell(rowKey: string | number, field: string) {
+    activeCell.value = { rowKey, field }
+
     nextTick(() => {
       const table = dataTableRef.value?.$el
       if (!table) return
+
+      const rowIndex = findRowIndex(rowKey)
+      if (rowIndex === -1) return
 
       if (dataTableRef.value?.virtualScroller) {
         dataTableRef.value.virtualScroller.scrollToIndex(rowIndex)
       }
 
-      // Complete any currently editing cell synchronously via Enter keydown.
-      // PrimeVue's outside-click uses setTimeout(..., 1) which causes a race:
-      // the new cell starts editing before the old one completes, sharing
-      // editingMeta[rowIndex].data and leaking values between cells.
-      // Enter triggers synchronous completeEdit — no race.
-      const editingTd = table.querySelector('td[data-p-cell-editing="true"]')
-      if (editingTd) {
-        editingTd.dispatchEvent(new KeyboardEvent('keydown', {
-          key: 'Enter',
-          code: 'Enter',
-          bubbles: true,
-          cancelable: true,
-        }))
-      }
+      completeEditingCell(table)
 
-      // Wait one tick for PrimeVue to tear down old editor, then activate new cell
       nextTick(() => {
+        const freshIndex = findRowIndex(rowKey)
+        if (freshIndex === -1) return
+
         const rows = table.querySelectorAll('.p-datatable-tbody > tr')
-        const row = rows[rowIndex]
+        const row = rows[freshIndex]
         if (!row) return
 
         const cell = row.querySelector(`[data-field="${field}"]`)?.closest('td')
         if (!cell) return
 
         cell.click()
-        // PrimeVue needs one tick to switch to #editor, then another for the component to mount
+
         nextTick(() => {
-          nextTick(() => {
-            const container = row.querySelector(`[data-field="${field}"]`)
-            if (!container) return
-            focusEditorElement(container)
-          })
+          const container = row.querySelector(`[data-field="${field}"]`)
+          if (!container) return
+          focusEditorElement(container)
         })
       })
     })
   }
 
   function deactivateCell() {
+    const table = dataTableRef.value?.$el
+    if (table) completeEditingCell(table)
     activeCell.value = null
   }
 
