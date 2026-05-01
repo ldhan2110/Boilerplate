@@ -9,7 +9,7 @@ import { JwtPayload } from '../strategies/jwt.strategy';
 import { LoginRequestDto, LoginResponseDto, RefreshTokenResponseDto, UpdatePreferencesDto } from '../dto';
 import { AuthCacheService } from './auth-cache.service';
 import { TenantDataSourceManager } from '@infra/tenant/datasource/tenant-datasource-manager';
-import { RequestContext } from '@infra/tenant/request-context';
+import { RequestContext } from '@infra/tenant/storage/request-context';
 import { SuccessDto } from '@infra/common/dto';
 import { QueryFactory } from '@infra/database/query-factory';
 import { LogService } from '@infra/logger';

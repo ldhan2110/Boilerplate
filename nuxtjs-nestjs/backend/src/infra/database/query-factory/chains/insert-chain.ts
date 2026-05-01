@@ -1,6 +1,6 @@
 import { DeepPartial, EntityManager, EntityTarget, ObjectLiteral, QueryRunner } from 'typeorm';
 import { generateEntityIdExpression } from '@infra/common/utils';
-import { RequestContext } from '@infra/tenant/request-context';
+import { RequestContext } from '@infra/tenant/storage/request-context';
 import { getAutoIdMeta } from '../../decorators';
 
 interface AutoIdConfig {

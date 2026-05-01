@@ -5,7 +5,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { RequestContext } from '../request-context';
+import { RequestContext } from '../storage/request-context';
 import { TenantDataSourceManager } from '../datasource/tenant-datasource-manager';
 
 @Injectable()

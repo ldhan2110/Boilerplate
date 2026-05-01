@@ -7,7 +7,7 @@ import type { Request } from 'express';
 import { UsersService } from '@module/administration/users/services/users.service';
 import { AuthCacheService } from '@module/authentication/services/auth-cache.service';
 import { TenantDataSourceManager } from '@infra/tenant/datasource/tenant-datasource-manager';
-import { RequestContext } from '@infra/tenant/request-context';
+import { RequestContext } from '@infra/tenant/storage/request-context';
 
 export interface JwtPayload {
   sub: string;

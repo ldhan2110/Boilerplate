@@ -5,7 +5,7 @@ import { QueryChain } from './query-chain';
 import { RawQueryChain } from './raw-query-chain';
 import { TransactionContext } from './transaction-context';
 import { generateEntityIdExpression } from '@infra/common/utils';
-import { RequestContext } from '@infra/tenant/request-context';
+import { RequestContext } from '@infra/tenant/storage/request-context';
 
 @Injectable()
 export class QueryFactory {

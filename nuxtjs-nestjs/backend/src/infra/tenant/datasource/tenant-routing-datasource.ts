@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { RequestContext } from '../request-context';
+import { RequestContext } from '../storage/request-context';
 import { TenantDataSourceManager } from './tenant-datasource-manager';
 
 const logger = new Logger('TenantRoutingDataSource');

@@ -1,4 +1,4 @@
-import { RequestContext } from '@infra/tenant/request-context';
+import { RequestContext } from '@infra/tenant/storage/request-context';
 import { DeepPartial, EntityManager, EntityTarget, ObjectLiteral } from 'typeorm';
 
 /**

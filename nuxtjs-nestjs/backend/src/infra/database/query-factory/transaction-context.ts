@@ -13,7 +13,7 @@ import { UpdateChain } from './chains/update-chain';
 import { DeleteChain } from './chains/delete-chain';
 import { UpsertChain } from './chains/upsert-chain';
 import { generateEntityIdExpression } from '@infra/common/utils';
-import { RequestContext } from '@infra/tenant/request-context';
+import { RequestContext } from '@infra/tenant/storage/request-context';
 
 /**
  * Transaction-scoped context passed to the callback of `QueryFactory.transaction()`.
