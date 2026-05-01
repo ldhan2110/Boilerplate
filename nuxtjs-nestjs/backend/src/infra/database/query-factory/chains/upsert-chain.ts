@@ -1,3 +1,5 @@
+import { TenantContext } from '@infra/tenant/tenant-context';
+import { UserContext } from '@infra/user-context';
 import { DeepPartial, EntityManager, EntityTarget, ObjectLiteral } from 'typeorm';
 
 /**
@@ -37,6 +39,16 @@ export class UpsertChain<T extends ObjectLiteral> {
     }
     if (!this.conflictColumns) {
       throw new Error('UpsertChain requires .conflictOn() before .execute().');
+    }
+
+    const tenantId = TenantContext.getTenantId();
+    const currentUserId = UserContext.getUserId();
+    for (const item of this.data) {
+      if (tenantId && !(item as any).coId) (item as any).coId = tenantId;
+      if (currentUserId) {
+        if (!(item as any).createdBy) (item as any).createdBy = currentUserId;
+        if (!(item as any).updatedBy) (item as any).updatedBy = currentUserId;
+      }
     }
 
     await this.manager.upsert(this.entity, this.data as any, {
