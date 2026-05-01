@@ -45,7 +45,15 @@ export class UsersService {
   // ---------------------------------------------------------------------------
 
   async getListUserInfo(dto: SearchUserDto): Promise<UserInfoListDto> {
-    const { usrId, usrNm, searchText, useFlg, pagination } = dto;
+    const { usrId, usrNm, searchText, useFlg, pagination, sort, sorts } = dto;
+
+    const ALLOWED_FIELDS: Record<string, string> = {
+      usrId: 'u.usrId',
+      usrNm: 'u.usrNm',
+      usrEml: 'u.usrEml',
+    };
+
+    const appliedSorts = sort ? [sort] : sorts;
 
     const columns = [
       'u.usrId   AS "usrId"',
@@ -72,6 +80,7 @@ export class UsersService {
     }
 
     const [raw, total] = await qb
+      .orderByMany(appliedSorts, ALLOWED_FIELDS, { default: ['u.createdAt', 'DESC'] })
       .paginate(pagination)
       .getRawManyAndCount<UserInfoDto>();
 

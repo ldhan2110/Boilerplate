@@ -46,7 +46,7 @@ async function fetchData() {
   if (search.searchText) body.searchText = search.searchText
   if (search.useFlg !== null && search.useFlg !== undefined) body.useFlg = search.useFlg
   if (sortState.value) {
-    body.sort = { field: sortState.value.field, order: sortState.value.order === 1 ? 'ASC' : 'DESC' }
+    body.sort = { sortField: sortState.value.field, sortType: sortState.value.order === 1 ? 'ASC' : 'DESC' }
   }
 
   const result = await loadUsers(body)
