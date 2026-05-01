@@ -124,8 +124,6 @@ export class CompaniesService {
     dto.coNm = company.coNm;
     dto.useFlg = company.useFlg;
     dto.tmZn = company.tmZn;
-    dto.createdBy = company.createdBy;
-    dto.updatedBy = company.updatedBy;
     return dto;
   }
 }

@@ -59,8 +59,6 @@ export class RolesService {
       roleNm: r.roleNm,
       roleDesc: r.roleDesc,
       useFlg: r.useFlg,
-      createdBy: r.createdBy,
-      updatedBy: r.updatedBy,
     }));
 
     return { roleList, total };
@@ -134,8 +132,6 @@ export class RolesService {
       roleNm: role.roleNm,
       roleDesc: role.roleDesc,
       useFlg: role.useFlg,
-      createdBy: role.createdBy,
-      updatedBy: role.updatedBy,
       roleAuthList,
     };
   }
