@@ -252,3 +252,20 @@
 .pi {
   font-size: 0.8125rem;
 }
+
+/* --- FloatLabel compact overrides (variant="on") --- */
+.p-floatlabel-on label {
+  font-size: 0.6875rem;
+}
+
+.p-floatlabel-on:has(input:focus) label,
+.p-floatlabel-on:has(input.p-filled) label,
+.p-floatlabel-on:has(input:-webkit-autofill) label,
+.p-floatlabel-on:has(textarea:focus) label,
+.p-floatlabel-on:has(textarea.p-filled) label,
+.p-floatlabel-on:has(.p-inputwrapper-focus) label,
+.p-floatlabel-on:has(.p-inputwrapper-filled) label,
+.p-floatlabel-on:has(input[placeholder]) label,
+.p-floatlabel-on:has(textarea[placeholder]) label {
+  font-size: 0.625rem;
+}

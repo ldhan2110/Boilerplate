@@ -56,7 +56,7 @@ const inputId = computed(() => props.id || `select-${_uid}`)
 
 function resolve(value: string | undefined, fallbackKey?: string): string | undefined {
   const v = value || fallbackKey
-  if (!v) return undefined
+  if (!v || props.floatLabel) return undefined
   return te(v) ? t(v) : v
 }
 

@@ -4,8 +4,8 @@ const { t } = useI18n()
 
 const statusOptions = [
   { label: t('common.all', 'All'), value: '' },
-  { label: t('common.active', 'Active'), value: true },
-  { label: t('common.inactive', 'Inactive'), value: false }
+  { label: t('common.active', 'Active'), value: 'Y' },
+  { label: t('common.inactive', 'Inactive'), value: 'N' }
 ]
 
 const {
@@ -37,22 +37,20 @@ onMounted(() => fetchData())
   <div class="flex flex-col gap-2.5 pt-1">
     <!-- Search -->
     <SearchCard :form="searchForm" @search="handleSearch" class="pt-2">
-      <FormField :label="t('common.search', 'Search')" float-label>
-        <PInputText
-          v-bind="searchForm.field('searchText')"
-          class="w-full"
-        />
-      </FormField>
+      <Input 
+        v-bind="searchForm.field('searchText')"
+        :label="t('common.search', 'Search')" 
+        float-label
+      />
 
-      <FormField :label="t('common.status', 'Status')" float-label>
-        <PSelect
-          v-bind="searchForm.field('useFlg')"
-          :options="statusOptions"
-          option-label="label"
-          option-value="value"
-          class="w-full"
-        />
-      </FormField>
+      <Select
+        v-bind="searchForm.field('useFlg')"
+        :label="t('common.status', 'Status')" 
+        :options="statusOptions"
+        option-label="label"
+        option-value="value"
+        float-label
+      />
     </SearchCard>
 
     <PCard class="p-0">

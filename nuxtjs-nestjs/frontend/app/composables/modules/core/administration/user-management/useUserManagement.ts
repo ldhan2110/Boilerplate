@@ -8,7 +8,7 @@ export function useUserManagement () {
     // --- Search form ---
     const searchSchema = z.object({
         searchText: z.string().optional(),
-        useFlg: z.boolean().nullable().optional()
+        useFlg: z.string().nullable().optional()
     });
 
     const searchForm = useAppForm({
