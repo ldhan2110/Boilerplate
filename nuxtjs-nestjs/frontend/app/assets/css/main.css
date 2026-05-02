@@ -47,6 +47,106 @@
   padding: 0.375rem 0.75rem;
 }
 
+/* --- ConfirmDialog beautification --- */
+.p-confirmdialog {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
+  border: 1px solid var(--p-surface-200);
+  overflow: hidden;
+  min-width: 22rem;
+  max-width: 28rem;
+}
+
+.dark .p-confirmdialog {
+  border-color: var(--p-surface-700);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Hide default header — custom header rendered via #message slot */
+.p-confirmdialog .p-dialog-header {
+  display: none;
+}
+
+/* Content area holds our custom layout */
+.p-confirmdialog .p-dialog-content {
+  padding: 0.75rem 0.875rem;
+}
+
+/* Custom header row: icon badge + title */
+.confirmdialog-custom {
+  width: 100%;
+}
+
+.confirmdialog-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid var(--p-surface-200);
+  margin-bottom: 0.625rem;
+}
+
+.dark .confirmdialog-header {
+  border-bottom-color: var(--p-surface-700);
+}
+
+.confirmdialog-title {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--p-text-color);
+}
+
+/* Icon as tinted rounded-square badge */
+.confirmdialog-icon-badge.pi {
+  width: 1.75rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  border-radius: 0.375rem;
+  display: grid;
+  place-items: center;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+/* Type-specific icon badge colors via data attribute */
+.confirmdialog-icon-badge[data-type="success"] {
+  background: color-mix(in srgb, var(--p-green-500) 15%, transparent);
+  color: var(--p-green-500);
+}
+
+.confirmdialog-icon-badge[data-type="info"] {
+  background: color-mix(in srgb, var(--p-blue-500) 15%, transparent);
+  color: var(--p-blue-500);
+}
+
+.confirmdialog-icon-badge[data-type="warning"] {
+  background: color-mix(in srgb, var(--p-yellow-500) 15%, transparent);
+  color: var(--p-yellow-600);
+}
+
+.confirmdialog-icon-badge[data-type="error"] {
+  background: color-mix(in srgb, var(--p-red-500) 15%, transparent);
+  color: var(--p-red-500);
+}
+
+/* Message text */
+.confirmdialog-message {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--p-text-muted-color);
+  margin: 0;
+}
+
+/* Footer: inline buttons, no background/border */
+.p-confirmdialog .p-dialog-footer {
+  padding: 0.5rem 0.875rem 0.75rem;
+  border-top: none;
+  background: transparent;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 /* --- Tabs --- */
 .p-tab {
   padding: 0.3rem 0.625rem;

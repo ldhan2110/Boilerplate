@@ -21,5 +21,20 @@ useSeoMeta({
     <NuxtPage />
   </NuxtLayout>
   <PToast />
-  <PConfirmDialog group="app-dialog" />
+  <PConfirmDialog group="app-dialog">
+    <template #message="{ message }">
+      <div class="confirmdialog-custom">
+        <div class="confirmdialog-header">
+          <span
+            v-if="message.icon"
+            class="confirmdialog-icon-badge"
+            :class="message.icon"
+            :data-type="message.icon?.includes('check') ? 'success' : message.icon?.includes('info') ? 'info' : message.icon?.includes('times') ? 'error' : 'warning'"
+          />
+          <span class="confirmdialog-title">{{ message.header }}</span>
+        </div>
+        <p class="confirmdialog-message">{{ message.message }}</p>
+      </div>
+    </template>
+  </PConfirmDialog>
 </template>
