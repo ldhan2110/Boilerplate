@@ -62,7 +62,7 @@ const emit = defineEmits<{
   (e: 'refresh'): void
   (e: 'node-expand', node: any): void
   (e: 'node-collapse', node: any): void
-  (e: 'node-reparent', payload: { nodeKey: string | number; newParentKey: string | number | null }): void
+  (e: 'node-reparent', payload: { node: any; oldParent: any; newParent: any }): void
 }>()
 
 const rootRef = ref<HTMLElement | null>(null)
@@ -529,6 +529,92 @@ const paginatedTreeNodes = computed(() => {
   return roots.slice(start, end)
 })
 
+// Drag-drop row reparenting
+const dragState = ref<{ nodeKey: string | number, sourceParentKey: string | number | null } | null>(null)
+const dropTarget = ref<{ nodeKey: string | number, position: 'before' | 'after' | 'child' } | null>(null)
+
+function onRowDragStart(node: any, e: DragEvent) {
+  if (!props.draggableRows) return
+  dragState.value = {
+    nodeKey: node.key,
+    sourceParentKey: node.data[props.parentKey ?? 'parentId'] ?? null
+  }
+  e.dataTransfer!.effectAllowed = 'move'
+}
+
+function onRowDragOver(node: any, e: DragEvent) {
+  if (!dragState.value || dragState.value.nodeKey === node.key) return
+  if (isDescendant(dragState.value.nodeKey, node.key)) return
+  e.preventDefault()
+  e.dataTransfer!.dropEffect = 'move'
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+  const y = e.clientY - rect.top
+  const third = rect.height / 3
+  let position: 'before' | 'child' | 'after'
+  if (y < third) position = 'before'
+  else if (y > third * 2) position = 'after'
+  else position = 'child'
+  dropTarget.value = { nodeKey: node.key, position }
+}
+
+function onRowDrop() {
+  if (!dragState.value || !dropTarget.value) return
+  const pk = props.parentKey ?? 'parentId'
+  const rk = props.rowKey ?? 'id'
+
+  const targetKey = dropTarget.value.position === 'child'
+    ? dropTarget.value.nodeKey
+    : treeBuilder.findNode(dropTarget.value.nodeKey)?.data[pk] ?? null
+
+  const oldParentKey = dragState.value.sourceParentKey
+  if (targetKey !== oldParentKey) {
+    const node = rowsRef.value.find((r: any) => r[rk] === dragState.value!.nodeKey)
+    const oldParent = oldParentKey ? rowsRef.value.find((r: any) => r[rk] === oldParentKey) : null
+    const newParent = targetKey ? rowsRef.value.find((r: any) => r[rk] === targetKey) : null
+    treeBuilder.reparentNode(dragState.value.nodeKey, targetKey)
+    emit('node-reparent', { node, oldParent, newParent })
+  }
+  dragState.value = null
+  dropTarget.value = null
+}
+
+function isDescendant(ancestorKey: string | number, nodeKey: string | number): boolean {
+  const pk = props.parentKey ?? 'parentId'
+  let current = treeBuilder.findNode(nodeKey)
+  while (current) {
+    const parentId = current.data[pk]
+    if (parentId === ancestorKey) return true
+    if (parentId == null) return false
+    current = treeBuilder.findNode(parentId)
+  }
+  return false
+}
+
+// PT passthrough for drag-drop on rows
+const treePt = computed(() => {
+  if (!props.draggableRows) return {}
+  return {
+    row: ({ instance }: any) => {
+      const node = instance?.node
+      if (!node) return {}
+      return {
+        draggable: true,
+        onDragstart: (e: DragEvent) => onRowDragStart(node, e),
+        onDragover: (e: DragEvent) => onRowDragOver(node, e),
+        onDragleave: () => { dropTarget.value = null },
+        onDrop: () => onRowDrop(),
+        onDragend: () => { dragState.value = null; dropTarget.value = null },
+        class: {
+          'tree-row-drag-source': dragState.value?.nodeKey === node.key,
+          'tree-row-drop-before': dropTarget.value?.nodeKey === node.key && dropTarget.value?.position === 'before',
+          'tree-row-drop-child': dropTarget.value?.nodeKey === node.key && dropTarget.value?.position === 'child',
+          'tree-row-drop-after': dropTarget.value?.nodeKey === node.key && dropTarget.value?.position === 'after',
+        }
+      }
+    }
+  }
+})
+
 // Expose API
 defineExpose({
   // Base
@@ -570,8 +656,14 @@ defineExpose({
   },
   getChildren: treeBuilder.getChildren,
   reparentNode: (nodeKey: string | number, newParentKey: string | number | null) => {
+    const rk = props.rowKey ?? 'id'
+    const pk = props.parentKey ?? 'parentId'
+    const node = rowsRef.value.find((r: any) => r[rk] === nodeKey)
+    const oldParentKey = node?.[pk] ?? null
+    const oldParent = oldParentKey ? rowsRef.value.find((r: any) => r[rk] === oldParentKey) : null
+    const newParent = newParentKey ? rowsRef.value.find((r: any) => r[rk] === newParentKey) : null
     treeBuilder.reparentNode(nodeKey, newParentKey)
-    emit('node-reparent', { nodeKey, newParentKey })
+    emit('node-reparent', { node, oldParent, newParent })
   },
 })
 </script>
@@ -605,6 +697,7 @@ defineExpose({
         v-model:selectionKeys="selectionKeysModel"
         :value="loading ? [] : paginatedTreeNodes"
         :loading="false"
+        :pt="treePt"
         :show-gridlines="showGridlines"
         :striped-rows="stripedRows"
         :resizable-columns="resizableColumns"
@@ -956,6 +1049,20 @@ defineExpose({
 </template>
 
 <style scoped>
+/* Row drag-drop feedback */
+:deep(.tree-row-drag-source) {
+  opacity: 0.4;
+}
+:deep(.tree-row-drop-before) {
+  box-shadow: inset 0 2px 0 0 var(--p-primary-color);
+}
+:deep(.tree-row-drop-child) {
+  background: color-mix(in srgb, var(--p-primary-color) 10%, transparent) !important;
+}
+:deep(.tree-row-drop-after) {
+  box-shadow: inset 0 -2px 0 0 var(--p-primary-color);
+}
+
 .app-tree-data-table.is-fullscreen {
   position: fixed;
   top: 0;
