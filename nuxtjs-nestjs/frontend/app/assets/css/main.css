@@ -143,6 +143,11 @@
   height: 0.875rem;
 }
 
+/* --- DataTable grouped header: remove duplicate border between colSpan rows --- */
+.p-datatable-thead tr:not(:last-child) th {
+  border-bottom: none;
+}
+
 /* --- Global icon sizing for dense layout --- */
 .pi {
   font-size: 0.8125rem;
