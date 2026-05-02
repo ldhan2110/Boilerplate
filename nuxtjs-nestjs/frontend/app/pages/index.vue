@@ -76,6 +76,7 @@ const formSchema = z.object({
   startTime: z.string().nullable().optional(),
   dateRange: z.array(z.string()).nullable().optional(),
   content: z.string().optional(),
+  attachments: z.array(z.any()).optional(),
   age: z.number().min(1, 'Age must be at least 1').max(150, 'Age must be at most 150').nullable().optional(),
   price: z.number().min(0, 'Price must be positive').nullable().optional(),
   quantity: z.number().int().min(0).nullable().optional(),
@@ -104,6 +105,7 @@ const { formProps, formRef, field, values, isDirty, isSubmitting, resetForm } = 
     startTime: null,
     dateRange: null,
     content: '',
+    attachments: [],
     age: null,
     price: null,
     quantity: 0,
@@ -793,6 +795,32 @@ hasPermission('manage', 'all') = {{ useAppPermission().hasPermission('manage', '
                   hint="Format your text with the toolbar above"
                   :height="200"
                 />
+
+                <!-- FileUpload -->
+                <Grid
+                  :cols="{ base: 1, md: 2 }"
+                  gap="4"
+                >
+                  <FileUpload
+                    v-bind="field('attachments') as any"
+                    label="Attachments (List)"
+                    multiple
+                    :max-files="5"
+                    max-file-size="20mb"
+                    :accept="['image/*', '.pdf', '.docx']"
+                    hint="Max 5 files, 20MB each. Images, PDF, DOCX."
+                  />
+                  <FileUpload
+                    v-bind="field('attachments') as any"
+                    label="Attachments (Grid)"
+                    multiple
+                    :max-files="5"
+                    max-file-size="20mb"
+                    :accept="['image/*', '.pdf', '.docx']"
+                    display="grid"
+                    hint="Same data, grid display mode"
+                  />
+                </Grid>
 
                 <!-- Form Actions -->
                 <Flex

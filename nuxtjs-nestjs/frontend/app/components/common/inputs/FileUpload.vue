@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+defineOptions({ inheritAttrs: false })
+
 import type { FileDto } from '~/types'
 
 interface FileUploadProps {
