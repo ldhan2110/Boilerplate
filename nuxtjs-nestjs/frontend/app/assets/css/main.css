@@ -243,8 +243,9 @@
   height: 0.875rem;
 }
 
-/* --- DataTable grouped header: remove duplicate border between colSpan rows --- */
-.p-datatable-thead tr:not(:last-child) th {
+/* --- DataTable/TreeTable grouped header: remove border only for colspan parent cells --- */
+.p-datatable-thead tr:not(:last-child) th:not([rowspan]),
+.p-treetable-thead tr:not(:last-child) th:not([rowspan]) {
   border-bottom: none;
 }
 
