@@ -126,5 +126,11 @@
       "add": "Thêm người dùng",
       "delete": "Xoá người dùng"
     }
+  },
+  "fileUpload": {
+    "dropOrClick": "Kéo thả tệp vào đây hoặc nhấp để chọn",
+    "maxFilesExceeded": "Tối đa {max} tệp được phép",
+    "fileTooLarge": "{name} vượt quá kích thước tối đa {max}",
+    "invalidType": "{name} có định dạng không được hỗ trợ"
   }
 }

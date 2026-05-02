@@ -125,5 +125,11 @@
       "add": "Add User",
       "delete": "Delete User"
     }
+  },
+  "fileUpload": {
+    "dropOrClick": "Drop files here or click to browse",
+    "maxFilesExceeded": "Maximum {max} files allowed",
+    "fileTooLarge": "{name} exceeds maximum size of {max}",
+    "invalidType": "{name} has an unsupported file type"
   }
 }
