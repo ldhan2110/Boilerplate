@@ -872,6 +872,62 @@ hasPermission('manage', 'all') = {{ useAppPermission().hasPermission('manage', '
         </template>
       </PCard>
 
+      <!-- Horizontal FormField Demo -->
+      <PCard>
+        <template #title>
+          <span class="text-base">Horizontal Form Layout</span>
+        </template>
+        <template #content>
+          <Flex direction="col" gap="3">
+            <Input
+              v-bind="field('name')"
+              label="Full Name"
+              placeholder="Enter your name"
+              horizontal
+              required
+            />
+            <Input
+              v-bind="field('email')"
+              label="Email"
+              type="email"
+              placeholder="you@example.com"
+              horizontal
+              required
+            />
+            <Select
+              v-bind="field('role')"
+              label="Role"
+              :options="roles"
+              option-label="label"
+              option-value="value"
+              horizontal
+              required
+              filterable
+            />
+            <InputNumber
+              v-bind="field('age')"
+              label="Age"
+              :min="1"
+              :max="150"
+              placeholder="Enter age"
+              horizontal
+              hint="1–150"
+            />
+            <DatePicker
+              v-bind="field('startDate')"
+              label="Start Date"
+              horizontal
+              required
+            />
+            <Toggle
+              v-bind="field('darkMode')"
+              label="Dark Mode"
+              horizontal
+            />
+          </Flex>
+        </template>
+      </PCard>
+
       <!-- AppDataTable Demo -->
       <PCard>
         <template #title>

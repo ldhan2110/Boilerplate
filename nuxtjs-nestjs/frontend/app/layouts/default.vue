@@ -6,10 +6,10 @@
       <LayoutAppSidebar />
 
       <main class="flex-1 min-w-0 overflow-y-auto">
-        <div class="px-4 pt-3 lg:px-6 lg:pt-4">
+        <div class="px-3 pt-2 lg:px-4 lg:pt-3">
           <LayoutAppBreadcrumb />
         </div>
-        <div class="p-4 lg:p-6 pt-2 lg:pt-3">
+        <div class="p-3 lg:p-4 pt-1.5 lg:pt-2">
           <slot />
         </div>
       </main>

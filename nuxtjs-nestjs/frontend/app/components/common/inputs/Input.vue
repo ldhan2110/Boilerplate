@@ -33,6 +33,8 @@ interface InputProps {
   floatLabel?: boolean
   /** PrimeVue Form field name — enables validation integration */
   name?: string
+  /** Place label on the left, input on the right */
+  horizontal?: boolean
 }
 
 const props = withDefaults(defineProps<InputProps>(), {
@@ -74,6 +76,7 @@ const computedType = computed(() => {
     :input-id="inputId"
     :float-label="floatLabel"
     :name="name"
+    :horizontal="horizontal"
   >
     <PTextarea
       v-if="variant === 'textarea'"

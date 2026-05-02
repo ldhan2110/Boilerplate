@@ -48,6 +48,8 @@ interface InputNumberProps {
   prefix?: string
   /** Suffix text (e.g. '%', 'kg') */
   suffix?: string
+  /** Place label on the left, input on the right */
+  horizontal?: boolean
 }
 
 const props = withDefaults(defineProps<InputNumberProps>(), {
@@ -82,6 +84,7 @@ const hasError = computed(() => !!props.error)
     :input-id="inputId"
     :float-label="floatLabel"
     :name="name"
+    :horizontal="horizontal"
   >
     <PInputNumber
       :id="inputId"

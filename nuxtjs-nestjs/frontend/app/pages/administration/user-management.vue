@@ -188,7 +188,7 @@ function handleDeleteUser() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 pt-2">
+  <div class="flex flex-col gap-2.5 pt-1">
     <!-- Search -->
     <SearchCard :form="searchForm" @search="onSearch" class="pt-2">
       <FormField :label="t('common.search', 'Search')" float-label>

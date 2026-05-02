@@ -44,7 +44,7 @@ interface ButtonProps {
 
 const props = withDefaults(defineProps<ButtonProps>(), {
   variant: 'primary',
-  size: 'md',
+  size: 'sm',
   iconPos: 'left',
   type: 'button',
   text: false,

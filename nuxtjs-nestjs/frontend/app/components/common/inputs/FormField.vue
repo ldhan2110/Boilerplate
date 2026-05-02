@@ -14,6 +14,8 @@ interface FormFieldProps {
   name?: string
   /** Use PrimeVue FloatLabel instead of stacked label — saves vertical space */
   floatLabel?: boolean
+  /** Place label on the left, input on the right — single-line layout */
+  horizontal?: boolean
 }
 
 const props = defineProps<FormFieldProps>()
@@ -52,9 +54,9 @@ const resolvedError = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
+  <div :class="horizontal ? 'flex flex-row items-start gap-2' : 'flex flex-col gap-0.5'">
     <!-- Float label mode -->
-    <template v-if="floatLabel && resolvedLabel">
+    <template v-if="floatLabel && resolvedLabel && !horizontal">
       <PFloatLabel variant="on">
         <slot />
         <label :for="inputId">
@@ -64,30 +66,43 @@ const resolvedError = computed(() => {
       </PFloatLabel>
     </template>
 
-    <!-- Stacked label mode (default) -->
+    <!-- Stacked / horizontal label mode -->
     <template v-else>
       <label
         v-if="resolvedLabel"
         :for="inputId"
-        class="text-xs font-medium text-gray-700 dark:text-gray-300"
+        :class="[
+          'text-[0.6875rem] font-medium text-gray-700 dark:text-gray-300 leading-tight',
+          horizontal ? 'w-32 shrink-0 pt-1.5 text-right' : ''
+        ]"
       >
         {{ resolvedLabel }}
         <span v-if="required" class="text-red-500 ml-0.5">*</span>
       </label>
-      <slot />
+
+      <!-- Wrap input + feedback when horizontal so they stack in right column -->
+      <div v-if="horizontal" class="flex-1 flex flex-col gap-0.5">
+        <slot />
+        <small v-if="resolvedError" class="text-red-500 text-xs">
+          {{ resolvedError }}
+        </small>
+        <small v-else-if="resolvedHint" class="text-gray-400 dark:text-gray-500 text-xs">
+          {{ resolvedHint }}
+        </small>
+      </div>
+      <template v-else>
+        <slot />
+      </template>
     </template>
 
-    <small
-      v-if="resolvedError"
-      class="text-red-500 text-xs"
-    >
-      {{ resolvedError }}
-    </small>
-    <small
-      v-else-if="resolvedHint"
-      class="text-gray-400 dark:text-gray-500 text-xs"
-    >
-      {{ resolvedHint }}
-    </small>
+    <!-- Feedback for non-horizontal (outside inner template) -->
+    <template v-if="!horizontal">
+      <small v-if="resolvedError" class="text-red-500 text-xs">
+        {{ resolvedError }}
+      </small>
+      <small v-else-if="resolvedHint" class="text-gray-400 dark:text-gray-500 text-xs">
+        {{ resolvedHint }}
+      </small>
+    </template>
   </div>
 </template>

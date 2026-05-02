@@ -74,13 +74,13 @@ const wrappedFormProps = computed(() => {
         <Grid
           :cols="gridCols"
           :min-child-width="gridMinChildWidth"
-          gap="4"
+          gap="3"
         >
           <slot />
         </Grid>
 
         <!-- Action buttons row — always at bottom right -->
-        <div class="mt-4 flex justify-end gap-2">
+        <div class="mt-2 flex justify-end gap-2">
           <Button
             v-if="!autoSearch"
             type="submit"

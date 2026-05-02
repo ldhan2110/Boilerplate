@@ -600,7 +600,7 @@ defineExpose({
     <!-- Toolbar slot -->
     <div
       v-if="$slots.toolbar"
-      class="mb-2 flex items-center gap-2 flex-wrap"
+      class="mb-1.5 flex items-center gap-2 flex-wrap"
     >
       <slot name="toolbar" />
     </div>
@@ -1072,10 +1072,12 @@ defineExpose({
   background: var(--p-surface-900);
 }
 
-/* Slightly reduced cell padding */
-:deep(.p-datatable-tbody > tr > td),
+/* Dense enterprise cell padding */
+:deep(.p-datatable-tbody > tr > td) {
+  padding: 0.25rem 0.5rem;
+}
 :deep(.p-datatable-thead > tr > th) {
-  padding: 0.5rem 0.75rem;
+  padding: 0.3rem 0.5rem;
 }
 
 /*
