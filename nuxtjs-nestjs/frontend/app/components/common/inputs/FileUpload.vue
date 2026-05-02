@@ -90,7 +90,7 @@ function isAccepted(file: File, accept: string[]): boolean {
 function addFiles(files: File[]) {
   validationError.value = ''
   const currentFiles = props.modelValue || []
-  const filesToAdd = props.multiple ? files : [files[0]]
+  const filesToAdd = props.multiple ? files : files.slice(0, 1)
 
   const totalAfter = currentFiles.length + filesToAdd.length
   if (totalAfter > props.maxFiles) {

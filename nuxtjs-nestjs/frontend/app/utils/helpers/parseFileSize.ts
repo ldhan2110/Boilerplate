@@ -1,19 +1,19 @@
-const UNITS: Record<string, number> = {
-  kb: 1024,
-  mb: 1024 ** 2,
-  gb: 1024 ** 3,
-}
+const KB = 1024
+const MB = 1024 ** 2
+const GB = 1024 ** 3
+
+const UNITS: Record<string, number> = { kb: KB, mb: MB, gb: GB }
 
 export function parseFileSize(size: string | number): number {
   if (typeof size === 'number') return size
   const match = size.toLowerCase().trim().match(/^(\d+(?:\.\d+)?)\s*(kb|mb|gb)$/)
-  if (!match) return Number(size)
-  return parseFloat(match[1]) * UNITS[match[2]]
+  if (!match || !match[1] || !match[2]) return Number(size)
+  return parseFloat(match[1]) * UNITS[match[2]]!
 }
 
 export function formatFileSize(bytes: number): string {
-  if (bytes >= UNITS.gb) return `${(bytes / UNITS.gb).toFixed(1)} GB`
-  if (bytes >= UNITS.mb) return `${(bytes / UNITS.mb).toFixed(1)} MB`
-  if (bytes >= UNITS.kb) return `${(bytes / UNITS.kb).toFixed(1)} KB`
+  if (bytes >= GB) return `${(bytes / GB).toFixed(1)} GB`
+  if (bytes >= MB) return `${(bytes / MB).toFixed(1)} MB`
+  if (bytes >= KB) return `${(bytes / KB).toFixed(1)} KB`
   return `${bytes} B`
 }
