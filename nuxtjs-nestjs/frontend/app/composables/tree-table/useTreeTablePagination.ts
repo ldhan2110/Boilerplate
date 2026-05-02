@@ -1,13 +1,16 @@
-import type { BackendMode, PageEvent } from '~/types/table'
+import type { DataMode, BackendMode, PageEvent } from '~/types/table'
 
 export interface UseTreeTablePaginationOptions {
+  dataMode: Ref<DataMode>
   paginationMode: Ref<BackendMode>
   pageSize: Ref<number>
   pageSizeOptions: Ref<number[]>
   rows: Ref<any[]>
   totalRecords: Ref<number | undefined>
+  onLoadMore?: Ref<((params: PageEvent) => Promise<void>) | undefined>
   emit: {
     page: (payload: PageEvent) => void
+    loadMore: () => void
   }
 }
 
@@ -18,16 +21,22 @@ export interface UseTreeTablePaginationReturn {
   totalCount: Ref<number>
   displayedRows: Ref<any[]>
   showPaginator: Ref<boolean>
+  isLoadingMore: Ref<boolean>
   onPageChange: (event: any) => void
+  sentinelRef: Ref<HTMLElement | null>
+  setupInfiniteScroll: () => void
+  teardownInfiniteScroll: () => void
 }
 
 export function useTreeTablePagination(options: UseTreeTablePaginationOptions): UseTreeTablePaginationReturn {
   const {
+    dataMode,
     paginationMode,
     pageSize,
     pageSizeOptions,
     rows,
     totalRecords,
+    onLoadMore,
     emit,
   } = options
 
@@ -37,6 +46,10 @@ export function useTreeTablePagination(options: UseTreeTablePaginationOptions): 
   const currentPage = ref(Number(route.query.p) || 0)
   const currentPageSize = ref(Number(route.query.ps) || pageSize.value)
   const first = ref(currentPage.value * currentPageSize.value)
+  const isLoadingMore = ref(false)
+  const infiniteScrollPage = ref(0)
+  const sentinelRef = ref<HTMLElement | null>(null)
+  let observer: IntersectionObserver | null = null
 
   const totalCount = computed(() => {
     if (paginationMode.value === 'server') {
@@ -46,10 +59,13 @@ export function useTreeTablePagination(options: UseTreeTablePaginationOptions): 
   })
 
   const showPaginator = computed(() => {
-    return paginationMode.value !== 'none'
+    return dataMode.value === 'pagination'
   })
 
   const displayedRows = computed(() => {
+    if (dataMode.value === 'infiniteScroll') {
+      return rows.value
+    }
     if (paginationMode.value === 'server') {
       return rows.value
     }
@@ -57,6 +73,7 @@ export function useTreeTablePagination(options: UseTreeTablePaginationOptions): 
   })
 
   function syncUrlParams() {
+    if (dataMode.value !== 'pagination') return
     router.replace({
       query: {
         ...route.query,
@@ -77,6 +94,49 @@ export function useTreeTablePagination(options: UseTreeTablePaginationOptions): 
     }
   }
 
+  function setupInfiniteScroll() {
+    if (dataMode.value !== 'infiniteScroll') return
+    if (!onLoadMore?.value) {
+      console.warn('[AppTreeDataTable] dataMode="infiniteScroll" requires onLoadMore prop')
+      return
+    }
+
+    observer = new IntersectionObserver(
+      async (entries) => {
+        const entry = entries[0]
+        if (entry?.isIntersecting && !isLoadingMore.value) {
+          isLoadingMore.value = true
+          infiniteScrollPage.value++
+          try {
+            await onLoadMore.value!({
+              page: infiniteScrollPage.value,
+              pageSize: currentPageSize.value,
+            })
+          } finally {
+            isLoadingMore.value = false
+          }
+          emit.loadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (sentinelRef.value) {
+      observer.observe(sentinelRef.value)
+    }
+  }
+
+  function teardownInfiniteScroll() {
+    observer?.disconnect()
+    observer = null
+  }
+
+  watch(sentinelRef, (el) => {
+    if (el && dataMode.value === 'infiniteScroll') {
+      observer?.observe(el)
+    }
+  })
+
   return {
     first,
     currentPage,
@@ -84,6 +144,10 @@ export function useTreeTablePagination(options: UseTreeTablePaginationOptions): 
     totalCount,
     displayedRows,
     showPaginator,
+    isLoadingMore,
     onPageChange,
+    sentinelRef,
+    setupInfiniteScroll,
+    teardownInfiniteScroll,
   }
 }

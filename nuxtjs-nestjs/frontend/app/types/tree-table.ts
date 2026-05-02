@@ -1,5 +1,6 @@
 import type {
   ColumnDef,
+  DataMode,
   BackendMode,
   SelectionMode,
   PageEvent,
@@ -22,6 +23,11 @@ export interface AppTreeDataTableProps<T = any> {
   parentKey?: string
   totalRecords?: number
   loading?: boolean
+
+  // Data mode
+  dataMode?: DataMode
+  virtualScroll?: boolean
+  onLoadMore?: (params: PageEvent) => Promise<void>
 
   // Pagination
   pageSize?: number
@@ -63,4 +69,4 @@ export interface AppTreeDataTableProps<T = any> {
   exportFormats?: ExportFormat[]
 }
 
-export type { ColumnDef, BackendMode, SelectionMode, PageEvent, SortEvent, FooterAgg, ExportFormat }
+export type { ColumnDef, DataMode, BackendMode, SelectionMode, PageEvent, SortEvent, FooterAgg, ExportFormat }

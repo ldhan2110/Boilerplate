@@ -20,6 +20,8 @@ import { useTableExport } from '~/composables/table/useTableExport'
 const props = withDefaults(defineProps<AppTreeDataTableProps>(), {
   rowKey: 'id',
   parentKey: 'parentId',
+  dataMode: 'pagination',
+  virtualScroll: false,
   pageSize: 25,
   pageSizeOptions: () => [10, 25, 50, 100],
   paginationMode: 'server',
@@ -45,6 +47,7 @@ const props = withDefaults(defineProps<AppTreeDataTableProps>(), {
 const emit = defineEmits<{
   (e: 'page', payload: PageEvent): void
   (e: 'sort', payload: SortEvent): void
+  (e: 'load-more'): void
   (e: 'node-expand', node: any): void
   (e: 'node-collapse', node: any): void
   (e: 'selection-change', selected: any[]): void
@@ -68,9 +71,11 @@ const defaultColumnWidthRef = computed(() => props.defaultColumnWidth)
 const sortBackendRef = computed(() => props.sortBackend)
 const defaultSortFieldRef = computed(() => props.defaultSortField)
 const defaultSortOrderRef = computed(() => props.defaultSortOrder)
+const dataModeRef = computed(() => props.dataMode)
 const pageSizeRef = computed(() => props.pageSize)
 const pageSizeOptionsRef = computed(() => props.pageSizeOptions)
 const paginationModeRef = computed(() => props.paginationMode)
+const onLoadMoreRef = computed(() => props.onLoadMore)
 const headerContextMenuRef = computed(() => props.headerContextMenu)
 const rowContextMenuRef = computed(() => props.rowContextMenu)
 const showFooterRef = computed(() => props.showFooter)
@@ -100,12 +105,17 @@ const sort = useTreeTableSort({
 })
 
 const pagination = useTreeTablePagination({
+  dataMode: dataModeRef,
   paginationMode: paginationModeRef,
   pageSize: pageSizeRef,
   pageSizeOptions: pageSizeOptionsRef,
   rows: rowsRef,
   totalRecords: totalRecordsRef,
-  emit: { page: (payload) => emit('page', payload) },
+  onLoadMore: onLoadMoreRef,
+  emit: {
+    page: (payload) => emit('page', payload),
+    loadMore: () => emit('load-more'),
+  },
 })
 
 // Reactive ref from columnState so drag tracks reorders + visibility changes
@@ -445,8 +455,14 @@ function toggleFullscreen() {
 function onFullscreenChange() {
   isFullscreenState.value = !!document.fullscreenElement
 }
-onMounted(() => document.addEventListener('fullscreenchange', onFullscreenChange))
-onUnmounted(() => document.removeEventListener('fullscreenchange', onFullscreenChange))
+onMounted(() => {
+  document.addEventListener('fullscreenchange', onFullscreenChange)
+  pagination.setupInfiniteScroll()
+})
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
+  pagination.teardownInfiniteScroll()
+})
 
 // --- Column Manager DnD ---
 interface ColumnManagerItem {
@@ -738,6 +754,18 @@ defineExpose({
           </template>
         </PColumn>
       </PTreeTable>
+    </div>
+
+    <!-- Infinite scroll sentinel -->
+    <div
+      v-if="dataMode === 'infiniteScroll'"
+      :ref="(el: any) => { pagination.sentinelRef.value = el }"
+      class="flex justify-center py-4"
+    >
+      <PProgressSpinner
+        v-if="pagination.isLoadingMore.value"
+        style="width: 2rem; height: 2rem"
+      />
     </div>
 
     <!-- Paginator with total rows display -->
