@@ -4,9 +4,8 @@ import type {
   AppTreeDataTableProps,
   PageEvent,
   SortEvent,
-  EditSaveEvent,
   ExportFormat,
-  ProcFlag,
+  FooterAgg,
 } from '~/types/tree-table'
 import type { HeaderCell } from '~/composables/table/useTableSpan'
 import {
@@ -14,16 +13,9 @@ import {
   useTreeTableColumns,
   useTreeTableSort,
   useTreeTablePagination,
-  useTreeTableSelection,
-  useTreeTableEdit,
-  useTreeTableValidation,
-  useTreeTableFooter,
-  useTreeTableExport,
-  useTreeTableMenus,
-  useTreeTableProcFlag,
-  useTreeTableColumnDrag,
 } from '~/composables/tree-table'
-import { generateTempKey } from '~/composables/tree-table/useTreeTableProcFlag'
+import { useTableFooter } from '~/composables/table/useTableFooter'
+import { useTableExport } from '~/composables/table/useTableExport'
 
 const props = withDefaults(defineProps<AppTreeDataTableProps>(), {
   rowKey: 'id',
@@ -33,7 +25,6 @@ const props = withDefaults(defineProps<AppTreeDataTableProps>(), {
   paginationMode: 'server',
   sortBackend: 'server',
   defaultSortOrder: 1,
-  editable: false,
   selectable: false,
   selectionMode: 'multiple',
   showGridlines: true,
@@ -41,34 +32,31 @@ const props = withDefaults(defineProps<AppTreeDataTableProps>(), {
   reorderableColumns: true,
   stickyHeader: true,
   maxFrozenColumns: 3,
-  showFooter: false,
-  rowContextMenu: true,
-  headerContextMenu: true,
   defaultColumnWidth: 150,
-  draggableRows: false,
+  headerContextMenu: true,
+  rowContextMenu: true,
+  showFooter: false,
+  footerAggregations: () => [],
   exportFilename: 'export',
   exportFormats: () => ['csv', 'xlsx'] as ExportFormat[],
   frozenColumns: () => [],
-  footerAggregations: () => [],
-  editableColumns: undefined,
 })
 
 const emit = defineEmits<{
   (e: 'page', payload: PageEvent): void
   (e: 'sort', payload: SortEvent): void
-  (e: 'row-edit-save', payload: EditSaveEvent): void
-  (e: 'full-screen-change', isFullscreen: boolean): void
-  (e: 'selection-change', selected: any[]): void
-  (e: 'refresh'): void
   (e: 'node-expand', node: any): void
   (e: 'node-collapse', node: any): void
-  (e: 'node-reparent', payload: { node: any; oldParent: any; newParent: any }): void
+  (e: 'selection-change', selected: any[]): void
+  (e: 'full-screen-change', isFullscreen: boolean): void
+  (e: 'refresh'): void
 }>()
 
+const { t } = useI18n()
 const rootRef = ref<HTMLElement | null>(null)
 const treeTableRef = ref<any>(null)
 
-// Reactive prop refs for composables
+// Reactive prop refs
 const rowsRef = shallowRef(props.rows)
 watch(() => props.rows, (val) => { rowsRef.value = val }, { flush: 'sync' })
 
@@ -83,19 +71,14 @@ const defaultSortOrderRef = computed(() => props.defaultSortOrder)
 const pageSizeRef = computed(() => props.pageSize)
 const pageSizeOptionsRef = computed(() => props.pageSizeOptions)
 const paginationModeRef = computed(() => props.paginationMode)
-const selectableRef = computed(() => props.selectable)
-const selectionModeRef = computed(() => props.selectionMode)
-const editableRef = computed(() => props.editable)
-const editableColumnsRef = computed(() => props.editableColumns)
-const showFooterRef = computed(() => props.showFooter)
-const footerAggregationsRef = computed(() => props.footerAggregations)
 const headerContextMenuRef = computed(() => props.headerContextMenu)
 const rowContextMenuRef = computed(() => props.rowContextMenu)
+const showFooterRef = computed(() => props.showFooter)
+const footerAggregationsRef = computed(() => props.footerAggregations)
 const exportFilenameRef = computed(() => props.exportFilename)
-const cellConfigRef = computed(() => props.cellConfig)
 const reorderableColumnsRef = computed(() => props.reorderableColumns)
 
-// --- Wire composables ---
+// --- Composables ---
 const treeBuilder = useTreeBuilder({
   rows: rowsRef,
   rowKey: props.rowKey,
@@ -113,236 +96,359 @@ const sort = useTreeTableSort({
   sortBackend: sortBackendRef,
   defaultSortField: defaultSortFieldRef,
   defaultSortOrder: defaultSortOrderRef,
-  emit: (_, payload) => emit('sort', payload),
+  emit: (_event, payload) => emit('sort', payload),
 })
 
 const pagination = useTreeTablePagination({
   paginationMode: paginationModeRef,
   pageSize: pageSizeRef,
   pageSizeOptions: pageSizeOptionsRef,
-  rows: computed(() => treeBuilder.treeNodes.value.map(n => n.data)),
+  rows: rowsRef,
   totalRecords: totalRecordsRef,
-  emit: {
-    page: payload => emit('page', payload),
-  },
+  emit: { page: (payload) => emit('page', payload) },
 })
 
-// No column groups / span for tree table (keep stubs for columnDrag compatibility)
-const hasColumnGroups = computed(() => false)
-const headerRows = computed<HeaderCell[][]>(() => [])
-
+// Reactive ref from columnState so drag tracks reorders + visibility changes
 const columnStateRef = computed(() => [...columns.columnState])
 
-const columnDrag = useTreeTableColumnDrag({
-  columns: columnStateRef,
-  hasColumnGroups,
-  headerRows,
-  reorderableColumns: reorderableColumnsRef,
-  columnsApi: columns,
+// --- Selection (TreeTable uses selectionKeys) ---
+const selectionKeys = ref<Record<string, { checked: boolean; partialChecked: boolean }>>({})
+
+const selectedRows = computed(() => {
+  if (!props.selectable) return []
+  const result: any[] = []
+  for (const [key, val] of Object.entries(selectionKeys.value)) {
+    if (val.checked) {
+      const node = treeBuilder.findNode(key)
+      if (node) result.push(node.data)
+    }
+  }
+  return result
 })
 
-const bodyColumns = computed(() => columns.visibleColumns.value)
+const hasSelection = computed(() => selectedRows.value.length > 0)
 
-const selection = useTreeTableSelection({
-  selectable: selectableRef,
-  selectionMode: selectionModeRef,
-  rowKey: props.rowKey,
-  rows: rowsRef,
-  emit: selected => emit('selection-change', selected),
-})
+watch(selectionKeys, () => {
+  if (props.selectable) emit('selection-change', selectedRows.value)
+}, { deep: true })
 
-const selectionKeysModel = selection.selectionKeys
-
-const edit = useTreeTableEdit({
-  editable: editableRef,
-  editableColumns: editableColumnsRef,
-  columnState: columns.columnState,
-  visibleColumns: columns.visibleColumns,
-  rows: rowsRef,
-  displayedRows: pagination.displayedRows,
-  cellConfig: cellConfigRef,
-  rowKey: props.rowKey,
-  emit: {
-    editSave: payload => emit('row-edit-save', payload),
-  },
-})
-
-const validation = useTreeTableValidation({
-  rows: rowsRef,
-  displayedRows: pagination.displayedRows,
-  columnState: columns.columnState,
-  visibleColumns: columns.visibleColumns,
-  cellConfig: cellConfigRef,
-  editable: editableRef,
-  editableColumns: editableColumnsRef,
-  rowKey: props.rowKey,
-})
-
-const procFlag = useTreeTableProcFlag({
-  rows: rowsRef,
-  dirtyRows: edit.dirtyRows,
-  rowKey: props.rowKey,
-})
-
-function onInlineToggleWithValidation(row: any, field: string, val: any) {
-  edit.onInlineToggle(row, field, val)
-  validation.validateCell(row, field)
+function clearSelection() {
+  selectionKeys.value = {}
 }
 
-function onCellClick(node: any, col: ColumnDef) {
-  if (!props.editable) return
-  if (!col.field) return
-  if (col.editType === 'checkbox' || col.editType === 'toggle') return
-  edit.startEdit(node.key, col.field)
-}
-
-/** Capture old value when starting edit, commit/cancel on Enter/Escape/blur */
-function onEditorKeydown(e: KeyboardEvent, node: any, col: ColumnDef) {
-  if (e.key === 'Enter') {
-    e.preventDefault()
-    const oldValue = node.data[col.field!]
-    edit.commitEdit(node.key, col.field!, oldValue, node.data[col.field!])
-  } else if (e.key === 'Escape') {
-    e.preventDefault()
-    edit.cancelEdit()
-  }
-}
-
-function onEditorBlur(e: FocusEvent, node: any, col: ColumnDef) {
-  // If blur target is inside the same editor cell, ignore
-  const editorEl = (e.currentTarget as HTMLElement)
-  if (editorEl?.contains(e.relatedTarget as Node)) return
-  const oldValue = node.data[col.field!]
-  edit.commitEdit(node.key, col.field!, oldValue, node.data[col.field!])
-}
-
-function insertRow(defaultValues?: Partial<any>): any {
-  const blank: any = {}
-  for (const col of columns.columnState) {
-    if (col.field) blank[col.field] = null
-  }
-  const key = generateTempKey()
-  blank[props.rowKey] = key
-  blank.procFlag = 'I'
-  if (defaultValues) {
-    Object.assign(blank, defaultValues)
-    blank[props.rowKey] = key
-    blank.procFlag = 'I'
-  }
-  rowsRef.value.unshift(blank)
-  triggerRef(rowsRef)
-  procFlag.markInsert(key)
-  return blank
-}
-
-function insertRows(rowDefaults: Partial<any>[]): any[] {
-  return rowDefaults.map(defaults => insertRow(defaults))
-}
-
-function deleteRow(key: string | number): void {
-  procFlag.markDelete(key)
-}
-
-function deleteRows(keys: (string | number)[]): void {
-  for (const key of keys) {
-    procFlag.markDelete(key)
-  }
-}
-
-function deleteSelected(): void {
-  const keys = selection.selectedRows.value.map((r: any) => r[props.rowKey])
-  for (const key of keys) {
-    procFlag.markDelete(key)
-  }
-  selection.clearSelection()
-}
-
-function getRow(key: string | number): any | undefined {
-  return procFlag.getRowByKey(key)
-}
-
-function getRows(flags?: ProcFlag[]): any[] {
-  return procFlag.getRowsByFlag(flags)
-}
-
-function getSelectedRows(): any[] {
-  return selection.selectedRows.value
-}
-
-function hasChanges(): boolean {
-  return procFlag.hasChanges()
-}
-
-function clearChanges(): void {
-  procFlag.clearProcFlags()
-  edit.clearDirty()
-  validation.clearErrors()
-}
-
-function hasSelectedRow(): boolean {
-  return selection.hasSelection.value
-}
-
-function resetTable(): void {
-  columns.resetColumns()
-  sort.clearSort()
-  selection.clearSelection()
-  procFlag.clearProcFlags()
-  edit.clearDirty()
-  validation.clearErrors()
-}
-
-const footer = useTreeTableFooter({
+// --- Footer (reuse generic composable) ---
+const footer = useTableFooter({
   rows: rowsRef,
   visibleColumns: columns.visibleColumns,
   footerAggregations: footerAggregationsRef,
   showFooter: showFooterRef,
 })
 
-const exportTable = useTreeTableExport({
+// --- Export (reuse generic composable) ---
+const selectedRowsRef = computed(() => selectedRows.value)
+const displayedRowsRef = computed(() => treeBuilder.flatFromTree())
+
+const exportTable = useTableExport({
   rows: rowsRef,
-  displayedRows: pagination.displayedRows,
-  selectedRows: selection.selectedRows,
+  displayedRows: displayedRowsRef,
+  selectedRows: selectedRowsRef,
   visibleColumns: columns.visibleColumns,
   exportFilename: exportFilenameRef,
 })
 
-const { confirmAsync } = useAppDialog()
+// --- Body columns ---
+const bodyColumns = computed(() =>
+  columns.hasColumnGroups.value ? columns.leafColumns.value : columns.visibleColumns.value
+)
 
-const menus = useTreeTableMenus({
-  editable: editableRef,
-  headerContextMenu: headerContextMenuRef,
-  rowContextMenu: rowContextMenuRef,
-  columns,
-  sort,
-  selection,
-  exportFn: exportTable,
-  rows: rowsRef,
-  rowKey: props.rowKey,
-  parentKey: props.parentKey,
-  emit: {
-    editSave: payload => emit('row-edit-save', payload),
-    refresh: () => emit('refresh'),
-    fullScreenChange: val => emit('full-screen-change', val),
-  },
-  rootRef,
-  confirmAsync,
-  procFlag: {
-    markInsert: procFlag.markInsert,
-    markDelete: procFlag.markDelete,
-    getFlag: procFlag.getFlag,
-  },
-  generateTempKey,
-  columnState: columns.columnState,
-  resetTable,
-  expandAll: treeBuilder.expandAll,
-  collapseAll: treeBuilder.collapseAll,
+// --- Column drag (for grouped header mode) ---
+interface DragSource {
+  topLevelIndex: number
+  childIndex: number | null
+  field?: string
+}
+
+const isDragging = ref(false)
+const dragOverGroupIndex = ref<number | null>(null)
+const dragDirection = ref<'left' | 'right' | null>(null)
+const dragSource = ref<DragSource | null>(null)
+
+const isColumnDragActive = computed(() => columns.hasColumnGroups.value && reorderableColumnsRef.value)
+
+function resolveHeaderCellGroup(cell: HeaderCell): number | null {
+  const cols = columns.columnState
+  if (cell.field) {
+    for (let i = 0; i < cols.length; i++) {
+      const col = cols[i]!
+      if (col.children?.length) {
+        if (col.children.some(c => c.field === cell.field)) return i
+      } else if (col.field === cell.field) {
+        return i
+      }
+    }
+    return null
+  }
+  return cols.findIndex(col => col.children?.length && col.header === cell.header)
+}
+
+function resolveCellToSource(cell: HeaderCell): DragSource | null {
+  const cols = columns.columnState
+  if (cell.field) {
+    for (let i = 0; i < cols.length; i++) {
+      const col = cols[i]!
+      if (col.children?.length) {
+        const ci = col.children.findIndex(c => c.field === cell.field)
+        if (ci !== -1) return { topLevelIndex: i, childIndex: ci, field: cell.field }
+      } else if (col.field === cell.field) {
+        return { topLevelIndex: i, childIndex: null, field: cell.field }
+      }
+    }
+    return null
+  }
+  const idx = cols.findIndex(col => col.children?.length && col.header === cell.header)
+  if (idx === -1) return null
+  return { topLevelIndex: idx, childIndex: null }
+}
+
+function onColumnDragStart(e: DragEvent, cell: HeaderCell) {
+  const source = resolveCellToSource(cell)
+  if (!source) { e.preventDefault(); return }
+  dragSource.value = source
+  isDragging.value = true
+  e.dataTransfer!.effectAllowed = 'move'
+  const el = (e.target as HTMLElement).closest('.grouped-header-cell') || (e.target as HTMLElement)
+  el.classList.add('column-drag-source')
+}
+
+function onColumnDragOver(e: DragEvent, cell: HeaderCell) {
+  if (!dragSource.value) return
+  e.preventDefault()
+  e.dataTransfer!.dropEffect = 'move'
+  const target = resolveCellToSource(cell)
+  if (!target) return
+  dragOverGroupIndex.value = target.topLevelIndex
+  if (dragSource.value.topLevelIndex < target.topLevelIndex) {
+    dragDirection.value = 'right'
+  } else if (dragSource.value.topLevelIndex > target.topLevelIndex) {
+    dragDirection.value = 'left'
+  } else if (dragSource.value.childIndex !== null && target.childIndex !== null) {
+    dragDirection.value = dragSource.value.childIndex < target.childIndex ? 'right' : 'left'
+  } else {
+    dragDirection.value = null
+  }
+}
+
+function onColumnDragLeave(e: DragEvent) {
+  const relatedTarget = e.relatedTarget as HTMLElement | null
+  const el = (e.target as HTMLElement).closest('.grouped-header-cell') || (e.target as HTMLElement)
+  if (el && relatedTarget && el.contains(relatedTarget)) return
+  dragOverGroupIndex.value = null
+  dragDirection.value = null
+}
+
+function onColumnDrop(e: DragEvent, cell: HeaderCell) {
+  e.preventDefault()
+  if (!dragSource.value) return
+  const source = dragSource.value
+  const target = resolveCellToSource(cell)
+  if (!target) { cleanupDrag(e); return }
+  if (source.topLevelIndex === target.topLevelIndex) {
+    if (source.childIndex !== null && target.childIndex !== null && source.childIndex !== target.childIndex) {
+      columns.reorderChildren(source.topLevelIndex, source.childIndex, target.childIndex)
+    }
+  } else {
+    columns.reorderTopLevel(source.topLevelIndex, target.topLevelIndex)
+  }
+  cleanupDrag(e)
+}
+
+function onColumnDragEnd(e: DragEvent) {
+  cleanupDrag(e)
+}
+
+function cleanupDrag(e?: DragEvent) {
+  isDragging.value = false
+  dragSource.value = null
+  dragOverGroupIndex.value = null
+  dragDirection.value = null
+  if (e) {
+    const table = (e.target as HTMLElement).closest('.app-tree-data-table')
+    if (table) {
+      table.querySelectorAll('.column-drag-source').forEach(el => el.classList.remove('column-drag-source'))
+    }
+  }
+}
+
+function getColumnDragAttrs(cell: HeaderCell, _rowIndex: number): Record<string, any> {
+  if (!isColumnDragActive.value) return {}
+  if (cell.col?.frozen) return {}
+  return {
+    draggable: true,
+    onDragstart: (e: DragEvent) => onColumnDragStart(e, cell),
+    onDragover: (e: DragEvent) => onColumnDragOver(e, cell),
+    onDragleave: (e: DragEvent) => onColumnDragLeave(e),
+    onDrop: (e: DragEvent) => onColumnDrop(e, cell),
+    onDragend: (e: DragEvent) => onColumnDragEnd(e),
+  }
+}
+
+// --- Header Context Menu ---
+const headerMenuRef = ref<any>(null)
+const rightClickedColumn = ref<ColumnDef | null>(null)
+const showColumnManager = ref(false)
+
+const headerMenuModel = computed(() => {
+  if (!props.headerContextMenu || !rightClickedColumn.value) return []
+  const col = rightClickedColumn.value
+  const items: any[] = []
+
+  if (col.sortable !== false) {
+    items.push(
+      {
+        label: t('table.sortAscending'),
+        icon: 'pi pi-sort-amount-up',
+        command: () => sort.setSortAsc(col.field!),
+      },
+      {
+        label: t('table.sortDescending'),
+        icon: 'pi pi-sort-amount-down',
+        command: () => sort.setSortDesc(col.field!),
+      },
+      { separator: true },
+      {
+        label: t('table.clearAllSorts'),
+        icon: 'pi pi-filter-slash',
+        command: () => sort.clearSort(),
+        disabled: sort.sortChips.value.length === 0,
+      },
+    )
+  }
+
+  items.push(
+    { separator: true },
+    {
+      label: t('table.freezeColumn'),
+      icon: 'pi pi-lock',
+      command: () => columns.freezeColumn(col.field!),
+      disabled: columns.isColumnFrozen(col.field!) || !columns.canFreezeMore.value,
+    },
+    {
+      label: t('table.unfreezeColumn'),
+      icon: 'pi pi-lock-open',
+      command: () => columns.unfreezeColumn(col.field!),
+      disabled: !columns.isColumnFrozen(col.field!),
+    },
+    { separator: true },
+    {
+      label: t('table.showHideColumns'),
+      icon: 'pi pi-th-large',
+      command: () => { showColumnManager.value = true },
+    },
+    { separator: true },
+    {
+      label: t('table.resetToDefault'),
+      icon: 'pi pi-undo',
+      command: () => resetTable(),
+    },
+  )
+
+  return items
 })
 
-/**
- * Column manager items — flat list for the column manager dialog.
- * Groups become section headers, leaves are toggleable.
- */
+function onHeaderContextMenu(event: MouseEvent, col: ColumnDef) {
+  rightClickedColumn.value = col
+  headerMenuRef.value?.show(event)
+}
+
+// --- Row Context Menu ---
+const rowMenuRef = ref<any>(null)
+const rightClickedRow = ref<any>(null)
+const isRefreshing = ref(false)
+
+const rowMenuModel = computed(() => {
+  if (!props.rowContextMenu || !rightClickedRow.value) return []
+  const items: any[] = []
+
+  items.push(
+    {
+      label: t('table.copyRow'),
+      icon: 'pi pi-clipboard',
+      command: () => navigator.clipboard.writeText(JSON.stringify(rightClickedRow.value, null, 2)),
+    },
+    {
+      label: t('table.copySelected'),
+      icon: 'pi pi-clipboard',
+      command: () => navigator.clipboard.writeText(JSON.stringify(selectedRows.value, null, 2)),
+      disabled: !hasSelection.value,
+    },
+    { separator: true },
+    {
+      label: t('table.refresh'),
+      icon: 'pi pi-refresh',
+      command: () => doRefresh(),
+    },
+    {
+      label: t('table.exportVisible'),
+      icon: 'pi pi-download',
+      command: () => exportTable.exportTable('csv', 'visible'),
+    },
+    { separator: true },
+    {
+      label: isFullscreen() ? t('table.exitFullScreen') : t('table.fullScreen'),
+      icon: isFullscreen() ? 'pi pi-window-minimize' : 'pi pi-window-maximize',
+      command: () => toggleFullscreen(),
+    },
+    { separator: true },
+    {
+      label: t('table.resetToDefault'),
+      icon: 'pi pi-undo',
+      command: () => resetTable(),
+    },
+  )
+
+  return items
+})
+
+function onRowContextMenu(event: MouseEvent, nodeData: any) {
+  rightClickedRow.value = nodeData
+  rowMenuRef.value?.show(event)
+}
+
+async function doRefresh() {
+  isRefreshing.value = true
+  try {
+    emit('refresh')
+    await nextTick()
+  } finally {
+    isRefreshing.value = false
+  }
+}
+
+// --- Fullscreen ---
+const isFullscreenState = ref(false)
+
+function isFullscreen(): boolean {
+  return !!document.fullscreenElement
+}
+
+function toggleFullscreen() {
+  if (!rootRef.value) return
+  if (document.fullscreenElement) {
+    document.exitFullscreen()
+    emit('full-screen-change', false)
+  } else {
+    rootRef.value.requestFullscreen()
+    emit('full-screen-change', true)
+  }
+}
+
+function onFullscreenChange() {
+  isFullscreenState.value = !!document.fullscreenElement
+}
+onMounted(() => document.addEventListener('fullscreenchange', onFullscreenChange))
+onUnmounted(() => document.removeEventListener('fullscreenchange', onFullscreenChange))
+
+// --- Column Manager DnD ---
 interface ColumnManagerItem {
   col: ColumnDef
   isGroup: boolean
@@ -385,7 +491,6 @@ function onColumnManagerMoveDown(item: ColumnManagerItem) {
   }
 }
 
-// Column manager drag-and-drop
 const cmDragSource = ref<{ parentIndex: number; childIndex: number | null } | null>(null)
 const cmDropTarget = ref<{ parentIndex: number; childIndex: number | null; position: 'before' | 'after' } | null>(null)
 
@@ -452,219 +557,36 @@ function cmDragClasses(item: ColumnManagerItem): Record<string, boolean> {
   }
 }
 
-// Computed scroll height from tableHeight offset
+// --- Scroll height ---
 const computedScrollHeight = computed(() => {
   if (props.tableHeight != null) return `calc(100vh - ${props.tableHeight}px)`
-  if (props.stickyHeader) return undefined
+  if (props.scrollHeight) return props.scrollHeight
   return undefined
 })
 
-// Tree level CSS vars — sets --tree-level on <tr> elements based on aria-level
-function applyTreeLevelCssVars() {
-  const root = rootRef.value
-  if (!root) return
-  const rows = root.querySelectorAll<HTMLElement>('.p-treetable-tbody > tr[aria-level]')
-  rows.forEach((tr) => {
-    const level = tr.getAttribute('aria-level')
-    if (level) {
-      tr.style.setProperty('--tree-level', level)
-    }
-  })
+// --- Expand / Collapse ---
+function expandAll() { treeBuilder.expandAll() }
+function collapseAll() { treeBuilder.collapseAll() }
 
-  // Add tree-has-next-sibling class
-  const allRows = Array.from(rows)
-  for (let i = 0; i < allRows.length; i++) {
-    const tr = allRows[i]!
-    const level = tr.getAttribute('aria-level')
-    tr.classList.remove('tree-has-next-sibling')
-
-    // Check if a later row has the same level (next sibling at same depth)
-    for (let j = i + 1; j < allRows.length; j++) {
-      const nextLevel = allRows[j]!.getAttribute('aria-level')
-      if (nextLevel === level) {
-        tr.classList.add('tree-has-next-sibling')
-        break
-      }
-      // If we encounter a row with a lower level number, stop — we've left this subtree
-      if (Number(nextLevel) < Number(level)) break
-    }
-  }
+// --- Reset ---
+function resetTable() {
+  columns.resetColumns()
+  sort.clearSort()
+  clearSelection()
 }
 
-// Fullscreen class
-const isFullscreen = ref(false)
-function onFullscreenChange() {
-  isFullscreen.value = !!document.fullscreenElement
-}
-onMounted(() => {
-  document.addEventListener('fullscreenchange', onFullscreenChange)
-  nextTick(() => applyTreeLevelCssVars())
-})
-onUnmounted(() => {
-  document.removeEventListener('fullscreenchange', onFullscreenChange)
-})
-
-// Re-apply when expandedKeys change
-watch(treeBuilder.expandedKeys, () => {
-  nextTick(() => applyTreeLevelCssVars())
-}, { deep: true })
-
-// PTreeTable events
-function onNodeExpand(node: any) {
-  emit('node-expand', node)
-  nextTick(() => applyTreeLevelCssVars())
-}
-
-function onNodeCollapse(node: any) {
-  emit('node-collapse', node)
-  nextTick(() => applyTreeLevelCssVars())
-}
-
-// Paginated tree nodes (root-level only, sliced for client-side pagination)
-const paginatedTreeNodes = computed(() => {
-  const roots = treeBuilder.treeNodes.value
-  if (paginationModeRef.value === 'server') return roots
-  const start = pagination.first.value
-  const end = start + pagination.currentPageSize.value
-  return roots.slice(start, end)
-})
-
-// Drag-drop row reparenting
-const dragState = ref<{ nodeKey: string | number, sourceParentKey: string | number | null } | null>(null)
-const dropTarget = ref<{ nodeKey: string | number, position: 'before' | 'after' | 'child' } | null>(null)
-
-function onRowDragStart(node: any, e: DragEvent) {
-  if (!props.draggableRows) return
-  dragState.value = {
-    nodeKey: node.key,
-    sourceParentKey: node.data[props.parentKey ?? 'parentId'] ?? null
-  }
-  e.dataTransfer!.effectAllowed = 'move'
-}
-
-function onRowDragOver(node: any, e: DragEvent) {
-  if (!dragState.value || dragState.value.nodeKey === node.key) return
-  if (isDescendant(dragState.value.nodeKey, node.key)) return
-  e.preventDefault()
-  e.dataTransfer!.dropEffect = 'move'
-  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  const y = e.clientY - rect.top
-  const third = rect.height / 3
-  let position: 'before' | 'child' | 'after'
-  if (y < third) position = 'before'
-  else if (y > third * 2) position = 'after'
-  else position = 'child'
-  dropTarget.value = { nodeKey: node.key, position }
-}
-
-function onRowDrop() {
-  if (!dragState.value || !dropTarget.value) return
-  const pk = props.parentKey ?? 'parentId'
-  const rk = props.rowKey ?? 'id'
-
-  const targetKey = dropTarget.value.position === 'child'
-    ? dropTarget.value.nodeKey
-    : treeBuilder.findNode(dropTarget.value.nodeKey)?.data[pk] ?? null
-
-  const oldParentKey = dragState.value.sourceParentKey
-  if (targetKey !== oldParentKey) {
-    const node = rowsRef.value.find((r: any) => r[rk] === dragState.value!.nodeKey)
-    const oldParent = oldParentKey ? rowsRef.value.find((r: any) => r[rk] === oldParentKey) : null
-    const newParent = targetKey ? rowsRef.value.find((r: any) => r[rk] === targetKey) : null
-    treeBuilder.reparentNode(dragState.value.nodeKey, targetKey)
-    emit('node-reparent', { node, oldParent, newParent })
-  }
-  dragState.value = null
-  dropTarget.value = null
-}
-
-function isDescendant(ancestorKey: string | number, nodeKey: string | number): boolean {
-  const pk = props.parentKey ?? 'parentId'
-  let current = treeBuilder.findNode(nodeKey)
-  while (current) {
-    const parentId = current.data[pk]
-    if (parentId === ancestorKey) return true
-    if (parentId == null) return false
-    current = treeBuilder.findNode(parentId)
-  }
-  return false
-}
-
-// PT passthrough for drag-drop on rows
-const treePt = computed(() => {
-  if (!props.draggableRows) return {}
-  return {
-    row: ({ instance }: any) => {
-      const node = instance?.node
-      if (!node) return {}
-      return {
-        draggable: true,
-        onDragstart: (e: DragEvent) => onRowDragStart(node, e),
-        onDragover: (e: DragEvent) => onRowDragOver(node, e),
-        onDragleave: () => { dropTarget.value = null },
-        onDrop: () => onRowDrop(),
-        onDragend: () => { dragState.value = null; dropTarget.value = null },
-        class: {
-          'tree-row-drag-source': dragState.value?.nodeKey === node.key,
-          'tree-row-drop-before': dropTarget.value?.nodeKey === node.key && dropTarget.value?.position === 'before',
-          'tree-row-drop-child': dropTarget.value?.nodeKey === node.key && dropTarget.value?.position === 'child',
-          'tree-row-drop-after': dropTarget.value?.nodeKey === node.key && dropTarget.value?.position === 'after',
-        }
-      }
-    }
-  }
-})
-
-// Expose API
+// --- Exposed API ---
 defineExpose({
-  // Base
-  exportTable: exportTable.exportTable,
-  resetColumns: columns.resetColumns,
-  clearSelection: selection.clearSelection,
-  clearSort: sort.clearSort,
-  clearDirty: edit.clearDirty,
+  expandAll,
+  collapseAll,
   resetTable,
-  getDirtyRows: edit.getDirtyRows,
+  resetColumns: columns.resetColumns,
+  clearSort: sort.clearSort,
+  clearSelection,
+  getSelectedRows: () => selectedRows.value,
+  hasSelectedRow: () => hasSelection.value,
+  exportTable: exportTable.exportTable,
   refresh: () => emit('refresh'),
-  // procFlag API
-  insertRow,
-  insertRows,
-  deleteRow,
-  deleteRows,
-  deleteSelected,
-  getRow,
-  getRows,
-  getSelectedRows,
-  hasSelectedRow,
-  hasChanges,
-  clearChanges,
-  getFlag: procFlag.getFlag,
-  // Validation API
-  validate: validation.validate,
-  getErrors: validation.getErrors,
-  getCellErrors: validation.getCellErrors,
-  clearErrors: validation.clearErrors,
-  isValid: validation.isValid,
-  // Tree-specific
-  expandAll: treeBuilder.expandAll,
-  collapseAll: treeBuilder.collapseAll,
-  expandNode: (key: string | number) => {
-    treeBuilder.expandedKeys.value[String(key)] = true
-  },
-  collapseNode: (key: string | number) => {
-    delete treeBuilder.expandedKeys.value[String(key)]
-  },
-  getChildren: treeBuilder.getChildren,
-  reparentNode: (nodeKey: string | number, newParentKey: string | number | null) => {
-    const rk = props.rowKey ?? 'id'
-    const pk = props.parentKey ?? 'parentId'
-    const node = rowsRef.value.find((r: any) => r[rk] === nodeKey)
-    const oldParentKey = node?.[pk] ?? null
-    const oldParent = oldParentKey ? rowsRef.value.find((r: any) => r[rk] === oldParentKey) : null
-    const newParent = newParentKey ? rowsRef.value.find((r: any) => r[rk] === newParentKey) : null
-    treeBuilder.reparentNode(nodeKey, newParentKey)
-    emit('node-reparent', { node, oldParent, newParent })
-  },
 })
 </script>
 
@@ -672,7 +594,7 @@ defineExpose({
   <div
     ref="rootRef"
     class="app-tree-data-table"
-    :class="{ 'is-fullscreen': isFullscreen }"
+    :class="{ 'is-fullscreen': isFullscreenState }"
   >
     <!-- Toolbar slot -->
     <div
@@ -685,7 +607,7 @@ defineExpose({
     <!-- Loading overlay for refresh -->
     <div class="relative">
       <div
-        v-if="menus.isRefreshing.value"
+        v-if="isRefreshing"
         class="absolute inset-0 z-10 flex items-center justify-center bg-surface-0/50 dark:bg-surface-900/50"
       >
         <PProgressSpinner style="width: 2rem; height: 2rem" />
@@ -693,16 +615,14 @@ defineExpose({
 
       <PTreeTable
         ref="treeTableRef"
+        :value="treeBuilder.treeNodes.value"
         v-model:expandedKeys="treeBuilder.expandedKeys.value"
-        v-model:selectionKeys="selectionKeysModel"
-        :value="loading ? [] : paginatedTreeNodes"
-        :loading="false"
-        :pt="treePt"
+        v-model:selectionKeys="selectionKeys"
+        :selection-mode="selectable ? (selectionMode === 'checkbox' ? 'checkbox' : selectionMode) : undefined"
+        :loading="loading"
         :show-gridlines="showGridlines"
-        :striped-rows="stripedRows"
         :resizable-columns="resizableColumns"
         column-resize-mode="expand"
-        :reorderable-columns="reorderableColumns"
         :scroll-height="computedScrollHeight"
         :scrollable="!!computedScrollHeight || stickyHeader"
         :sort-field="sort.sortField.value"
@@ -710,13 +630,11 @@ defineExpose({
         :multi-sort-meta="sort.multiSortMeta.value"
         sort-mode="multiple"
         :removable-sort="true"
-        :selection-mode="selectable ? (selectionMode === 'checkbox' ? 'checkbox' : selectionMode) : undefined"
         :lazy="paginationMode === 'server'"
-        @sort="sort.onSort"
         @column-resize-end="() => columns.onColumnResizeEnd(treeTableRef)"
-        @row-contextmenu="menus.onRowContextMenu"
-        @node-expand="onNodeExpand"
-        @node-collapse="onNodeCollapse"
+        @sort="sort.onSort"
+        @node-expand="(node: any) => emit('node-expand', node)"
+        @node-collapse="(node: any) => emit('node-collapse', node)"
       >
         <!-- Skeleton loading -->
         <template v-if="loading" #empty>
@@ -726,12 +644,6 @@ defineExpose({
               :key="r"
               class="flex gap-2 py-2 px-3"
             >
-              <PSkeleton
-                v-if="selectable && selectionMode === 'checkbox'"
-                width="1.25rem"
-                height="1.25rem"
-                class="shrink-0"
-              />
               <PSkeleton
                 v-for="col in bodyColumns"
                 :key="col.field!"
@@ -751,22 +663,14 @@ defineExpose({
           </slot>
         </template>
 
-        <!-- Checkbox selection column -->
-        <PColumn
-          v-if="selectable && selectionMode === 'checkbox'"
-          selection-mode="multiple"
-          :frozen="true"
-          :style="{ width: '50px' }"
-        />
-
         <!-- Data columns -->
         <PColumn
-          v-for="(col, colIndex) in bodyColumns"
+          v-for="col in bodyColumns"
           :key="col.field!"
           :field="col.field"
           :sortable="col.sortable !== false"
           :frozen="col.frozen"
-          :expander="colIndex === 0"
+          :expander="col === bodyColumns[0]"
           :style="{
             width: (col.width ?? defaultColumnWidth) + 'px',
             minWidth: (col.minWidth ?? 80) + 'px',
@@ -778,14 +682,10 @@ defineExpose({
           <template #header>
             <div
               class="flex items-center gap-1 w-full font-bold"
-              @contextmenu.prevent="menus.onHeaderContextMenu($event, col)"
+              @contextmenu.prevent="onHeaderContextMenu($event, col)"
             >
-              <slot
-                :name="`header-${col.field}`"
-                :column="col"
-              >
+              <slot :name="`header-${col.field}`" :column="col">
                 {{ col.header }}
-                <span v-if="col.validators?.required" class="text-red-500 ml-0.5">*</span>
               </slot>
             </div>
           </template>
@@ -793,96 +693,21 @@ defineExpose({
           <!-- Body -->
           <template #body="{ node }">
             <div
-              v-tooltip.top="validation.hasError(node.data, col.field!) ? validation.getCellErrors(node.data, col.field!).join('\n') : undefined"
-              :data-field="col.field"
               class="cell-content"
-              :class="{ 'cell-invalid': validation.hasError(node.data, col.field!) }"
-              @click="onCellClick(node, col)"
+              @contextmenu.prevent="onRowContextMenu($event, node.data)"
             >
               <slot
                 :name="`body-${col.field}`"
                 :data="node.data"
-                :column="col"
                 :node="node"
+                :column="col"
               >
-                <!-- Editing mode (custom, not PDataTable editMode) -->
-                <template v-if="edit.isEditing(node.key, col.field!) && editable && col.editType !== 'checkbox' && col.editType !== 'toggle'">
-                  <div
-                    class="cell-editor"
-                    @keydown="(e: KeyboardEvent) => onEditorKeydown(e, node, col)"
-                    @focusout="(e: FocusEvent) => onEditorBlur(e, node, col)"
-                  >
-                    <template v-if="edit.isCellEditable(node.data, col.field!) && !edit.isCellDisabled(node.data, col.field!)">
-                      <TableCellEditor
-                        :value="node.data[col.field!]"
-                        :field="col.field!"
-                        :row="node.data"
-                        :col-def="col"
-                        :options="edit.getCellOptions(node.data, col)"
-                        @update:value="(val: any) => { node.data[col.field!] = val; edit.onEditorValueChange(col.field!, val) }"
-                      />
-                    </template>
-                    <template v-else>
-                      <span
-                        class="cell-text"
-                        :class="{ 'opacity-50': edit.isCellDisabled(node.data, col.field!) }"
-                      >
-                        <component
-                          :is="() => col.render!(node.data[col.field!], node.data, col)"
-                          v-if="col.render"
-                        />
-                        <template v-else>{{ edit.getCellDisplayValue(node.data[col.field!], node.data, col) }}</template>
-                      </span>
-                    </template>
-                  </div>
-                </template>
-
-                <!-- Checkbox/toggle inline (always visible, no edit mode needed) -->
-                <template v-else-if="(col.editType === 'checkbox' || col.editType === 'toggle') && editable && edit.isCellEditable(node.data, col.field!)">
-                  <div
-                    class="flex items-center justify-center"
-                    :class="{ 'opacity-50': edit.isCellDisabled(node.data, col.field!) }"
-                  >
-                    <PCheckbox
-                      v-if="col.editType === 'checkbox'"
-                      :model-value="node.data[col.field!]"
-                      :binary="true"
-                      :disabled="edit.isCellDisabled(node.data, col.field!)"
-                      v-bind="col.editProps"
-                      @update:model-value="(val: any) => onInlineToggleWithValidation(node.data, col.field!, val)"
-                    />
-                    <PToggleSwitch
-                      v-else
-                      :model-value="node.data[col.field!]"
-                      :disabled="edit.isCellDisabled(node.data, col.field!)"
-                      v-bind="col.editProps"
-                      @update:model-value="(val: any) => onInlineToggleWithValidation(node.data, col.field!, val)"
-                    />
-                  </div>
-                </template>
-                <template v-else-if="col.editType === 'checkbox' || col.editType === 'toggle'">
-                  <div
-                    class="flex items-center justify-center"
-                    :class="{ 'opacity-50': edit.isCellDisabled(node.data, col.field!) }"
-                  >
-                    <i
-                      class="pi text-sm"
-                      :class="(col.editProps?.trueValue !== undefined ? node.data[col.field!] === col.editProps.trueValue : node.data[col.field!]) ? 'pi-check-circle text-green-500' : 'pi-times-circle text-surface-400'"
-                    />
-                  </div>
-                </template>
-
-                <!-- Normal display -->
-                <span
-                  v-else
-                  class="cell-text"
-                  :class="{ 'opacity-50': edit.isCellDisabled(node.data, col.field!) }"
-                >
+                <span class="cell-text">
                   <component
                     :is="() => col.render!(node.data[col.field!], node.data, col)"
                     v-if="col.render"
                   />
-                  <template v-else>{{ edit.getCellDisplayValue(node.data[col.field!], node.data, col) }}</template>
+                  <template v-else>{{ col.format ? col.format(node.data[col.field!], node.data) : node.data[col.field!] }}</template>
                 </span>
               </slot>
             </div>
@@ -901,9 +726,9 @@ defineExpose({
               <template v-if="footer.footerValues.value[col.field!]">
                 <span
                   class="font-semibold"
-                  :class="{ 'text-right block': col.align === 'right' || ['number'].includes(col.editType ?? '') }"
+                  :class="{ 'text-right block': col.align === 'right' }"
                 >
-                  {{ footer?.footerValues?.value[col.field!]?.formatted }}
+                  {{ footer.footerValues.value[col.field!]?.formatted }}
                 </span>
               </template>
               <template v-else-if="footer.firstNonAggColumn.value === col.field">
@@ -920,7 +745,6 @@ defineExpose({
       v-if="pagination.showPaginator.value"
       class="flex items-center justify-between gap-4 mt-2 min-h-8"
     >
-      <!-- Paginator in center -->
       <div class="flex-1 flex justify-center">
         <PPaginator
           :first="pagination.first.value"
@@ -931,27 +755,28 @@ defineExpose({
           @page="pagination.onPageChange"
         />
       </div>
-      <!-- Total rows display (fixed on right) -->
       <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-1.25">
         Total: {{ pagination.totalCount.value }} row(s)
       </span>
     </div>
 
-    <!-- Context menus -->
+    <!-- Header Context Menu -->
     <PContextMenu
-      :ref="(el: any) => { menus.headerMenuRef.value = el }"
-      :model="menus.headerMenuModel.value"
+      :ref="(el: any) => { headerMenuRef = el }"
+      :model="headerMenuModel"
       :global="false"
     />
+
+    <!-- Row Context Menu -->
     <PContextMenu
-      :ref="(el: any) => { menus.rowMenuRef.value = el }"
-      :model="menus.rowMenuModel.value"
+      :ref="(el: any) => { rowMenuRef = el }"
+      :model="rowMenuModel"
       :global="false"
     />
 
     <!-- Column Manager Dialog -->
     <PDialog
-      v-model:visible="menus.showColumnManager.value"
+      v-model:visible="showColumnManager"
       :header="$t('table.showHideColumns')"
       modal
       :style="{ width: '360px' }"
@@ -1049,20 +874,7 @@ defineExpose({
 </template>
 
 <style scoped>
-/* Row drag-drop feedback */
-:deep(.tree-row-drag-source) {
-  opacity: 0.4;
-}
-:deep(.tree-row-drop-before) {
-  box-shadow: inset 0 2px 0 0 var(--p-primary-color);
-}
-:deep(.tree-row-drop-child) {
-  background: color-mix(in srgb, var(--p-primary-color) 10%, transparent) !important;
-}
-:deep(.tree-row-drop-after) {
-  box-shadow: inset 0 -2px 0 0 var(--p-primary-color);
-}
-
+/* Fullscreen mode */
 .app-tree-data-table.is-fullscreen {
   position: fixed;
   top: 0;
@@ -1074,6 +886,11 @@ defineExpose({
   background: var(--p-surface-0);
 }
 
+:deep(.dark) .app-tree-data-table.is-fullscreen {
+  background: var(--p-surface-900);
+}
+
+/* Checkbox compact */
 :deep(.p-checkbox) {
   height: 1.25rem !important;
   width: 1.25rem !important;
@@ -1083,16 +900,30 @@ defineExpose({
   padding: 0px;
 }
 
-:deep(.dark) .app-tree-data-table.is-fullscreen {
-  background: var(--p-surface-900);
-}
-
-/* Dense enterprise cell padding */
+/* Dense enterprise cell padding — matches AppDataTable */
 :deep(.p-treetable-tbody > tr > td) {
   padding: 0.25rem 0.5rem;
+  max-width: 0;
 }
 :deep(.p-treetable-thead > tr > th) {
   padding: 0.3rem 0.5rem;
+}
+
+/* Footer cells */
+:deep(.p-treetable-tfoot > tr > td) {
+  padding: 0.3rem 0.5rem;
+}
+
+.cell-content {
+  overflow: hidden;
+  min-height: 1.25rem;
+}
+
+.cell-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /*
@@ -1108,18 +939,18 @@ defineExpose({
   z-index: 2 !important;
 }
 
-/* Frozen body cells: opaque + z-1 (above non-frozen siblings on horizontal scroll) */
+/* Frozen body cells: opaque + z-1 */
 :deep(.p-treetable-tbody > tr > td.p-treetable-frozen-column) {
   background: var(--p-datatable-row-background);
   z-index: 1 !important;
 }
 
-/* Frozen header cells: opaque + z-1 within thead stacking context (horizontal scroll) */
+/* Frozen header cells: opaque */
 :deep(.p-treetable-thead > tr > th.p-treetable-frozen-column) {
   background: var(--p-datatable-header-cell-background);
 }
 
-/* Frozen footer cells: opaque + z-1 within tfoot stacking context */
+/* Frozen footer cells: opaque */
 :deep(.p-treetable-tfoot > tr > td.p-treetable-frozen-column) {
   background: var(--p-datatable-footer-cell-background);
 }
@@ -1128,140 +959,6 @@ defineExpose({
 :deep(th.p-treetable-frozen-column),
 :deep(td.p-treetable-frozen-column) {
   border-right: 0.5px solid var(--p-datatable-body-cell-border-color);
-}
-
-/* Force cells to respect column width and truncate overflow */
-:deep(.p-treetable-tbody > tr > td) {
-  max-width: 0;
-}
-
-.cell-content {
-  overflow: hidden;
-  min-height: 1.25rem;
-}
-
-.cell-text {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Editor container: constrain width so inputs don't overflow */
-.cell-editor {
-  overflow: hidden;
-  min-width: 0;
-}
-
-/* Truncate text inside editor inputs */
-:deep(.cell-editor input) {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Cell editor Select / MultiSelect: compact size */
-:deep(.cell-editor .p-select),
-:deep(.cell-editor .p-multiselect) {
-  font-size: 0.85rem;
-}
-
-:deep(.cell-editor .p-select .p-select-label),
-:deep(.cell-editor .p-multiselect .p-multiselect-label) {
-  font-size: 0.85rem;
-  padding: 0.25rem 0.375rem;
-}
-
-:deep(.cell-editor .p-select .p-select-dropdown),
-:deep(.cell-editor .p-multiselect .p-multiselect-dropdown) {
-  width: 1.25rem;
-}
-
-:deep(.cell-editor .p-select .p-select-dropdown .p-icon),
-:deep(.cell-editor .p-multiselect .p-multiselect-dropdown .p-icon) {
-  width: 0.625rem;
-  height: 0.625rem;
-}
-
-:deep(.cell-editor .p-select .p-select-clear-icon),
-:deep(.cell-editor .p-multiselect .p-multiselect-clear-icon) {
-  width: 0.625rem;
-  height: 0.625rem;
-}
-
-/* InputNumber: make wrapper fill cell, input truncate on overflow */
-:deep(.cell-editor .p-inputnumber) {
-  width: 100%;
-}
-:deep(.cell-editor .p-inputnumber .p-inputtext) {
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Compact paginator styling */
-:deep(.p-paginator) {
-  padding: 0 !important;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  background-color: transparent !important;
-}
-
-:deep(.p-paginator .p-paginator-content) {
-  gap: 0.25rem;
-}
-
-:deep(.p-paginator .p-paginator-current) {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.375rem;
-}
-
-/* Rows-per-page Select */
-:deep(.p-paginator .p-paginator-rpp-dropdown) {
-  font-size: 0.75rem;
-  height: 1.625rem;
-}
-
-:deep(.p-paginator .p-paginator-rpp-dropdown .p-select-label) {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.375rem;
-  line-height: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-:deep(.p-paginator .p-paginator-rpp-dropdown .p-select-dropdown) {
-  width: 1.375rem;
-}
-
-:deep(.p-paginator .p-paginator-rpp-dropdown .p-select-dropdown .p-icon) {
-  width: 0.65rem;
-  height: 0.65rem;
-}
-
-/* Navigation buttons */
-:deep(.p-paginator .p-paginator-pages) {
-  gap: 0.125rem;
-}
-
-:deep(.p-paginator .p-paginator-page),
-:deep(.p-paginator .p-paginator-next),
-:deep(.p-paginator .p-paginator-prev),
-:deep(.p-paginator .p-paginator-first),
-:deep(.p-paginator .p-paginator-last) {
-  font-size: 0.75rem;
-  min-width: 1.625rem;
-  height: 1.625rem;
-  padding: 0;
-}
-
-:deep(.p-paginator .p-paginator-first .p-icon),
-:deep(.p-paginator .p-paginator-prev .p-icon),
-:deep(.p-paginator .p-paginator-next .p-icon),
-:deep(.p-paginator .p-paginator-last .p-icon) {
-  width: 0.65rem;
-  height: 0.65rem;
 }
 
 /* Column drag-and-drop visual feedback */
@@ -1290,78 +987,88 @@ defineExpose({
   box-shadow: 0 2px 0 0 var(--p-primary-color);
 }
 
-/* Validation error — red outline on td */
-:deep(td:has(.cell-invalid)) {
-  outline: 2px solid var(--p-red-400);
-  outline-offset: -2px;
+/* Compact paginator styling */
+:deep(.p-paginator) {
+  padding: 0 !important;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  background-color: transparent !important;
 }
 
-/* Smaller tooltip text for validation errors */
-:deep(.p-tooltip .p-tooltip-text) {
-  font-size: 0.7rem;
-  line-height: 1.3;
+:deep(.p-paginator .p-paginator-content) {
+  gap: 0.25rem;
 }
 
-/* ==================== Hierarchy indent lines ==================== */
-:deep(.p-treetable-tbody > tr[aria-level]:not([aria-level="1"]) > td:first-child) {
-  position: relative;
+:deep(.p-paginator .p-paginator-current) {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
 }
 
-:deep(.p-treetable-tbody > tr[aria-level]:not([aria-level="1"]) > td:first-child::before) {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 50%;
-  left: calc((var(--tree-level, 0) - 1) * 1rem + 0.75rem);
-  width: 1px;
-  background: var(--p-surface-300);
-  pointer-events: none;
+:deep(.p-paginator .p-paginator-rpp-dropdown) {
+  font-size: 0.75rem;
+  height: 1.625rem;
 }
 
-:deep(.p-treetable-tbody > tr[aria-level]:not([aria-level="1"]) > td:first-child::after) {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: calc((var(--tree-level, 0) - 1) * 1rem + 0.75rem);
-  width: 0.75rem;
-  height: 1px;
-  background: var(--p-surface-300);
-  pointer-events: none;
+:deep(.p-paginator .p-paginator-rpp-dropdown .p-select-label) {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-:deep(.p-treetable-tbody > tr.tree-has-next-sibling > td:first-child::before) {
-  bottom: 0;
+:deep(.p-paginator .p-paginator-rpp-dropdown .p-select-dropdown) {
+  width: 1.375rem;
 }
 
-/* Dark mode hierarchy lines */
-.dark :deep(.p-treetable-tbody > tr[aria-level]:not([aria-level="1"]) > td:first-child::before),
-.dark :deep(.p-treetable-tbody > tr[aria-level]:not([aria-level="1"]) > td:first-child::after) {
-  background: var(--p-surface-600);
+:deep(.p-paginator .p-paginator-rpp-dropdown .p-select-dropdown .p-icon) {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+:deep(.p-paginator .p-paginator-pages) {
+  gap: 0.125rem;
+}
+
+:deep(.p-paginator .p-paginator-page),
+:deep(.p-paginator .p-paginator-next),
+:deep(.p-paginator .p-paginator-prev),
+:deep(.p-paginator .p-paginator-first),
+:deep(.p-paginator .p-paginator-last) {
+  font-size: 0.75rem;
+  min-width: 1.625rem;
+  height: 1.625rem;
+  padding: 0;
+}
+
+:deep(.p-paginator .p-paginator-first .p-icon),
+:deep(.p-paginator .p-paginator-prev .p-icon),
+:deep(.p-paginator .p-paginator-next .p-icon),
+:deep(.p-paginator .p-paginator-last .p-icon) {
+  width: 0.65rem;
+  height: 0.65rem;
 }
 
 /* ==================== Tablet ==================== */
 @media (min-width: 640px) and (max-width: 1023px) {
-  /* Cell padding + font */
   :deep(.p-treetable-tbody > tr > td),
   :deep(.p-treetable-thead > tr > th) {
     padding: 0.25rem 0.375rem;
     font-size: 0.75rem;
   }
 
-  /* Header text truncation */
   :deep(.p-treetable-thead > tr > th) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* Footer */
   :deep(.p-treetable-tfoot > tr > td) {
     padding: 0.25rem 0.375rem;
     font-size: 0.75rem;
   }
 
-  /* Header sort icon + badge */
   :deep(.p-treetable-sort-icon) {
     width: 0.7rem;
     height: 0.7rem;
@@ -1372,32 +1079,6 @@ defineExpose({
     height: 0.875rem;
   }
 
-  /* Cell editors */
-  :deep(.cell-editor .p-select),
-  :deep(.cell-editor .p-multiselect) {
-    font-size: 0.75rem;
-  }
-  :deep(.cell-editor .p-select .p-select-label),
-  :deep(.cell-editor .p-multiselect .p-multiselect-label) {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.1875rem;
-  }
-  :deep(.cell-editor .p-select .p-select-dropdown),
-  :deep(.cell-editor .p-multiselect .p-multiselect-dropdown) {
-    width: 1rem;
-  }
-  :deep(.cell-editor .p-select .p-select-dropdown .p-icon),
-  :deep(.cell-editor .p-multiselect .p-multiselect-dropdown .p-icon) {
-    width: 0.5rem;
-    height: 0.5rem;
-  }
-  :deep(.cell-editor .p-select .p-select-clear-icon),
-  :deep(.cell-editor .p-multiselect .p-multiselect-clear-icon) {
-    width: 0.5rem;
-    height: 0.5rem;
-  }
-
-  /* Paginator */
   :deep(.p-paginator) {
     gap: 0.1875rem;
     font-size: 0.6875rem;
@@ -1439,21 +1120,23 @@ defineExpose({
 
 /* ==================== Mobile ==================== */
 @media (max-width: 639px) {
-  /* Cell padding + font */
   :deep(.p-treetable-tbody > tr > td),
   :deep(.p-treetable-thead > tr > th) {
     padding: 0.1875rem 0.25rem;
     font-size: 0.6875rem;
   }
 
-  /* Header text truncation */
   :deep(.p-treetable-thead > tr > th) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* Header sort icon + badge */
+  :deep(.p-treetable-tfoot > tr > td) {
+    padding: 0.1875rem 0.25rem;
+    font-size: 0.6875rem;
+  }
+
   :deep(.p-treetable-sort-icon) {
     width: 0.5625rem;
     height: 0.5625rem;
@@ -1464,70 +1147,6 @@ defineExpose({
     height: 0.75rem;
   }
 
-  /* Footer */
-  :deep(.p-treetable-tfoot > tr > td) {
-    padding: 0.1875rem 0.25rem;
-    font-size: 0.6875rem;
-  }
-
-  /* Cell editors */
-  :deep(.cell-editor .p-select),
-  :deep(.cell-editor .p-multiselect) {
-    font-size: 0.6875rem;
-  }
-  :deep(.cell-editor .p-select .p-select-label),
-  :deep(.cell-editor .p-multiselect .p-multiselect-label) {
-    font-size: 0.6875rem;
-    padding: 0.0625rem 0.125rem;
-  }
-  :deep(.cell-editor .p-select .p-select-dropdown),
-  :deep(.cell-editor .p-multiselect .p-multiselect-dropdown) {
-    width: 0.875rem;
-  }
-  :deep(.cell-editor .p-select .p-select-dropdown .p-icon),
-  :deep(.cell-editor .p-multiselect .p-multiselect-dropdown .p-icon) {
-    width: 0.4375rem;
-    height: 0.4375rem;
-  }
-  :deep(.cell-editor .p-select .p-select-clear-icon),
-  :deep(.cell-editor .p-multiselect .p-multiselect-clear-icon) {
-    width: 0.4375rem;
-    height: 0.4375rem;
-  }
-
-  /* Checkbox — box + icon */
-  :deep(.p-checkbox) {
-    height: 0.875rem !important;
-    width: 0.875rem !important;
-  }
-  :deep(.p-checkbox .p-checkbox-box) {
-    width: 0.875rem;
-    height: 0.875rem;
-  }
-  :deep(.p-checkbox .p-checkbox-icon) {
-    font-size: 0.5rem;
-  }
-  :deep(.p-checkbox .p-checkbox-box .p-icon) {
-    width: 0.5rem;
-    height: 0.5rem;
-  }
-
-  /* Toggle switch — compact for mobile */
-  :deep(.p-toggleswitch) {
-    width: 2rem;
-    height: 1rem;
-  }
-  :deep(.p-toggleswitch .p-toggleswitch-slider) {
-    width: 2rem;
-    height: 1rem;
-  }
-  :deep(.p-toggleswitch .p-toggleswitch-handle) {
-    width: 0.75rem;
-    height: 0.75rem;
-    margin-top: -6px;
-  }
-
-  /* Paginator */
   :deep(.p-paginator) {
     gap: 0.125rem;
     font-size: 0.625rem;
@@ -1564,6 +1183,23 @@ defineExpose({
   :deep(.p-paginator .p-paginator-last .p-icon) {
     width: 0.625rem;
     height: 0.625rem;
+  }
+
+  /* Checkbox — box + icon */
+  :deep(.p-checkbox) {
+    height: 0.875rem !important;
+    width: 0.875rem !important;
+  }
+  :deep(.p-checkbox .p-checkbox-box) {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  :deep(.p-checkbox .p-checkbox-icon) {
+    font-size: 0.5rem;
+  }
+  :deep(.p-checkbox .p-checkbox-box .p-icon) {
+    width: 0.5rem;
+    height: 0.5rem;
   }
 
   /* Hide page numbers on mobile — keep only prev/next */

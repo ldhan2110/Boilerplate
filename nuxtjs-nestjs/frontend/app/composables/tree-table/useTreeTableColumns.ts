@@ -1,4 +1,5 @@
 import type { ColumnDef } from '~/types/table'
+import type { HeaderCell } from '~/composables/table/useTableSpan'
 
 export interface UseTreeTableColumnsOptions {
   columns: Ref<ColumnDef[]>
@@ -10,6 +11,9 @@ export interface UseTreeTableColumnsOptions {
 export interface UseTreeTableColumnsReturn {
   columnState: ColumnDef[]
   visibleColumns: Ref<ColumnDef[]>
+  leafColumns: ComputedRef<ColumnDef[]>
+  hasColumnGroups: ComputedRef<boolean>
+  headerRows: ComputedRef<HeaderCell[][]>
   frozenFields: Ref<Set<string>>
   resetColumns: () => void
   toggleColumnVisibility: (field: string) => void
@@ -23,6 +27,67 @@ export interface UseTreeTableColumnsReturn {
   moveColumnDown: (field: string) => void
   reorderTopLevel: (fromIndex: number, toIndex: number) => void
   reorderChildren: (parentIndex: number, fromChildIndex: number, toChildIndex: number) => void
+}
+
+/** Count leaf nodes under a column (recursively). */
+function countLeaves(col: ColumnDef): number {
+  if (!col.children?.length) return 1
+  return col.children.reduce((sum, child) => sum + countLeaves(child), 0)
+}
+
+/** Find max depth of the column tree. */
+function getMaxDepth(columns: ColumnDef[]): number {
+  let max = 1
+  for (const col of columns) {
+    if (col.children?.length) {
+      const childDepth = 1 + getMaxDepth(col.children)
+      if (childDepth > max) max = childDepth
+    }
+  }
+  return max
+}
+
+/** Flatten column tree to leaf columns in left-to-right order. */
+function flattenLeaves(columns: ColumnDef[]): ColumnDef[] {
+  const leaves: ColumnDef[] = []
+  for (const col of columns) {
+    if (col.children?.length) {
+      leaves.push(...flattenLeaves(col.children))
+    } else if (col.field) {
+      leaves.push(col)
+    }
+  }
+  return leaves
+}
+
+/** Build header rows from column tree for colspan rendering. */
+function buildHeaderRows(columns: ColumnDef[], maxDepth: number): HeaderCell[][] {
+  const rows: HeaderCell[][] = Array.from({ length: maxDepth }, () => [])
+
+  function walk(cols: ColumnDef[], depth: number) {
+    for (const col of cols) {
+      if (col.children?.length) {
+        rows[depth]!.push({
+          header: col.header,
+          colspan: countLeaves(col),
+          rowspan: 1,
+          col,
+        })
+        walk(col.children, depth + 1)
+      } else {
+        rows[depth]!.push({
+          header: col.header,
+          colspan: 1,
+          rowspan: maxDepth - depth,
+          col,
+          field: col.field,
+        })
+      }
+    }
+  }
+
+  walk(columns, 0)
+  return rows
 }
 
 export function useTreeTableColumns(options: UseTreeTableColumnsOptions): UseTreeTableColumnsReturn {
@@ -63,6 +128,21 @@ export function useTreeTableColumns(options: UseTreeTableColumnsOptions): UseTre
 
   const visibleColumns = computed(() =>
     columnState.filter(col => !col.hidden)
+  )
+
+  const hasColumnGroups = computed(() =>
+    columnState.some(col => col.children?.length)
+  )
+
+  const maxDepth = computed(() => getMaxDepth(columnState))
+
+  const headerRows = computed<HeaderCell[][]>(() => {
+    if (!hasColumnGroups.value) return []
+    return buildHeaderRows(columnState.filter(col => !col.hidden), maxDepth.value)
+  })
+
+  const leafColumns = computed<ColumnDef[]>(() =>
+    flattenLeaves(columnState.filter(col => !col.hidden))
   )
 
   const canFreezeMore = computed(() =>
@@ -121,12 +201,17 @@ export function useTreeTableColumns(options: UseTreeTableColumnsOptions): UseTre
     return frozenFields.value.has(field)
   }
 
-  function onColumnResizeEnd(dataTableInstance: any) {
-    const el = dataTableInstance.$el as HTMLElement
-    const table = dataTableInstance.$refs.table as HTMLElement | undefined
-    if (!el || !table) return
+  function onColumnResizeEnd(treeTableInstance: any) {
+    const el = treeTableInstance.$el as HTMLElement
+    if (!el) return
 
-    // Read actual widths from all th elements (includes checkbox column)
+    // PTreeTable uses a table inside tablecontainer
+    const container = el.querySelector<HTMLElement>('[data-pc-section="tablecontainer"]')
+    if (!container) return
+    const table = container.querySelector<HTMLElement>('table[data-pc-section="table"]')
+    if (!table) return
+
+    // Read actual widths from all th elements
     const ths = Array.from(
       table.querySelectorAll<HTMLElement>('thead[data-pc-section="thead"] > tr > th')
     )
@@ -134,10 +219,6 @@ export function useTreeTableColumns(options: UseTreeTableColumnsOptions): UseTre
 
     const widths = ths.map(th => th.getBoundingClientRect().width)
     const totalWidth = widths.reduce((sum, w) => sum + w, 0)
-
-    // Find container width
-    const container = el.querySelector<HTMLElement>('[data-pc-section="tablecontainer"]')
-    if (!container) return
     const containerWidth = container.clientWidth
 
     // Only redistribute when columns don't fill the container
@@ -147,11 +228,8 @@ export function useTreeTableColumns(options: UseTreeTableColumnsOptions): UseTre
     const newWidths = widths.map(w => Math.round(w + gap * (w / totalWidth)))
 
     // Overwrite PrimeVue's style element with redistributed widths
-    const attrSelector = dataTableInstance.$attrSelector
-    const vScrollPart = dataTableInstance.virtualScrollerDisabled
-      ? ''
-      : '> [data-pc-name="virtualscroller"]'
-    const selector = `[data-pc-name="datatable"][${attrSelector}] > [data-pc-section="tablecontainer"] ${vScrollPart} > table[data-pc-section="table"]`
+    const attrSelector = treeTableInstance.$attrSelector
+    const selector = `[data-pc-name="treetable"][${attrSelector}] > [data-pc-section="tablecontainer"] > table[data-pc-section="table"]`
 
     let innerHTML = ''
     newWidths.forEach((w, i) => {
@@ -164,8 +242,8 @@ export function useTreeTableColumns(options: UseTreeTableColumnsOptions): UseTre
       `
     })
 
-    if (dataTableInstance.styleElement) {
-      dataTableInstance.styleElement.innerHTML = innerHTML
+    if (treeTableInstance.styleElement) {
+      treeTableInstance.styleElement.innerHTML = innerHTML
     }
 
     // Update table width to fill container
@@ -233,6 +311,9 @@ export function useTreeTableColumns(options: UseTreeTableColumnsOptions): UseTre
   return {
     columnState,
     visibleColumns,
+    leafColumns,
+    hasColumnGroups,
+    headerRows,
     frozenFields,
     resetColumns,
     toggleColumnVisibility,

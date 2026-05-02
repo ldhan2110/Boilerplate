@@ -42,6 +42,7 @@ declare module 'vue' {
     PTextarea: typeof import('primevue/textarea')['default']
     PToast: typeof import('primevue/toast')['default']
     PToggleSwitch: typeof import('primevue/toggleswitch')['default']
+    PTreeTable: typeof import('primevue/treetable')['default']
   }
   export interface ComponentCustomProperties {
     Tooltip: typeof import('primevue/tooltip')['default']

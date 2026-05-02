@@ -46,7 +46,7 @@ export function useTreeTablePagination(options: UseTreeTablePaginationOptions): 
   })
 
   const showPaginator = computed(() => {
-    return totalCount.value > currentPageSize.value
+    return paginationMode.value !== 'none'
   })
 
   const displayedRows = computed(() => {

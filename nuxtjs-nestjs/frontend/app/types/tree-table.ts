@@ -1,16 +1,11 @@
 import type {
   ColumnDef,
-  DataMode,
   BackendMode,
   SelectionMode,
-  ExportFormat,
-  FooterAgg,
-  CellConfig,
   PageEvent,
   SortEvent,
-  EditSaveEvent,
-  ProcFlag,
-  ValidationError,
+  FooterAgg,
+  ExportFormat,
 } from './table'
 
 export interface TreeNode<T = any> {
@@ -27,49 +22,45 @@ export interface AppTreeDataTableProps<T = any> {
   parentKey?: string
   totalRecords?: number
   loading?: boolean
-  dataMode?: DataMode
+
+  // Pagination
   pageSize?: number
   pageSizeOptions?: number[]
   paginationMode?: BackendMode
-  scrollHeight?: string
+
+  // Sort
   sortBackend?: BackendMode
   defaultSortField?: string
   defaultSortOrder?: 1 | -1
-  editable?: boolean
-  editableColumns?: string[]
+
+  // Selection
   selectable?: boolean
   selectionMode?: SelectionMode
-  tableHeight?: number
+
+  // Display
   showGridlines?: boolean
-  stripedRows?: boolean
   resizableColumns?: boolean
   reorderableColumns?: boolean
   stickyHeader?: boolean
+  scrollHeight?: string
+  tableHeight?: number
+
+  // Columns
   frozenColumns?: string[]
   maxFrozenColumns?: number
+  defaultColumnWidth?: number
+
+  // Menus
+  headerContextMenu?: boolean
+  rowContextMenu?: boolean
+
+  // Footer
   showFooter?: boolean
   footerAggregations?: FooterAgg[]
-  rowContextMenu?: boolean
-  headerContextMenu?: boolean
+
+  // Export
   exportFilename?: string
   exportFormats?: ExportFormat[]
-  cellConfig?: (row: T, field: string) => CellConfig | void
-  defaultColumnWidth?: number
-  draggableRows?: boolean
 }
 
-// Re-export for convenience
-export type {
-  ColumnDef,
-  DataMode,
-  BackendMode,
-  SelectionMode,
-  ExportFormat,
-  FooterAgg,
-  CellConfig,
-  PageEvent,
-  SortEvent,
-  EditSaveEvent,
-  ProcFlag,
-  ValidationError,
-}
+export type { ColumnDef, BackendMode, SelectionMode, PageEvent, SortEvent, FooterAgg, ExportFormat }

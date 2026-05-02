@@ -66,6 +66,7 @@ export default defineNuxtConfig({
         inputnumber: { root: { style: 'font-size: 0.75rem' } },
         datepicker: { root: { style: 'font-size: 0.75rem' } },
         datatable: { root: { style: 'font-size: 0.75rem' } },
+        treetable: { root: { style: 'font-size: 0.75rem' } },
         card: { root: { style: 'font-size: 0.75rem' } },
         dialog: { root: { style: 'font-size: 0.75rem' } },
         tabs: { root: { style: 'font-size: 0.75rem' } },
