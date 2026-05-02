@@ -21,17 +21,11 @@
   },
   "sidebar": {
     "dashboard": "Bảng điều khiển",
-    "users": "Người dùng",
-    "usersList": "Tất cả người dùng",
-    "usersCreate": "Tạo người dùng",
-    "settings": "Cài đặt",
-    "settingsGeneral": "Tổng quan",
-    "settingsSecurity": "Bảo mật",
-    "settingsNotifications": "Thông báo",
-    "roles": "Vai trò",
-    "programs": "Chương trình",
-    "programsList": "Tất cả chương trình",
-    "programsCreate": "Tạo chương trình"
+    "administration": "Quản trị hệ thống",
+    "admin": {
+      "userList": "Quản lí người dùng",
+      "programList": "Quản lí chương trình"
+    }
   },
   "header": {
     "notifications": "Thông báo",

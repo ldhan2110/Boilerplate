@@ -20,17 +20,11 @@
   },
   "sidebar": {
     "dashboard": "Dashboard",
-    "users": "Users",
-    "usersList": "All Users",
-    "usersCreate": "Create User",
-    "settings": "Settings",
-    "settingsGeneral": "General",
-    "settingsSecurity": "Security",
-    "settingsNotifications": "Notifications",
-    "roles": "Roles",
-    "programs": "Programs",
-    "programsList": "All Programs",
-    "programsCreate": "Create Program"
+    "administration": "Administration",
+    "admin": {
+      "userList": "User Management",
+      "programList": "Program Management"
+    }
   },
   "header": {
     "notifications": "Notifications",

@@ -2,10 +2,11 @@
   { "id": "dashboard", "label": "sidebar.dashboard", "icon": "dashboard", "to": "/" },
   {
     "id": "administration",
-    "label": "sidebar.users",
-    "icon": "users",
+    "label": "sidebar.administration",
+    "icon": "shield",
     "children": [
-      { "id": "users-list", "label": "sidebar.usersList", "to": "/administration/user-management" }
+      { "id": "users-list", "label": "sidebar.admin.userList", "to": "/administration/user-management" },
+      { "id": "program-list", "label": "sidebar.admin.programList", "to": "/administration/program-management"}
     ]
   }
 ]
