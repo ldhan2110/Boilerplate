@@ -884,6 +884,7 @@ defineExpose({
               :name="`footer-${col.field}`"
               :column="col"
               :value="footer.footerValues.value[col.field!]"
+              :rows="rows"
             >
               <template v-if="footer.footerValues.value[col.field!]">
                 <span

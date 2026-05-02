@@ -710,6 +710,7 @@ defineExpose({
           <template #body="{ node }">
             <div
               class="cell-content"
+              :class="{ 'cell-align-right': col.align === 'right', 'cell-align-center': col.align === 'center' }"
               @contextmenu.prevent="onRowContextMenu($event, node.data)"
             >
               <slot
@@ -738,6 +739,7 @@ defineExpose({
               :name="`footer-${col.field}`"
               :column="col"
               :value="footer.footerValues.value[col.field!]"
+              :rows="rows"
             >
               <template v-if="footer.footerValues.value[col.field!]">
                 <span
@@ -945,6 +947,24 @@ defineExpose({
 .cell-content {
   overflow: hidden;
   min-height: 1.25rem;
+}
+
+.cell-align-right {
+  text-align: right;
+}
+
+.cell-align-center {
+  text-align: center;
+}
+
+/* PTreeTable wraps body content in a flex div (.p-treetable-body-cell-content),
+   so text-align on td is ignored. Override justify-content to align cell content. */
+:deep(td:has(.cell-align-right) > .p-treetable-body-cell-content) {
+  justify-content: flex-end;
+}
+
+:deep(td:has(.cell-align-center) > .p-treetable-body-cell-content) {
+  justify-content: center;
 }
 
 .cell-text {

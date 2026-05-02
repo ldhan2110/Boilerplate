@@ -1,7 +1,7 @@
 <script setup lang="ts">
 usePageReady()
 import { z } from 'zod'
-import type { ColumnDef, EditSaveEvent, PageEvent, SortEvent } from '~/types'
+import type { ColumnDef, EditSaveEvent, PageEvent, SortEvent, FooterAgg } from '~/types'
 import { formatDate, formatTime, formatDateTime, ABILITY_ACTION, ABILITY_SUBJECT } from '~/utils'
 
 const { t } = useI18n()
@@ -386,6 +386,72 @@ function handleSaveToBackend() {
     message: `Would send ${changed.length} rows to backend`,
     payload: changed.map((r: any) => ({ procFlag: r.procFlag, key: r.id, name: r.name }))
   })
+}
+
+// --- AppTreeDataTable demo ---
+const { tableRef: treeTableRef, expandAll, collapseAll, getSelectedRows: getTreeSelectedRows, exportTable: exportTreeTable } = useAppTreeDataTable()
+
+const treeRows = ref([
+  { id: 1, parentId: null, name: 'John CEO', title: 'CEO', department: 'Executive', location: 'New York', salary: 250000, bonus: 50000, active: true },
+  { id: 2, parentId: 1, name: 'Sarah VP Eng', title: 'VP Engineering', department: 'Engineering', location: 'San Francisco', salary: 180000, bonus: 36000, active: true },
+  { id: 5, parentId: 2, name: 'Tom Lead', title: 'Tech Lead', department: 'Engineering', location: 'San Francisco', salary: 140000, bonus: 21000, active: true },
+  { id: 9, parentId: 5, name: 'Dave Dev', title: 'Senior Developer', department: 'Engineering', location: 'San Francisco', salary: 120000, bonus: 18000, active: true },
+  { id: 10, parentId: 5, name: 'Eve Dev', title: 'Developer', department: 'Engineering', location: 'Remote', salary: 100000, bonus: 10000, active: true },
+  { id: 11, parentId: 5, name: 'Frank Dev', title: 'Junior Developer', department: 'Engineering', location: 'Remote', salary: 75000, bonus: 5000, active: true },
+  { id: 16, parentId: 5, name: 'Nora Dev', title: 'Developer', department: 'Engineering', location: 'Austin', salary: 105000, bonus: 12000, active: true },
+  { id: 6, parentId: 2, name: 'Jane Lead', title: 'QA Lead', department: 'Engineering', location: 'San Francisco', salary: 130000, bonus: 19500, active: true },
+  { id: 12, parentId: 6, name: 'Grace QA', title: 'QA Engineer', department: 'Engineering', location: 'Remote', salary: 95000, bonus: 9500, active: true },
+  { id: 17, parentId: 6, name: 'Oscar QA', title: 'QA Engineer', department: 'Engineering', location: 'Austin', salary: 92000, bonus: 9000, active: true },
+  { id: 18, parentId: 2, name: 'Pete DevOps', title: 'DevOps Lead', department: 'Engineering', location: 'San Francisco', salary: 135000, bonus: 20000, active: true },
+  { id: 19, parentId: 18, name: 'Quinn SRE', title: 'SRE Engineer', department: 'Engineering', location: 'Remote', salary: 115000, bonus: 12000, active: true },
+  { id: 3, parentId: 1, name: 'Mike VP Sales', title: 'VP Sales', department: 'Sales', location: 'Chicago', salary: 170000, bonus: 40000, active: true },
+  { id: 7, parentId: 3, name: 'Bob Manager', title: 'Sales Manager', department: 'Sales', location: 'Chicago', salary: 120000, bonus: 24000, active: true },
+  { id: 8, parentId: 3, name: 'Amy Rep', title: 'Sales Rep', department: 'Sales', location: 'Chicago', salary: 80000, bonus: 16000, active: false },
+  { id: 15, parentId: 7, name: 'Kate Rep', title: 'Sales Rep', department: 'Sales', location: 'Dallas', salary: 75000, bonus: 15000, active: true },
+  { id: 20, parentId: 7, name: 'Ray Rep', title: 'Sales Rep', department: 'Sales', location: 'Miami', salary: 72000, bonus: 14000, active: true },
+  { id: 21, parentId: 3, name: 'Sam Analyst', title: 'Sales Analyst', department: 'Sales', location: 'Chicago', salary: 85000, bonus: 8500, active: true },
+  { id: 4, parentId: 1, name: 'Lisa VP HR', title: 'VP Human Resources', department: 'HR', location: 'New York', salary: 160000, bonus: 32000, active: true },
+  { id: 13, parentId: 4, name: 'Helen HR', title: 'HR Manager', department: 'HR', location: 'New York', salary: 110000, bonus: 16500, active: true },
+  { id: 14, parentId: 4, name: 'Ivan Recruit', title: 'Recruiter', department: 'HR', location: 'Remote', salary: 70000, bonus: 7000, active: false },
+  { id: 22, parentId: 13, name: 'Tina Benefits', title: 'Benefits Specialist', department: 'HR', location: 'New York', salary: 80000, bonus: 8000, active: true },
+  { id: 23, parentId: 1, name: 'Uma VP Finance', title: 'VP Finance', department: 'Finance', location: 'New York', salary: 165000, bonus: 33000, active: true },
+  { id: 24, parentId: 23, name: 'Vince Controller', title: 'Controller', department: 'Finance', location: 'New York', salary: 125000, bonus: 18000, active: true },
+  { id: 25, parentId: 23, name: 'Wendy Analyst', title: 'Financial Analyst', department: 'Finance', location: 'Remote', salary: 90000, bonus: 9000, active: true },
+])
+
+const treeTotalRecords = computed(() => treeRows.value.length)
+
+const treeColumns: ColumnDef[] = [
+  { field: 'name', header: 'Name', sortable: true, width: 220 },
+  { field: 'title', header: 'Title', sortable: true, width: 200 },
+  { field: 'department', header: 'Department', sortable: true, width: 130 },
+  { field: 'location', header: 'Location', sortable: true, width: 130 },
+  {
+    header: 'Compensation',
+    align: 'center',
+    children: [
+      { field: 'salary', header: 'Salary', sortable: true, width: 120, align: 'right', aggregation: 'sum' },
+      { field: 'bonus', header: 'Bonus', sortable: true, width: 100, align: 'right', aggregation: 'sum' },
+    ],
+  },
+  { field: 'active', header: 'Active', width: 80, align: 'center' },
+]
+
+const treeFooterAggregations: FooterAgg[] = [
+  { field: 'salary', type: 'sum', format: (v) => `$${v.toLocaleString()}` },
+  { field: 'bonus', type: 'sum', format: (v) => `$${v.toLocaleString()}` },
+]
+
+function handleTreeSort(payload: any) {
+  console.log('Tree Sort:', payload)
+}
+
+function handleTreeSelectionChange(selected: any[]) {
+  console.log('Tree Selected:', selected.length, 'rows')
+}
+
+function logTreeSelected() {
+  console.log('Current tree selection:', getTreeSelectedRows())
 }
 </script>
 
@@ -1122,6 +1188,69 @@ hasPermission('manage', 'all') = {{ useAppPermission().hasPermission('manage', '
             @row-edit-save="logTableEvent('rowspan-edit', $event)"
             @selection-change="(sel: any[]) => { rowSpanSelectionCount = sel.length; logTableEvent('rowspan-selection', { count: sel.length }) }"
           />
+        </template>
+      </PCard>
+
+      <!-- AppTreeDataTable Demo -->
+      <PCard>
+        <template #title>
+          <span class="text-base">AppTreeDataTable Demo</span>
+        </template>
+        <template #subtitle>
+          <span class="text-xs text-surface-500">Org chart tree with colspan headers, sorting, pagination, selection, footer aggregations + custom footer slots, context menus, and export.</span>
+        </template>
+        <template #content>
+          <AppTreeDataTable
+            ref="treeTableRef"
+            :rows="treeRows"
+            :columns="treeColumns"
+            :total-records="treeTotalRecords"
+            :loading="false"
+            :selectable="true"
+            selection-mode="checkbox"
+            pagination-mode="client"
+            sort-backend="client"
+            :page-size="10"
+            :show-footer="true"
+            :footer-aggregations="treeFooterAggregations"
+            export-filename="org-chart"
+            @sort="handleTreeSort"
+            @selection-change="handleTreeSelectionChange"
+          >
+            <template #toolbar>
+              <PButton label="Expand All" icon="pi pi-angle-double-down" severity="secondary" size="small" @click="expandAll()" />
+              <PButton label="Collapse All" icon="pi pi-angle-double-up" severity="secondary" size="small" @click="collapseAll()" />
+              <PButton label="Log Selected" icon="pi pi-list" severity="info" size="small" @click="logTreeSelected()" />
+              <PButton label="Export CSV" icon="pi pi-download" severity="help" size="small" @click="exportTreeTable('csv', 'all')" />
+            </template>
+
+            <template #body-salary="{ data }">
+              <span>{{ data.salary != null ? `$${data.salary.toLocaleString()}` : '' }}</span>
+            </template>
+
+            <template #body-bonus="{ data }">
+              <span>{{ data.bonus != null ? `$${data.bonus.toLocaleString()}` : '' }}</span>
+            </template>
+
+            <template #body-active="{ data }">
+              <i
+                class="pi text-sm"
+                :class="data.active ? 'pi-check-circle text-green-500' : 'pi-times-circle text-surface-400'"
+              />
+            </template>
+
+            <!-- Custom footer slot demo: override bonus column with custom computation -->
+            <template #footer-bonus="{ rows: footerRows }">
+              <span class="font-semibold text-right block text-blue-600 dark:text-blue-400">
+                Avg: ${{ Math.round(footerRows.reduce((s: number, r: any) => s + (r.bonus || 0), 0) / footerRows.length).toLocaleString() }}
+              </span>
+            </template>
+
+            <!-- Custom footer slot demo: show count in name column -->
+            <template #footer-name="{ rows: footerRows }">
+              <span class="font-semibold">{{ footerRows.length }} employees</span>
+            </template>
+          </AppTreeDataTable>
         </template>
       </PCard>
 
