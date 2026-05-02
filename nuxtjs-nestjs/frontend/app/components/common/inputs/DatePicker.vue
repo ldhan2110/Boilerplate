@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { toDateString, fromDateString } from '~/utils/date'
+import { toDateString, fromDateString } from '~/utils'
 
 type DatePickerVariant = 'date' | 'datetime' | 'time'
 

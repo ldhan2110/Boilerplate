@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ColumnDef } from '~/types/table'
-import { toDateString, fromDateString } from '~/utils/date'
+import { toDateString, fromDateString } from '~/utils'
 
 type DateVariant = 'date' | 'datetime' | 'time'
 
