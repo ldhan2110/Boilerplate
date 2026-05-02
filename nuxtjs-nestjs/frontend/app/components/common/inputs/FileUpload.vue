@@ -127,7 +127,11 @@ function handleFileSelect(event: Event) {
 
 function removeFile(index: number) {
   const updated = [...(props.modelValue || [])]
-  updated.splice(index, 1)
+  const removed = updated.splice(index, 1)[0]
+  if (removed && !isFileDto(removed) && objectUrls.has(removed)) {
+    URL.revokeObjectURL(objectUrls.get(removed)!)
+    objectUrls.delete(removed)
+  }
   emit('update:modelValue', updated)
 }
 
@@ -135,6 +139,25 @@ function getDownloadUrl(item: FileDto): string {
   const config = useRuntimeConfig()
   return `${config.public.apiBase}/file/download/${item.fileId}`
 }
+
+function isImage(item: FileDto | File): boolean {
+  return getFileMime(item).startsWith('image/')
+}
+
+const objectUrls = new Map<File, string>()
+
+function getPreviewUrl(item: FileDto | File): string {
+  if (isFileDto(item)) return getDownloadUrl(item)
+  if (objectUrls.has(item)) return objectUrls.get(item)!
+  const url = URL.createObjectURL(item)
+  objectUrls.set(item, url)
+  return url
+}
+
+onBeforeUnmount(() => {
+  objectUrls.forEach((url) => URL.revokeObjectURL(url))
+  objectUrls.clear()
+})
 
 const isDragging = ref(false)
 
@@ -212,7 +235,13 @@ function handleDrop(event: DragEvent) {
           :key="isFileDto(item) ? item.fileId : `new-${index}`"
           class="flex items-center gap-2 px-3 py-2 rounded-md bg-gray-50 dark:bg-gray-800 text-sm"
         >
-          <i :class="getFileIcon(getFileMime(item))" class="text-gray-500" />
+          <img
+            v-if="isImage(item)"
+            :src="getPreviewUrl(item)"
+            :alt="getFileName(item)"
+            class="w-8 h-8 rounded object-cover flex-shrink-0"
+          />
+          <i v-else :class="getFileIcon(getFileMime(item))" class="text-gray-500" />
           <span class="flex-1 truncate">{{ getFileName(item) }}</span>
           <span class="text-xs text-gray-400">{{ formatFileSize(getFileSize(item)) }}</span>
           <a
@@ -243,17 +272,15 @@ function handleDrop(event: DragEvent) {
         <div
           v-for="(item, index) in modelValue"
           :key="isFileDto(item) ? item.fileId : `new-${index}`"
-          class="flex flex-col items-center gap-1 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-center"
+          class="group relative flex flex-col items-center gap-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors"
         >
-          <i :class="getFileIcon(getFileMime(item))" class="text-2xl text-gray-500" />
-          <span class="text-xs truncate w-full">{{ getFileName(item) }}</span>
-          <span class="text-xs text-gray-400">{{ formatFileSize(getFileSize(item)) }}</span>
-          <div class="flex gap-1 mt-1">
+          <!-- Actions overlay -->
+          <div class="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <a
               v-if="isFileDto(item)"
               :href="getDownloadUrl(item)"
               target="_blank"
-              class="text-primary-500 hover:text-primary-700"
+              class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-primary-500"
               @click.stop
             >
               <i class="pi pi-download text-xs" />
@@ -261,11 +288,26 @@ function handleDrop(event: DragEvent) {
             <button
               v-if="!readonly"
               type="button"
-              class="text-red-400 hover:text-red-600"
+              class="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900 text-red-400 hover:text-red-600"
               @click="removeFile(index)"
             >
               <i class="pi pi-times text-xs" />
             </button>
+          </div>
+          <!-- Thumbnail -->
+          <img
+            v-if="isImage(item)"
+            :src="getPreviewUrl(item)"
+            :alt="getFileName(item)"
+            class="w-14 h-14 rounded-md object-cover"
+          />
+          <div v-else class="w-14 h-14 rounded-md flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+            <i :class="getFileIcon(getFileMime(item))" class="text-4xl text-gray-400" />
+          </div>
+          <!-- File info -->
+          <div class="w-full min-w-0 text-center">
+            <p class="text-xs font-medium truncate" :title="getFileName(item)">{{ getFileName(item) }}</p>
+            <p class="text-[10px] text-gray-400">{{ formatFileSize(getFileSize(item)) }}</p>
           </div>
         </div>
       </div>

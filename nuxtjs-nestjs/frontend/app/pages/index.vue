@@ -86,6 +86,11 @@ const formSchema = z.object({
 
 const lastSubmitted = ref<Record<string, unknown> | null>(null)
 
+function jsonReplacer(_key: string, value: unknown) {
+  if (value instanceof File) return `[File: ${value.name} (${formatFileSize(value.size)})]`
+  return value
+}
+
 const { formProps, formRef, field, values, isDirty, isSubmitting, resetForm } = useAppForm({
   schema: formSchema,
   initialValues: {
@@ -852,13 +857,13 @@ hasPermission('manage', 'all') = {{ useAppPermission().hasPermission('manage', '
                     <summary class="text-xs font-mono text-gray-500 dark:text-gray-400 cursor-pointer">
                       Current values
                     </summary>
-                    <pre class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{{ JSON.stringify(values, null, 2) }}</pre>
+                    <pre class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{{ JSON.stringify(values, jsonReplacer, 2) }}</pre>
                   </details>
                   <details v-if="lastSubmitted">
                     <summary class="text-xs font-mono text-green-600 dark:text-green-400 cursor-pointer">
                       Last submitted values
                     </summary>
-                    <pre class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{{ JSON.stringify(lastSubmitted, null, 2) }}</pre>
+                    <pre class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1">{{ JSON.stringify(lastSubmitted, jsonReplacer, 2) }}</pre>
                   </details>
                 </div>
               </Flex>

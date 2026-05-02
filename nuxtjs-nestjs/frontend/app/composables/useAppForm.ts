@@ -56,7 +56,10 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
   function handleSubmit(e: { valid: boolean; values: Record<string, unknown> }) {
     if (!e.valid) return
 
-    const result = onSubmit(e.values as z.infer<T>)
+    // Merge reactive values into PrimeVue Form's values so custom components
+    // (e.g. FileUpload) that bypass PrimeVue primitives are included
+    const mergedValues = { ...e.values, ...toRaw(values) }
+    const result = onSubmit(mergedValues as z.infer<T>)
     if (result instanceof Promise) {
       isSubmitting.value = true
       result
