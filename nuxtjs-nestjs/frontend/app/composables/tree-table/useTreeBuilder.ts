@@ -1,14 +1,14 @@
 import type { TreeNode } from '~/types/tree-table'
 
 interface UseTreeBuilderOptions {
-  rows: Ref<any[]> | ShallowRef<any[]>
+  rows: Ref<any[]>
   rowKey: string
   parentKey: string
 }
 
 export interface UseTreeBuilderReturn {
   treeNodes: ComputedRef<TreeNode[]>
-  nodeMap: ComputedRef<Map<string | number, TreeNode>>
+  nodeMap: ComputedRef<Map<string, TreeNode>>
   expandedKeys: Ref<Record<string, boolean>>
   findNode: (key: string | number) => TreeNode | undefined
   flatFromTree: () => any[]
@@ -27,17 +27,17 @@ export function useTreeBuilder(options: UseTreeBuilderOptions): UseTreeBuilderRe
   // Build tree and nodeMap together — O(n)
   const built = computed(() => {
     const items = rows.value
-    const map = new Map<string | number, TreeNode>()
-    const childrenMap = new Map<string | number | null, TreeNode[]>()
+    const map = new Map<string, TreeNode>()
+    const childrenMap = new Map<string | null, TreeNode[]>()
 
     // Pass 1: create TreeNode for each row, index by key
     for (const row of items) {
-      const key = row[rowKey]
+      const key = String(row[rowKey])
       const node: TreeNode = { key, data: row, children: [], leaf: false }
       map.set(key, node)
 
       // Group by parentKey value
-      const pk = row[parentKey] ?? null
+      const pk = row[parentKey] != null ? String(row[parentKey]) : null
       let group = childrenMap.get(pk)
       if (!group) {
         group = []
@@ -49,7 +49,7 @@ export function useTreeBuilder(options: UseTreeBuilderOptions): UseTreeBuilderRe
     // Pass 2: assign children, determine roots
     const roots: TreeNode[] = []
     for (const node of map.values()) {
-      const pk = node.data[parentKey] ?? null
+      const pk = node.data[parentKey] != null ? String(node.data[parentKey]) : null
       if (pk === null || !map.has(pk)) {
         roots.push(node)
       }
@@ -74,7 +74,7 @@ export function useTreeBuilder(options: UseTreeBuilderOptions): UseTreeBuilderRe
   const nodeMap = computed(() => built.value.map)
 
   function findNode(key: string | number): TreeNode | undefined {
-    return nodeMap.value.get(key)
+    return nodeMap.value.get(String(key))
   }
 
   function flatFromTree(): any[] {
@@ -117,15 +117,15 @@ export function useTreeBuilder(options: UseTreeBuilderOptions): UseTreeBuilderRe
     if (!current) return -1
     while (current) {
       const pk = current.data[parentKey] ?? null
-      if (pk === null || !nodeMap.value.has(pk)) break
-      current = nodeMap.value.get(pk)
+      if (pk === null || !nodeMap.value.has(String(pk))) break
+      current = nodeMap.value.get(String(pk))
       level++
     }
     return level
   }
 
   function getChildren(parentKeyValue: string | number | null): any[] {
-    return rows.value.filter((row) => {
+    return rows.value.filter((row: any) => {
       const pk = row[parentKey] ?? null
       return pk === parentKeyValue
     })

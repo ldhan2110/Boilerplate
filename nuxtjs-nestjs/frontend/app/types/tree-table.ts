@@ -14,7 +14,7 @@ import type {
 } from './table'
 
 export interface TreeNode<T = any> {
-  key: string | number
+  key: string
   data: T
   children?: TreeNode<T>[]
   leaf?: boolean

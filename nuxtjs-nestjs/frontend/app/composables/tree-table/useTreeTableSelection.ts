@@ -10,7 +10,7 @@ export interface UseTreeTableSelectionOptions {
 
 export interface UseTreeTableSelectionReturn {
   selectedRows: Ref<any[]>
-  selectionKeys: WritableComputedRef<Record<string, boolean> | null>
+  selectionKeys: WritableComputedRef<Record<string, boolean> | undefined>
   clearSelection: () => void
   hasSelection: Ref<boolean>
 }
@@ -24,9 +24,9 @@ export function useTreeTableSelection(options: UseTreeTableSelectionOptions): Us
 
   // PrimeVue TreeTable uses selectionKeys (Record<string, boolean>) instead of
   // a rows array. This computed bridges the two representations.
-  const selectionKeys = computed<Record<string, boolean> | null>({
+  const selectionKeys = computed<Record<string, boolean> | undefined>({
     get() {
-      if (selectedRows.value.length === 0) return null
+      if (selectedRows.value.length === 0) return undefined
       const keys: Record<string, boolean> = {}
       for (const row of selectedRows.value) {
         const key = row[rowKey]
