@@ -7,7 +7,7 @@ import type {
   EditSaveEvent,
   ExportFormat,
   ProcFlag} from '~/types/table'
-import type { HeaderCell } from '~/composables/table/useTableSpan'
+import type { HeaderCell } from '~/composables'
 import {
   useTableColumns,
   useTableSort,
@@ -23,7 +23,7 @@ import {
   useTableColumnDrag,
   generateTempKey,
   ROW_ID
-} from '~/composables/table'
+} from '~/composables'
 
 // --- v-row-span directive ---
 const vRowSpan = {
