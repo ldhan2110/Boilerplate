@@ -37,11 +37,12 @@ export default defineNuxtConfig({
   components: [
     {
       path: '~/components/common',
-      pathPrefix: false, // ✅ no prefix here
+      pathPrefix: false,
     },
     {
       path: '~/components',
-      pathPrefix: true, // default behavior for everything else
+      pathPrefix: true,
+      ignore: ['modules/**'],
     }
   ],
 
