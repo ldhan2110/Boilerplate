@@ -7,15 +7,15 @@ import type {
   ExportFormat,
   FooterAgg,
 } from '~/types/tree-table'
-import type { HeaderCell } from '~/composables/table/useTableSpan'
+import type { HeaderCell } from '~/composables'
 import {
   useTreeBuilder,
   useTreeTableColumns,
   useTreeTableSort,
   useTreeTablePagination,
-} from '~/composables/tree-table'
-import { useTableFooter } from '~/composables/table/useTableFooter'
-import { useTableExport } from '~/composables/table/useTableExport'
+  useTableFooter,
+  useTableExport,
+} from '~/composables'
 
 const props = withDefaults(defineProps<AppTreeDataTableProps>(), {
   rowKey: 'id',
