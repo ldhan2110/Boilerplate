@@ -22,10 +22,8 @@
   "sidebar": {
     "dashboard": "Bảng điều khiển",
     "administration": "Quản trị hệ thống",
-    "admin": {
-      "userList": "Quản lí người dùng",
-      "programList": "Quản lí chương trình"
-    }
+    "user-management": "Quản lí người dùng",
+    "program-management": "Quản lí chương trình"
   },
   "header": {
     "notifications": "Thông báo",
@@ -116,16 +114,16 @@
     "forbidden": "Truy cập bị từ chối",
     "forbiddenMessage": "Bạn không có quyền truy cập trang này."
   },
-  "adm": {
-    "user": {
-      "add": "Thêm người dùng",
-      "delete": "Xoá người dùng"
-    }
-  },
   "fileUpload": {
     "dropOrClick": "Kéo thả tệp vào đây hoặc nhấp để chọn",
     "maxFilesExceeded": "Tối đa {max} tệp được phép",
     "fileTooLarge": "{name} vượt quá kích thước tối đa {max}",
     "invalidType": "{name} có định dạng không được hỗ trợ"
+  },
+  "adm": {
+    "user": {
+      "add": "Thêm người dùng",
+      "delete": "Xoá người dùng"
+    }
   }
 }

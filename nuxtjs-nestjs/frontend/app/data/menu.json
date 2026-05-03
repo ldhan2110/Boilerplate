@@ -5,8 +5,8 @@
     "label": "sidebar.administration",
     "icon": "shield",
     "children": [
-      { "id": "users-list", "label": "sidebar.admin.userList", "to": "/administration/user-management" },
-      { "id": "program-list", "label": "sidebar.admin.programList", "to": "/administration/program-management"}
+      { "id": "user-management", "label": "sidebar.user-management", "to": "/administration/user-management" },
+      { "id": "program-management", "label": "sidebar.program-management", "to": "/administration/program-management"}
     ]
   }
 ]
