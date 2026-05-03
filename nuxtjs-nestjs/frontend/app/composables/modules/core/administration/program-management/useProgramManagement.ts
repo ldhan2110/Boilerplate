@@ -226,7 +226,7 @@ export function useProgramManagement() {
       prntPgmId: data.prntPgmId ?? null,
       dspOrder: data.dspOrder ?? 9999,
       pgmRmk: data.pgmRmk ?? '',
-      useFlg: data.useFlg === 'Y' || data.useFlg === true,
+      useFlg: data.useFlg === true,
     })
     dialogVisible.value = true
   }

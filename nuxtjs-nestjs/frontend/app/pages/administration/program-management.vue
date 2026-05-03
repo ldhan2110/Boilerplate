@@ -102,7 +102,7 @@ onMounted(() => fetchData())
             parent-key="prntPgmId"
             :table-height="350"
             @refresh="fetchData"
-            @selection-change="(selected: ProgramDto[]) => { if (selected.length > 0) handleRowClick(selected[selected.length - 1]) }"
+            @selection-change="(selected: ProgramDto[]) => { if (selected.length > 0) handleRowClick(selected[selected.length - 1]!) }"
           >
             <!-- pgmId as clickable link -->
             <template #body-pgmId="{ data }">
@@ -116,7 +116,7 @@ onMounted(() => fetchData())
 
             <!-- useFlg display -->
             <template #body-useFlg="{ data }">
-              <span>{{ data.useFlg === 'Y' || data.useFlg === true ? 'Y' : 'N' }}</span>
+              <span>{{ data.useFlg === true ? 'Y' : 'N' }}</span>
             </template>
           </AppTreeDataTable>
         </template>
