@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import z from 'zod'
-import type { ColumnDef, CellConfig, ProgramDto, PermissionDto, ProgramListDto } from '~/types'
-import type { ColumnDef as TreeColumnDef } from '~/types/tree-table'
+import type { ColumnDef, ColumnDef as TreeColumnDef, ProgramDto, PermissionDto, ProgramListDto } from '~/types'
 
 const toast = useAppToast()
+const dialog = useAppDialog();
 const { t } = useI18n()
 
 // ─── Search form ───
@@ -22,7 +22,7 @@ const searchForm = useAppForm({
 
 const typeOptions = [
   { label: t('common.all'), value: '' },
-  { label: 'Menu', value: 'MENU' },
+  { label: 'Menu', value: 'Menu' },
   { label: 'UI', value: 'UI' },
 ]
 
@@ -33,17 +33,28 @@ const statusOptions = [
 ]
 
 // ─── Program tree state ───
-const treeTableRef = ref<any>(null)
+const { tableRef: treeTableRef } = useAppTreeDataTable()
 const programList = ref<ProgramDto[]>([])
 const totalRecords = ref(0)
 const selectedPgmId = ref<string | undefined>(undefined)
+const selectedProgramName = computed(() => {
+  if (!selectedPgmId.value) return ''
+  const pgm = programList.value.find(p => p.pgmId === selectedPgmId.value)
+  return pgm ? `${pgm.pgmNm} (${pgm.pgmCd})` : ''
+})
 
 // ─── Program tree columns ───
 const treeColumns: TreeColumnDef[] = [
-  { field: 'pgmId', header: t('program.pgmId'), width: 160, sortable: true },
+  { field: 'pgmCd', header: t('program.pgmCd'), width: 160, sortable: true },
   { field: 'pgmNm', header: t('program.pgmNm'), width: 200, sortable: true },
-  { field: 'pgmTpCd', header: t('program.pgmTpCd'), width: 100, sortable: true },
-  { field: 'useFlg', header: t('program.useFlg'), width: 80, align: 'center' },
+  { field: 'pgmTpCd', header: t('program.pgmTpCd'), width: 100, align: "center", sortable: true, format: val => val == 'MENU' ? "Menu" : "UI" },
+  { 
+    field: 'useFlg', 
+    header: t('program.useFlg'), 
+    width: 80, 
+    align: 'center', 
+    format: val => val === 'Y' ? 'Active' : 'Inactive'
+  },
 ]
 
 // ─── Permission table state ───
@@ -75,7 +86,7 @@ const dialogMode = ref<'create' | 'edit'>('create')
 const editingProgram = ref<ProgramDto | null>(null)
 
 const dialogSchema = z.object({
-  pgmCd: z.string().min(1),
+  pgmCd: z.string().min(1, "This field is required"),
   pgmNm: z.string().min(1),
   pgmTpCd: z.enum(['MENU', 'UI']),
   prntPgmId: z.string().nullable().optional(),
@@ -95,24 +106,18 @@ const dialogForm = useAppForm({
     pgmRmk: '',
     useFlg: 'Y',
   },
-  onSubmit: () => {},
+  onSubmit: (values) => {
+    if (dialogMode.value === 'create') {
+      insertProgramMutate(values as ProgramDto)
+    } else {
+      updateProgramMutate({
+        pgmId: editingProgram.value?.pgmId,
+        ...values,
+      } as ProgramDto)
+    }
+  },
   guard: false,
 })
-
-function handleDialogSubmit() {
-  const result = dialogSchema.safeParse(toRaw(dialogForm.values))
-  if (!result.success) return
-
-  const values = result.data
-  if (dialogMode.value === 'create') {
-    insertProgramMutate(values as any)
-  } else {
-    updateProgramMutate({
-      pgmId: editingProgram.value?.pgmId,
-      ...values,
-    } as any)
-  }
-}
 
 // ─── Parent program options (MENU type only) ───
 const parentOptions = computed(() =>
@@ -173,8 +178,7 @@ const { mutate: updateProgramMutate, isPending: isUpdating } = useUpdateProgram(
 
 const { mutate: deleteProgramsMutate, isPending: isDeleting } = useDeletePrograms({
   onSuccess: () => {
-    selectedPgmId.value = undefined
-    permRows.value = []
+    clearAll()
     refetchTree()
   },
 })
@@ -189,17 +193,41 @@ const { mutate: savePermissionsMutate, isPending: isSavingPerms } = useSavePermi
 const isDialogSaving = computed(() => isInserting.value || isUpdating.value)
 
 // ─── Event handlers ───
+function clearAll() {
+  selectedPgmId.value = undefined
+  permRows.value = []
+  treeTableRef.value?.clearSelection()
+  permTableRef.value?.clearSelection()
+  permTableRef.value?.clearChanges()
+}
+
 function fetchData() {
-  queryEnabled.value = true
-  refetchTree()
+  const isUnsaved = permTableRef.value?.hasChanges();
+
+  if (isUnsaved) {
+    return dialog.confirm({
+      header: t('common.unsavedChanges'),
+      message: t('common.unsavedChangesMessage'),
+      acceptButton: { label: t('common.continue') },
+      onAccept: ()=> {
+        queryEnabled.value = true
+        refetchTree()
+        clearAll()
+      }
+    })
+  } else {
+    queryEnabled.value = true
+    refetchTree()
+    clearAll()
+  }
 }
 
 function handleSearch() {
   fetchData()
 }
 
-function handleRowClick(data: ProgramDto) {
-  selectedPgmId.value = data.pgmId
+function handleRowClick(payload: { data: ProgramDto; originalEvent: Event }) {
+  selectedPgmId.value = payload.data.pgmId
 }
 
 function handlePgmIdClick(data: ProgramDto) {
@@ -212,7 +240,7 @@ function handlePgmIdClick(data: ProgramDto) {
     prntPgmId: data.prntPgmId ?? null,
     dspOrder: data.dspOrder ?? 9999,
     pgmRmk: data.pgmRmk ?? '',
-    useFlg: data.useFlg === true,
+    useFlg: data.useFlg,
   })
   dialogVisible.value = true
 }
@@ -316,21 +344,30 @@ onMounted(() => fetchData())
             selection-mode="checkbox"
             row-key="pgmId"
             parent-key="prntPgmId"
+            data-mode="all"
+            default-expand-all
             :table-height="350"
             @refresh="fetchData"
-            @selection-change="(selected: ProgramDto[]) => { if (selected.length > 0) handleRowClick(selected[selected.length - 1]!) }"
+            @row-click="handleRowClick"
           >
-            <template #body-pgmId="{ data }">
+            <template #body-pgmCd="{ data }">
               <a
-                class="text-primary cursor-pointer hover:underline"
+                class="text-primary cursor-pointer hover:underline flex items-center gap-1.5"
                 @click.stop="handlePgmIdClick(data)"
               >
-                {{ data.pgmId }}
+                <i :class="data.pgmTpCd === 'MENU' ? 'pi pi-folder text-amber-500' : 'pi pi-desktop text-blue-500'" class="text-sm" />
+                {{ data.pgmCd }}
               </a>
             </template>
 
             <template #body-useFlg="{ data }">
-              <span>{{ data.useFlg === true ? 'Y' : 'N' }}</span>
+              <span
+                :class="data.useFlg === 'Y'
+                  ? 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                  : 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'"
+              >
+                {{ data.useFlg === 'Y' ? t('common.active') : t('common.inactive') }}
+              </span>
             </template>
           </AppTreeDataTable>
         </template>
@@ -340,23 +377,29 @@ onMounted(() => fetchData())
       <PCard class="p-0">
         <template #content>
           <template v-if="selectedPgmId">
-            <Flex justify="end" class="pb-2" gap="2">
-              <DeleteButton
-                :label="t('program.deletePermission')"
-                @click="handleDeletePermission"
-                v-if="permTableRef?.hasSelectedRow()"
-              />
-              <AddButton :label="t('program.addPermission')" @click="handleAddPermission" />
-              <SaveButton
-                :label="t('common.save')"
-                :loading="isSavingPerms"
-                @click="handleSavePermissions"
-              />
+            <Flex justify="between" align="center" class="pb-2">
+              <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">
+                {{ selectedProgramName }}
+              </span>
+              <Flex gap="2">
+                <DeleteButton
+                  :label="t('program.deletePermission')"
+                  @click="handleDeletePermission"
+                  v-if="permTableRef?.hasSelectedRow()"
+                />
+                <AddButton :label="t('program.addPermission')" @click="handleAddPermission" />
+                <SaveButton
+                  :label="t('common.save')"
+                  :loading="isSavingPerms"
+                  @click="handleSavePermissions"
+                />
+              </Flex>
             </Flex>
 
             <AppDataTable
               ref="permTableRef"
               :rows="permRows"
+              data-mode="all"
               :columns="permColumns"
               :loading="isLoadingPerms"
               :editable="true"
@@ -376,7 +419,6 @@ onMounted(() => fetchData())
     </div>
 
     <!-- Program Dialog -->
-     <ClientOnly>
     <PDialog
       v-model:visible="dialogVisible"
       :header="dialogMode === 'create' ? t('program.createProgram') : t('program.editProgram')"
@@ -384,75 +426,77 @@ onMounted(() => fetchData())
       :style="{ width: '500px' }"
       :draggable="false"
     >
-      <div class="flex flex-col gap-4 pt-2">
-          <Input
-            v-bind="dialogForm.field('pgmCd')"
-            :label="t('program.pgmCd')"
-            float-label
-            required
-          />
+      <PForm :ref="dialogForm.formRef" :v-bind="dialogForm.formProps">
+        <div class="flex flex-col gap-4 pt-2">
+            <Input
+              v-bind="dialogForm.field('pgmCd')"
+              :label="t('program.pgmCd')"
+              float-label
+              required
+            />
 
-          <Input
-            v-bind="dialogForm.field('pgmNm')"
-            :label="t('program.pgmNm')"
-            float-label
-            required
-          />
+            <Input
+              v-bind="dialogForm.field('pgmNm')"
+              :label="t('program.pgmNm')"
+              float-label
+              required
+            />
 
-          <Select
-            v-bind="dialogForm.field('pgmTpCd')"
-            :label="t('program.pgmTpCd')"
-            :options="[{ label: 'MENU', value: 'MENU' }, { label: 'UI', value: 'UI' }]"
-            option-label="label"
-            option-value="value"
-            float-label
-            required
-          />
+            <Select
+              v-bind="dialogForm.field('pgmTpCd')"
+              :label="t('program.pgmTpCd')"
+              :options="[{ label: 'MENU', value: 'MENU' }, { label: 'UI', value: 'UI' }]"
+              option-label="label"
+              option-value="value"
+              float-label
+              required
+            />
 
-          <Select
-            v-bind="dialogForm.field('prntPgmId')"
-            :label="t('program.prntPgmId')"
-            :options="parentOptions"
-            option-label="label"
-            option-value="value"
-            float-label
-            show-clear
-          />
+            <Select
+              v-bind="dialogForm.field('prntPgmId')"
+              :label="t('program.prntPgmId')"
+              :options="parentOptions"
+              option-label="label"
+              option-value="value"
+              float-label
+              show-clear
+            />
 
-          <InputNumber
-            v-bind="dialogForm.field('dspOrder')"
-            :label="t('program.dspOrder')"
-            float-label
-          />
+            <InputNumber
+              v-bind="dialogForm.field('dspOrder')"
+              :label="t('program.dspOrder')"
+              float-label
+            />
 
-          <Input
-            v-bind="dialogForm.field('pgmRmk')"
-            :label="t('program.pgmRmk')"
-            variant="textarea"
-            float-label
-          />
+            <Input
+              v-bind="dialogForm.field('pgmRmk')"
+              :label="t('program.pgmRmk')"
+              variant="textarea"
+              float-label
+            />
 
-          <CheckBox
-            v-bind="dialogForm.field('useFlg')"
-            :label="t('program.useFlg')"
-            true-value="Y"
-            false-value="N"
-          />
-        </div>
+            <CheckBox
+              v-bind="dialogForm.field('useFlg')"
+              :label="t('program.useFlg')"
+              true-value="Y"
+              false-value="N"
+            />
+          </div>
 
-        <div class="flex justify-end gap-2 pt-4">
-          <PButton
-            :label="t('common.cancel')"
-            severity="secondary"
-            @click="dialogVisible = false"
-          />
-          <SaveButton
-            :label="t('common.save')"
-            :loading="isDialogSaving"
-            @click="handleDialogSubmit"
-          />
-        </div>
+          <div class="flex justify-end gap-2 pt-4">
+            <PButton
+              :label="t('common.cancel')"
+              severity="secondary"
+              @click="dialogVisible = false"
+            />
+            <SaveButton
+              :label="t('common.save')"
+              :loading="isDialogSaving"
+              type="submit"
+              @submit="dialogForm.submit"
+            />
+          </div>
+      </PForm>
     </PDialog>
-    </ClientOnly>
   </div>
 </template>

@@ -104,7 +104,7 @@ export class ProgramsService {
 
   // ─── Mutations ─────────────────────────────────────────────────────────────
 
-  async insertProgram(dto: ProgramDto): Promise<ProgramDto> {
+  async insertProgram(dto: ProgramDto): Promise<void> {
     // 1. Unique pgmCd check (read outside transaction)
     const existing = await this.qf.findOne(Program, { pgmCd: dto.pgmCd });
     if (existing) {
@@ -137,15 +137,6 @@ export class ProgramsService {
       // 5. Inherit SUPERADMIN role-auths from parent
       await this.assignSuperAdminRoleInheritance(tx, pgmId, dto.prntPgmId);
     });
-
-    const saved = await this.qf
-      .select(Program, 'pgm')
-      .getQueryBuilder()
-      .leftJoinAndSelect('pgm.permList', 'perm')
-      .where('pgm.pgmId = :pgmId', { pgmId })
-      .getOne();
-
-    return this.mapProgramToDto(saved)!;
   }
 
   async updateProgram(dto: ProgramDto): Promise<ProgramDto> {

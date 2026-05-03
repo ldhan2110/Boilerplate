@@ -1,6 +1,6 @@
 import type { VNode } from 'vue'
 
-export type DataMode = 'pagination' | 'infiniteScroll'
+export type DataMode = 'pagination' | 'infiniteScroll' | 'all'
 export type BackendMode = 'client' | 'server'
 export type SelectionMode = 'single' | 'multiple' | 'checkbox'
 export type EditType = 'input' | 'number' | 'date' | 'datetime' | 'time' | 'select' | 'multiselect' | 'checkbox' | 'toggle'
@@ -33,7 +33,7 @@ export interface ColumnDef {
   hidden?: boolean
   align?: 'left' | 'center' | 'right'
   render?: (val: any, row: any, col: ColumnDef) => VNode | VNode[]
-  format?: (val: any, row: any) => string
+  format?: (val: any, row: any) => string | VNode | VNode[]
   aggregation?: AggregationType
   excelProps?: ExcelProps
   validators?: ValidationRules
@@ -124,6 +124,35 @@ export interface AppDataTableProps<T = any> {
   exportFormats?: ExportFormat[]
   cellConfig?: (row: T, field: string) => CellConfig | void
   defaultColumnWidth?: number
+}
+
+export interface AppDataTableExposed<T = any> {
+  exportTable: (format: ExportFormat, scope: ExportScope) => Promise<void>
+  scrollToTop: () => void
+  resetColumns: () => void
+  clearSelection: () => void
+  clearSort: () => void
+  clearDirty: () => void
+  resetTable: () => void
+  getDirtyRows: () => (T & { procFlag: ProcFlag })[]
+  refresh: () => void
+  insertRow: (defaultValues?: Partial<T>) => T & { procFlag: ProcFlag }
+  insertRows: (rowDefaults: Partial<T>[]) => (T & { procFlag: ProcFlag })[]
+  deleteRow: (key: string | number) => void
+  deleteRows: (keys: (string | number)[]) => void
+  deleteSelected: () => void
+  getRow: (key: string | number) => (T & { procFlag: ProcFlag }) | undefined
+  getRows: (flags?: ProcFlag[]) => (T & { procFlag: ProcFlag })[]
+  getSelectedRows: () => T[]
+  hasSelectedRow: () => boolean
+  hasChanges: () => boolean
+  clearChanges: () => void
+  getFlag: (row: T) => ProcFlag | undefined
+  validate: () => ValidationError[]
+  getErrors: () => ValidationError[]
+  getCellErrors: (row: any, field: string) => string[]
+  clearErrors: (rowKey?: string | number) => void
+  isValid: boolean
 }
 
 export interface AppDataTableEmits<T = any> {

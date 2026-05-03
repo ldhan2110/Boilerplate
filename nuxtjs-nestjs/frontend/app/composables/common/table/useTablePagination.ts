@@ -65,7 +65,7 @@ export function useTablePagination(options: UseTablePaginationOptions): UseTable
   })
 
   const displayedRows = computed(() => {
-    if (dataMode.value === 'infiniteScroll') {
+    if (dataMode.value === 'all' || dataMode.value === 'infiniteScroll') {
       return rows.value
     }
     if (paginationMode.value === 'server') {

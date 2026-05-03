@@ -1,7 +1,8 @@
 import type { ExportFormat, ExportScope } from '~/types/table'
+import type { AppTreeDataTableExposed } from '~/types/tree-table'
 
 export function useAppTreeDataTable() {
-  const tableRef = ref<any>()
+  const tableRef = ref<AppTreeDataTableExposed>()
 
   function expandAll(): void {
     tableRef.value?.expandAll()

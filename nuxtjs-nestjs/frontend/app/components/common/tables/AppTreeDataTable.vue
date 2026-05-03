@@ -27,6 +27,7 @@ const props = withDefaults(defineProps<AppTreeDataTableProps>(), {
   paginationMode: 'server',
   sortBackend: 'server',
   defaultSortOrder: 1,
+  defaultExpandAll: false,
   selectable: false,
   selectionMode: 'multiple',
   showGridlines: true,
@@ -51,6 +52,8 @@ const emit = defineEmits<{
   (e: 'node-expand', node: any): void
   (e: 'node-collapse', node: any): void
   (e: 'selection-change', selected: any[]): void
+  (e: 'row-click', payload: { data: any; originalEvent: Event }): void
+  (e: 'row-dblclick', payload: { data: any; originalEvent: Event }): void
   (e: 'full-screen-change', isFullscreen: boolean): void
   (e: 'refresh'): void
 }>()
@@ -89,6 +92,17 @@ const treeBuilder = useTreeBuilder({
   rowKey: props.rowKey,
   parentKey: props.parentKey,
 })
+
+// Auto-expand all nodes when defaultExpandAll is true and rows change
+watch(
+  () => treeBuilder.treeNodes.value,
+  (nodes) => {
+    if (props.defaultExpandAll && nodes.length > 0) {
+      treeBuilder.expandAll()
+    }
+  },
+  { immediate: true },
+)
 
 const columns = useTreeTableColumns({
   columns: columnsRef,
@@ -455,13 +469,43 @@ function toggleFullscreen() {
 function onFullscreenChange() {
   isFullscreenState.value = !!document.fullscreenElement
 }
+// --- Row click delegation (PrimeVue TreeTable has no native row-click event) ---
+function findRowData(event: Event): any | undefined {
+  const target = event.target as HTMLElement
+  const cell = target.closest('[data-row-key]') as HTMLElement | null
+  if (!cell) return undefined
+  const key = cell.dataset.rowKey
+  if (key == null) return undefined
+  return treeBuilder.nodeMap.value.get(key)?.data
+}
+
+function onTableClick(event: Event) {
+  const data = findRowData(event)
+  if (data) emit('row-click', { data, originalEvent: event })
+}
+
+function onTableDblClick(event: Event) {
+  const data = findRowData(event)
+  if (data) emit('row-dblclick', { data, originalEvent: event })
+}
+
 onMounted(() => {
   document.addEventListener('fullscreenchange', onFullscreenChange)
   pagination.setupInfiniteScroll()
+  const el = treeTableRef.value?.$el as HTMLElement | undefined
+  if (el) {
+    el.addEventListener('click', onTableClick)
+    el.addEventListener('dblclick', onTableDblClick)
+  }
 })
 onUnmounted(() => {
   document.removeEventListener('fullscreenchange', onFullscreenChange)
   pagination.teardownInfiniteScroll()
+  const el = treeTableRef.value?.$el as HTMLElement | undefined
+  if (el) {
+    el.removeEventListener('click', onTableClick)
+    el.removeEventListener('dblclick', onTableDblClick)
+  }
 })
 
 // --- Column Manager DnD ---
@@ -711,6 +755,7 @@ defineExpose({
             <div
               class="cell-content"
               :class="{ 'cell-align-right': col.align === 'right', 'cell-align-center': col.align === 'center' }"
+              :data-row-key="node.key"
               @contextmenu.prevent="onRowContextMenu($event, node.data)"
             >
               <slot
@@ -724,7 +769,11 @@ defineExpose({
                     :is="() => col.render!(node.data[col.field!], node.data, col)"
                     v-if="col.render"
                   />
-                  <template v-else>{{ col.format ? col.format(node.data[col.field!], node.data) : node.data[col.field!] }}</template>
+                  <component
+                    :is="() => col.format!(node.data[col.field!], node.data)"
+                    v-else-if="col.format"
+                  />
+                  <template v-else>{{ node.data[col.field!] }}</template>
                 </span>
               </slot>
             </div>
@@ -785,6 +834,16 @@ defineExpose({
           @page="pagination.onPageChange"
         />
       </div>
+      <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-1.25">
+        Total: {{ pagination.totalCount.value }} row(s)
+      </span>
+    </div>
+
+    <!-- Total rows only (no paginator, no infinite scroll) -->
+    <div
+      v-if="!pagination.showPaginator.value && dataMode !== 'infiniteScroll'"
+      class="flex justify-end mt-2 min-h-8"
+    >
       <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-1.25">
         Total: {{ pagination.totalCount.value }} row(s)
       </span>

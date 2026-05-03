@@ -90,6 +90,8 @@ const emit = defineEmits<{
   (e: 'load-more'): void
   (e: 'full-screen-change', isFullscreen: boolean): void
   (e: 'selection-change', selected: any[]): void
+  (e: 'row-click', payload: { data: any; originalEvent: Event }): void
+  (e: 'row-dblclick', payload: { data: any; originalEvent: Event }): void
   (e: 'refresh'): void
 }>()
 
@@ -641,6 +643,8 @@ defineExpose({
         @column-resize-end="() => columns.onColumnResizeEnd(dataTableRef)"
         @cell-edit-init="edit.onCellEditInit"
         @cell-edit-complete="onCellEditCompleteWithValidation"
+        @row-click="(e: any) => emit('row-click', { data: e.data, originalEvent: e.originalEvent })"
+        @row-dblclick="(e: any) => emit('row-dblclick', { data: e.data, originalEvent: e.originalEvent })"
         @row-contextmenu="menus.onRowContextMenu"
       >
         <!-- Skeleton loading -->
@@ -834,7 +838,10 @@ defineExpose({
                     :is="() => col.render!(data[col.field!], data, col)"
                     v-if="col.render"
                   />
-                  <template v-else>{{ edit.getCellDisplayValue(data[col.field!], data, col) }}</template>
+                  <component
+                    :is="() => edit.getCellDisplayValue(data[col.field!], data, col)"
+                    v-else
+                  />
                 </span>
               </slot>
             </div>
@@ -869,7 +876,10 @@ defineExpose({
                     :is="() => col.render!(data[field], data, col)"
                     v-if="col.render"
                   />
-                  <template v-else>{{ edit.getCellDisplayValue(data[field], data, col) }}</template>
+                  <component
+                    :is="() => edit.getCellDisplayValue(data[field], data, col)"
+                    v-else
+                  />
                 </span>
               </template>
             </div>
@@ -932,6 +942,16 @@ defineExpose({
         />
       </div>
       <!-- Total rows display (fixed on right) -->
+      <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-1.25">
+        Total: {{ pagination.totalCount.value }} row(s)
+      </span>
+    </div>
+
+    <!-- Total rows only (no paginator, no infinite scroll) -->
+    <div
+      v-if="!pagination.showPaginator.value && dataMode !== 'infiniteScroll'"
+      class="flex justify-end mt-2 min-h-8"
+    >
       <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-1.25">
         Total: {{ pagination.totalCount.value }} row(s)
       </span>

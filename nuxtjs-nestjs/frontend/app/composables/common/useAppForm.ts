@@ -122,6 +122,11 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
     })
   }
 
+  // --- Manual submit (for buttons outside <Form> or non-native triggers) ---
+  function submit() {
+    formRef.value?.submit?.()
+  }
+
   // --- Confirm dialog helper ---
   function showDiscardConfirm(): Promise<boolean> {
     return dialog.confirmAsync({
@@ -177,6 +182,7 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
     resetForm,
     guardClose,
     setFieldValue,
-    setFieldsValues
+    setFieldsValues,
+    submit
   }
 }

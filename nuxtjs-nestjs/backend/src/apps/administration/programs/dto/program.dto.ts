@@ -43,12 +43,15 @@ export class ProgramDto extends BaseDto {
   pgmRmk?: string;
 
   // Computed tree fields (read-only, populated from CTE)
+  @IsOptional()
   @ApiPropertyOptional()
   level?: number;
 
+  @IsOptional()
   @ApiPropertyOptional()
   treeKey?: string;
 
+  @IsOptional()
   @ApiPropertyOptional()
   treePath?: string;
 

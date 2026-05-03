@@ -1,3 +1,4 @@
+import type { VNode } from 'vue'
 import type { ColumnDef, CellConfig, EditSaveEvent } from '~/types/table'
 import { ROW_ID } from './useTableProcFlag'
 
@@ -35,7 +36,7 @@ export interface UseTableEditReturn {
   isCellEditable: (row: any, field: string) => boolean
   isCellDisabled: (row: any, field: string) => boolean
   getCellOptions: (row: any, col: ColumnDef) => any[] | undefined
-  getCellDisplayValue: (val: any, row: any, col: ColumnDef) => string
+  getCellDisplayValue: (val: any, row: any, col: ColumnDef) => string | VNode | VNode[]
   onInlineToggle: (row: any, field: string, val: any) => void
 }
 
@@ -103,7 +104,7 @@ export function useTableEdit(options: UseTableEditOptions): UseTableEditReturn {
     return config?.options ?? col.editOptions
   }
 
-  function getCellDisplayValue(val: any, row: any, col: ColumnDef): string {
+  function getCellDisplayValue(val: any, row: any, col: ColumnDef): string | VNode | VNode[] {
     const config = getCellConfig(row, col.field!)
     if (config?.render) return config.render(val, row)
     if (col.format) return col.format(val, row)

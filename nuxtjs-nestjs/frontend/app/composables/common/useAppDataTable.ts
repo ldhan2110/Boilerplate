@@ -1,10 +1,10 @@
-import type { ProcFlag, ValidationError } from '~/types/table'
+import type { AppDataTableExposed, ProcFlag, ValidationError } from '~/types/table'
 
 export function useAppDataTable<T = any>() {
-  const tableRef = ref<any>()
+  const tableRef = ref<AppDataTableExposed<T>>()
 
   function insertRow(defaultValues?: Partial<T>): T & { procFlag: ProcFlag } {
-    return tableRef.value?.insertRow(defaultValues)
+    return tableRef.value!.insertRow(defaultValues)
   }
 
   function insertRows(rowDefaults: Partial<T>[]): (T & { procFlag: ProcFlag })[] {

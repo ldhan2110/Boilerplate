@@ -80,12 +80,12 @@ export function useAppDialog() {
             message: options.message,
             icon: options.icon ?? 'pi pi-exclamation-triangle',
             acceptButton: {
-                label: options.acceptButton?.label ?? t('common.yes'),
+                label: options.acceptButton?.label ?? t('common.continue'),
                 severity: options.acceptButton?.severity ?? 'danger',
                 ...options.acceptButton,
             },
             rejectButton: {
-                label: options.rejectButton?.label ?? t('common.no'),
+                label: options.rejectButton?.label ?? t('common.cancel'),
                 severity: 'secondary',
                 outlined: true,
                 ...options.rejectButton,

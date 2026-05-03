@@ -7,6 +7,7 @@ import type {
   SortEvent,
   FooterAgg,
   ExportFormat,
+  ExportScope,
 } from './table'
 
 export interface TreeNode<T = any> {
@@ -43,6 +44,9 @@ export interface AppTreeDataTableProps<T = any> {
   selectable?: boolean
   selectionMode?: SelectionMode
 
+  // Expand
+  defaultExpandAll?: boolean
+
   // Display
   showGridlines?: boolean
   resizableColumns?: boolean
@@ -69,4 +73,17 @@ export interface AppTreeDataTableProps<T = any> {
   exportFormats?: ExportFormat[]
 }
 
-export type { ColumnDef, DataMode, BackendMode, SelectionMode, PageEvent, SortEvent, FooterAgg, ExportFormat }
+export interface AppTreeDataTableExposed {
+  expandAll: () => void
+  collapseAll: () => void
+  resetTable: () => void
+  resetColumns: () => void
+  clearSort: () => void
+  clearSelection: () => void
+  getSelectedRows: () => any[]
+  hasSelectedRow: () => boolean
+  exportTable: (format: ExportFormat, scope: ExportScope) => Promise<void>
+  refresh: () => void
+}
+
+export type { ColumnDef, DataMode, BackendMode, SelectionMode, PageEvent, SortEvent, FooterAgg, ExportFormat, ExportScope }
