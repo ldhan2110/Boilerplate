@@ -53,13 +53,30 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
   // --- Submit handling ---
   const isSubmitting = ref(false)
 
-  function handleSubmit(e: { valid: boolean; values: Record<string, unknown> }) {
-    if (!e.valid) return
+  // Validation errors keyed by field name
+  const errors = ref<Record<string, string>>({})
 
-    // Merge reactive values into PrimeVue Form's values so custom components
-    // (e.g. FileUpload) that bypass PrimeVue primitives are included
-    const mergedValues = { ...e.values, ...toRaw(values) }
-    const result = onSubmit(mergedValues as z.infer<T>)
+  function validate(): boolean {
+    const result = schema.safeParse(toRaw(values))
+    if (result.success) {
+      errors.value = {}
+      return true
+    }
+    const fieldErrors: Record<string, string> = {}
+    for (const issue of result.error.issues) {
+      const key = issue.path[0]?.toString()
+      if (key && !fieldErrors[key]) {
+        fieldErrors[key] = issue.message
+      }
+    }
+    errors.value = fieldErrors
+    return false
+  }
+
+  function handleSubmit(_e?: any) {
+    if (!validate()) return
+
+    const result = onSubmit(toRaw(values) as z.infer<T>)
     if (result instanceof Promise) {
       isSubmitting.value = true
       result
@@ -77,8 +94,7 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
   // --- Props to spread onto <Form> ---
   const formProps = computed(() => ({
     resolver,
-    initialValues: JSON.parse(snapshot.value),
-    onSubmit: handleSubmit
+    initialValues: JSON.parse(snapshot.value)
   }))
 
   /**
@@ -94,9 +110,15 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
       modelValue: values[name] as any,
       'onUpdate:modelValue': (value: any) => {
         values[name] = value
+        // Clear field error on input
+        if (errors.value[name]) {
+          const { [name]: _, ...rest } = errors.value
+          errors.value = rest
+        }
         formRef.value?.setFieldValue?.(name, value)
       },
-      name
+      name,
+      error: errors.value[name]
     }
   }
 
@@ -104,7 +126,7 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
   function resetForm() {
     const initial = JSON.parse(snapshot.value)
     Object.assign(values, initial)
-    // Also reset PrimeVue Form's internal state
+    errors.value = {}
     formRef.value?.reset?.()
   }
 
@@ -122,9 +144,9 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
     })
   }
 
-  // --- Manual submit (for buttons outside <Form> or non-native triggers) ---
+  // --- Manual submit ---
   function submit() {
-    formRef.value?.submit?.()
+    handleSubmit()
   }
 
   // --- Confirm dialog helper ---
@@ -177,12 +199,15 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
     formRef,
     field,
     values,
+    errors,
     isDirty,
     isSubmitting,
     resetForm,
     guardClose,
     setFieldValue,
     setFieldsValues,
-    submit
+    submit,
+    validate,
+    handleSubmit
   }
 }

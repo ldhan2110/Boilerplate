@@ -86,8 +86,8 @@ const dialogMode = ref<'create' | 'edit'>('create')
 const editingProgram = ref<ProgramDto | null>(null)
 
 const dialogSchema = z.object({
-  pgmCd: z.string().min(1, "This field is required"),
-  pgmNm: z.string().min(1),
+  pgmCd: z.string().min(1, "Program code is required"),
+  pgmNm: z.string().min(1, "Program name is required"),
   pgmTpCd: z.enum(['MENU', 'UI']),
   prntPgmId: z.string().nullable().optional(),
   dspOrder: z.number().optional(),
@@ -286,6 +286,11 @@ function handleSavePermissions() {
   savePermissionsMutate(changed)
 }
 
+function handleCloseDialog() {
+  dialogVisible.value = false
+  dialogForm.resetForm()
+}
+
 onMounted(() => fetchData())
 </script>
 
@@ -426,7 +431,7 @@ onMounted(() => fetchData())
       :style="{ width: '500px' }"
       :draggable="false"
     >
-      <PForm :ref="dialogForm.formRef" :v-bind="dialogForm.formProps">
+      <PForm :ref="dialogForm.formRef" v-bind="dialogForm.formProps" @submit="dialogForm.handleSubmit">
         <div class="flex flex-col gap-4 pt-2">
             <Input
               v-bind="dialogForm.field('pgmCd')"
@@ -487,13 +492,12 @@ onMounted(() => fetchData())
             <PButton
               :label="t('common.cancel')"
               severity="secondary"
-              @click="dialogVisible = false"
+              @click="handleCloseDialog"
             />
             <SaveButton
               :label="t('common.save')"
               :loading="isDialogSaving"
               type="submit"
-              @submit="dialogForm.submit"
             />
           </div>
       </PForm>
