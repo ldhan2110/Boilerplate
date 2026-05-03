@@ -1,2 +1,2 @@
-export { useUserManagementStore } from './useUserManagementStore'
-export { useProgramManagementStore } from './useProgramManagementStore'
+export { useUserManagementStore } from './user-management.store'
+export { useProgramManagementStore } from './program-management.store'
