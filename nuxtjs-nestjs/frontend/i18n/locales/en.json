@@ -56,7 +56,10 @@
     "cancel": "Cancel",
     "ok": "OK",
     "backToHome": "Back to Home",
-    "status": "Status"
+    "status": "Status",
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive"
   },
   "dialog": {
     "success": "Success",
@@ -119,10 +122,35 @@
     "fileTooLarge": "{name} exceeds maximum size of {max}",
     "invalidType": "{name} has an unsupported file type"
   },
-  "adm": {
-    "user": {
+  "user": {
       "add": "Add User",
-      "delete": "Delete User"
+      "delete": "Delete User",
+      "usrId": "User ID",
+      "usrNm": "Name",
+      "usrEml": "Email",
+      "usrPhn": "Phone",
+      "usrAddr": "Address",
+      "usrDesc": "Description",
+      "roleId": "Role",
+      "useFlg": "Active"
+    },
+    "program": {
+      "pgmId": "Program ID",
+      "pgmCd": "Program Code",
+      "pgmNm": "Program Name",
+      "pgmTpCd": "Type",
+      "useFlg": "Use Flag",
+      "prntPgmId": "Parent Program",
+      "dspOrder": "Display Order",
+      "pgmRmk": "Remark",
+      "permCd": "Permission Code",
+      "permNm": "Permission Name",
+      "add": "Add",
+      "delete": "Delete",
+      "addPermission": "Add",
+      "deletePermission": "Delete",
+      "selectProgram": "Select a program to view permissions",
+      "createProgram": "Create Program",
+      "editProgram": "Edit Program"
     }
-  }
 }

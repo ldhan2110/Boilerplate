@@ -94,6 +94,7 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
       modelValue: values[name] as any,
       'onUpdate:modelValue': (value: any) => {
         values[name] = value
+        formRef.value?.setFieldValue?.(name, value)
       },
       name
     }
@@ -104,7 +105,7 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
     const initial = JSON.parse(snapshot.value)
     Object.assign(values, initial)
     // Also reset PrimeVue Form's internal state
-    formRef.value?.$form?.reset?.()
+    formRef.value?.reset?.()
   }
 
   // --- Imperative field setter (e.g. for async data) ---
@@ -112,7 +113,7 @@ export function useAppForm<T extends ZodObject<ZodRawShape>>(options: UseAppForm
     values[name] = value
 
     // sync to PrimeVue Form
-    formRef.value?.$form?.setFieldValue?.(name, value)
+    formRef.value?.setFieldValue?.(name, value)
   }
 
   function setFieldsValues(newValues: Record<string, unknown>) {

@@ -19,6 +19,8 @@ interface SaveButtonProps {
   label?: string
   /** Button icon override */
   icon?: string
+  /** Native button type */
+  type?: 'button' | 'submit' | 'reset'
 }
 
 const props = withDefaults(defineProps<SaveButtonProps>(), {
@@ -61,6 +63,7 @@ function onClick(event: MouseEvent) {
     :icon="icon"
     :loading="loading"
     :disabled="disabled"
+    :type="type"
     @click="onClick"
   />
 </template>

@@ -57,7 +57,10 @@
     "cancel": "Hủy",
     "ok": "OK",
     "backToHome": "Về trang chủ",
-    "status": "Trạng thái"
+    "status": "Trạng thái",
+    "all": "Tất cả",
+    "active": "Hoạt động",
+    "inactive": "Không hoạt động"
   },
   "dialog": {
     "success": "Thành công",
@@ -120,10 +123,35 @@
     "fileTooLarge": "{name} vượt quá kích thước tối đa {max}",
     "invalidType": "{name} có định dạng không được hỗ trợ"
   },
-  "adm": {
-    "user": {
-      "add": "Thêm người dùng",
-      "delete": "Xoá người dùng"
-    }
+  "user": {
+    "add": "Thêm người dùng",
+    "delete": "Xoá người dùng",
+    "usrId": "Mã người dùng",
+    "usrNm": "Họ tên",
+    "usrEml": "Email",
+    "usrPhn": "Số điện thoại",
+    "usrAddr": "Địa chỉ",
+    "usrDesc": "Mô tả",
+    "roleId": "Vai trò",
+    "useFlg": "Hoạt động"
+  },
+  "program": {
+    "pgmId": "Mã chương trình",
+    "pgmCd": "Mã chương trình",
+    "pgmNm": "Tên chương trình",
+    "pgmTpCd": "Loại",
+    "useFlg": "Sử dụng",
+    "prntPgmId": "Chương trình cha",
+    "dspOrder": "Thứ tự hiển thị",
+    "pgmRmk": "Ghi chú",
+    "permCd": "Mã quyền",
+    "permNm": "Tên quyền",
+    "add": "Thêm",
+    "delete": "Xoá",
+    "addPermission": "Thêm quyền",
+    "deletePermission": "Xoá quyền",
+    "selectProgram": "Chọn chương trình để xem quyền",
+    "createProgram": "Tạo chương trình",
+    "editProgram": "Sửa chương trình"
   }
 }
