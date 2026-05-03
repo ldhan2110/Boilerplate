@@ -2,16 +2,22 @@ import { defineStore } from 'pinia'
 import type {
   UserProfile,
   UserPreferences,
-  UserMeResponse
+  UserMeResponse,
+  LoginRequestDto
 } from '~/types'
 import {
   DEFAULT_PREFERENCES,
   COLOR_MAP,
   COLOR_TO_HEX
 } from '~/types'
-import { storage } from '~/utils/storage'
-import { apiClient } from '~/services/apiClient'
-import type { LoginRequestDto, LoginResponseDto } from '~/types/api'
+import { storage } from '~/utils'
+import {
+  loginApi,
+  logoutApi,
+  refreshTokenApi,
+  fetchProfileApi,
+  updatePreferencesApi
+} from '~/services'
 
 const STORAGE_KEYS = {
   refreshToken: 'refresh_token',
@@ -85,7 +91,7 @@ export const useUserStore = defineStore('user', () => {
   // --- Actions ---
   async function login(request: LoginRequestDto): Promise<boolean> {
     try {
-      const data = await apiClient.post<LoginResponseDto>(QUERY_KEY.AUTHENTICATION.LOGIN, request)
+      const data = await loginApi(request)
       accessToken.value = data.accessToken
       accessExpireIn.value = data.accessExpireIn
       storage.setString(STORAGE_KEYS.refreshToken, data.refreshToken)
@@ -99,13 +105,13 @@ export const useUserStore = defineStore('user', () => {
 
   async function fetchProfile(): Promise<void> {
     try {
-      const me = await apiClient.get<UserMeResponse>(QUERY_KEY.AUTHENTICATION.PROFILE)
+      const me = await fetchProfileApi()
       profile.value = mapProfileFromBackend(me)
       persistProfile()
       const backendPrefs = mapBackendPreferences(me)
       preferences.value = backendPrefs
       persistPreferences()
-    } catch(error: any) {
+    } catch (error: any) {
       // Profile fetch failed — use cached data if available
       console.log('Failed to fetch profile, using cached data if available', error)
     }
@@ -116,10 +122,7 @@ export const useUserStore = defineStore('user', () => {
     if (!storedRefresh) return false
 
     try {
-      const data = await apiClient.post<LoginResponseDto>(QUERY_KEY.AUTHENTICATION.REFRESH, {
-        refreshToken: storedRefresh
-      })
-
+      const data = await refreshTokenApi(storedRefresh)
       accessToken.value = data.accessToken
       accessExpireIn.value = data.accessExpireIn
       storage.setString(STORAGE_KEYS.refreshToken, data.refreshToken)
@@ -133,7 +136,7 @@ export const useUserStore = defineStore('user', () => {
 
   async function logout(): Promise<void> {
     try {
-      await apiClient.post(QUERY_KEY.AUTHENTICATION.LOGOUT)
+      await logoutApi()
       clearState()
       navigateTo('/login')
     } catch {
@@ -171,7 +174,7 @@ export const useUserStore = defineStore('user', () => {
     if (!isAuthenticated.value) return
     syncTimer = setTimeout(async () => {
       try {
-        await apiClient.patch('/api/auth/preferences', {
+        await updatePreferencesApi({
           langVal: preferences.value.locale,
           sysModVal: preferences.value.darkMode,
           sysColrVal: COLOR_TO_HEX[preferences.value.accentColor] || preferences.value.accentColor,

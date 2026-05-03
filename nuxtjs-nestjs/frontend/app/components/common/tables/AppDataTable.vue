@@ -1081,6 +1081,11 @@ defineExpose({
   padding: 0.3rem 0.5rem;
 }
 
+/* Footer cells */
+:deep(.p-datatable-tfoot > tr > td) {
+  padding: 0.3rem 0.5rem;
+}
+
 /*
  * Z-index layering for frozen columns + sticky header/footer.
  *

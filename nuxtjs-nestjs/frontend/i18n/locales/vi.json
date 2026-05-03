@@ -54,6 +54,7 @@
     "datePlaceholder": "Chọn ngày",
     "unsavedChanges": "Thay đổi chưa lưu",
     "unsavedChangesMessage": "Bạn có thay đổi chưa được lưu. Bạn có muốn bỏ thay đổi không?",
+    "internalError": "Oops, Something went wrong.",
     "discard": "Bỏ qua",
     "cancel": "Hủy",
     "ok": "OK",
