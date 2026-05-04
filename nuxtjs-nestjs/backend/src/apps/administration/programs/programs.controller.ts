@@ -45,6 +45,13 @@ export class ProgramsController {
     return SuccessDto.of(true, list.length);
   }
 
+  // POST /api/sys/program/getAllPermissions
+  @Post('getAllPermissions')
+  @HttpCode(HttpStatus.OK)
+  getAllPermissions(): Promise<PermissionDto[]> {
+    return this.programsService.getAllPermissions();
+  }
+
   // POST /api/sys/program/getPermissionByProgram
   @Post('getPermissionByProgram')
   @HttpCode(HttpStatus.OK)

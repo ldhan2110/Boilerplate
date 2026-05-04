@@ -40,6 +40,9 @@ const selectedProgramName = computed(() => {
   return pgm?.pgmNm ?? ''
 })
 
+// ─── All permissions map (eager-loaded): pgmId → PermissionDto[] ───
+const allPermsByPgm = ref<Map<string, PermissionDto[]>>(new Map())
+
 // ─── Build PrimeVue Tree nodes from flat programList ───
 interface TreeNode {
   key: string
@@ -92,10 +95,70 @@ watch(treeNodes, (nodes) => {
   expandedKeys.value = keys
 }, { immediate: true })
 
-const selectedTreeKey = ref<Record<string, { checked: boolean; partialChecked: boolean }>>({})
+// ─── Derive tree checkbox state from authMap (single source of truth) ───
+const selectedTreeKey = computed(() => {
+  const keys: Record<string, { checked: boolean; partialChecked: boolean }> = {}
 
-// ─── Permission list (local) ───
-const permRows = ref<PermissionDto[]>([])
+  function processNode(node: TreeNode): { allChecked: boolean; someChecked: boolean } {
+    if (!node.children?.length) {
+      const checked = authMap.value.has(node.key)
+      if (checked) keys[node.key] = { checked: true, partialChecked: false }
+      return { allChecked: checked, someChecked: checked }
+    }
+
+    let allChecked = true
+    let someChecked = false
+    for (const child of node.children) {
+      const result = processNode(child)
+      if (!result.allChecked) allChecked = false
+      if (result.someChecked) someChecked = true
+    }
+
+    if (allChecked && someChecked) {
+      keys[node.key] = { checked: true, partialChecked: false }
+    } else if (someChecked) {
+      keys[node.key] = { checked: false, partialChecked: true }
+    }
+
+    return { allChecked, someChecked }
+  }
+
+  for (const root of treeNodes.value) {
+    processNode(root)
+  }
+  return keys
+})
+
+function onTreeSelectionChange(newKeys: Record<string, { checked: boolean; partialChecked: boolean }>) {
+  const map = new Map(authMap.value)
+
+  for (const pgm of programList.value) {
+    if (pgm.pgmTpCd === 'MENU') continue
+    const pgmId = pgm.pgmId!
+    const wasChecked = map.has(pgmId)
+    const isChecked = newKeys[pgmId]?.checked ?? false
+
+    if (!wasChecked && isChecked) {
+      // Program checked → auto-add VIEW permission
+      const perms = allPermsByPgm.value.get(pgmId)
+      const viewPerm = perms?.find(p => p.permCd === 'VIEW')
+      if (viewPerm) {
+        map.set(pgmId, new Set([viewPerm.permId!]))
+      }
+    } else if (wasChecked && !isChecked) {
+      // Program unchecked → remove all permissions
+      map.delete(pgmId)
+    }
+  }
+
+  authMap.value = map
+}
+
+// ─── Permission list for selected program (derived from eager-loaded data) ───
+const permRows = computed(() => {
+  if (!selectedPgmId.value) return []
+  return allPermsByPgm.value.get(selectedPgmId.value) ?? []
+})
 
 // ─── Program tree query ───
 const programQueryEnabled = ref(false)
@@ -111,17 +174,22 @@ const { isFetching: isLoadingPrograms, refetch: refetchPrograms } = useLoadProgr
   }
 )
 
-// ─── Permission query (manual fetch per selected program) ───
-const { refetch: refetchPerms } = useLoadPermissions(
-  selectedPgmId as Ref<string | undefined>,
-  {
-    enabled: computed(() => !!selectedPgmId.value),
-    select: (result: PermissionDto[]) => {
-      permRows.value = result
-      return result
-    },
-  }
-)
+// ─── All permissions query (eager-load on dialog open) ───
+const permQueryEnabled = ref(false)
+
+const { refetch: refetchAllPerms } = useLoadAllPermissions({
+  enabled: permQueryEnabled,
+  select: (result: PermissionDto[]) => {
+    const map = new Map<string, PermissionDto[]>()
+    for (const p of result) {
+      if (!p.pgmId) continue
+      if (!map.has(p.pgmId)) map.set(p.pgmId, [])
+      map.get(p.pgmId)!.push(p)
+    }
+    allPermsByPgm.value = map
+    return result
+  },
+})
 
 // ─── Role detail query for edit mode ───
 const editRoleId = ref<string | undefined>(undefined)
@@ -174,11 +242,12 @@ const isSaving = computed(() => isInserting.value || isUpdating.value)
 // ─── Watch dialog open ───
 watch(() => store.dialogVisible, (visible) => {
   if (visible) {
-    // Load program tree
+    // Load program tree + all permissions
     programQueryEnabled.value = true
+    permQueryEnabled.value = true
     refetchPrograms()
+    refetchAllPerms()
     selectedPgmId.value = undefined
-    permRows.value = []
 
     if (store.dialogMode === 'edit' && store.editingRole?.roleId) {
       editRoleId.value = store.editingRole.roleId
@@ -191,7 +260,6 @@ watch(() => store.dialogVisible, (visible) => {
   } else {
     editRoleId.value = undefined
     selectedPgmId.value = undefined
-    permRows.value = []
     authMap.value = new Map()
     dialogForm.resetForm()
   }
@@ -304,11 +372,12 @@ function handleSave(values: any) {
             <div class="overflow-auto" style="height: 320px;">
               <PTree
                 v-model:expandedKeys="expandedKeys"
-                v-model:selectionKeys="selectedTreeKey"
+                :selectionKeys="selectedTreeKey"
                 :value="treeNodes"
                 :loading="isLoadingPrograms"
                 selection-mode="checkbox"
                 class="role-program-tree border-none bg-transparent"
+                @update:selectionKeys="onTreeSelectionChange"
               >
                 <template #default="{ node }">
                   <span class="cursor-pointer" @click.stop="selectedPgmId = node.key">{{ node.label }}</span>

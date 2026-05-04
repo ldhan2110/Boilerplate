@@ -204,6 +204,14 @@ export class ProgramsService {
 
   // ─── Permission operations ─────────────────────────────────────────────────
 
+  async getAllPermissions(): Promise<PermissionDto[]> {
+    const permissions = await this.qf
+      .select(Permission, 'p')
+      .getMany();
+
+    return permissions.map((p) => this.mapPermissionToDto(p));
+  }
+
   async getPermissionByProgram(dto: SearchProgramDto): Promise<PermissionDto[]> {
     if (!dto.pgmId) {
       throw new BizException('PGM000002', 'ERROR', 'pgmId is required');

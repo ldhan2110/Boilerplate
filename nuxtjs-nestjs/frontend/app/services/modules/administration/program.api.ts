@@ -28,6 +28,10 @@ export function deleteProgramsApi(body: ProgramDto[]) {
   return apiClient.post<SuccessDto>(API_ENDPOINTS.ADMINISTRATION.PROGRAMS.DELETE, body)
 }
 
+export function fetchAllPermissionsApi() {
+  return apiClient.post<PermissionDto[]>(API_ENDPOINTS.ADMINISTRATION.PROGRAMS.GET_ALL_PERMISSIONS, {})
+}
+
 export function fetchPermissionsByProgramApi(body: SearchProgramDto) {
   return apiClient.post<PermissionDto[]>(API_ENDPOINTS.ADMINISTRATION.PROGRAMS.GET_PERMISSIONS, body)
 }

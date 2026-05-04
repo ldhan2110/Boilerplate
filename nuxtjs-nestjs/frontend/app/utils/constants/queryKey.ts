@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
       INSERT: '/api/adm/program/insertProgram',
       UPDATE: '/api/adm/program/updateProgram',
       DELETE: '/api/adm/program/deletePrograms',
+      GET_ALL_PERMISSIONS: '/api/adm/program/getAllPermissions',
       GET_PERMISSIONS: '/api/adm/program/getPermissionByProgram',
       SAVE_PERMISSIONS: '/api/adm/program/savePermissionsByProgram',
     },
@@ -49,6 +50,8 @@ export const queryKeys = {
         [...queryKeys.administration.programs.all, 'list', params] as const,
       detail: (pgmId?: string) =>
         [...queryKeys.administration.programs.all, 'detail', pgmId] as const,
+      allPermissions: () =>
+        [...queryKeys.administration.programs.all, 'allPermissions'] as const,
       permissions: (pgmId?: string) =>
         [...queryKeys.administration.programs.all, 'permissions', pgmId] as const,
     },
