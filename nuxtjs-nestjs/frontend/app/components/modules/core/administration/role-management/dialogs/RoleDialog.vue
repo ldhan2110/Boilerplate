@@ -249,19 +249,18 @@ watch(() => store.dialogVisible, (visible) => {
     // Load program tree + all permissions
     programQueryEnabled.value = true
     permQueryEnabled.value = true
-    refetchPrograms()
-    refetchAllPerms()
     selectedPgmId.value = undefined
 
     if (store.dialogMode === 'edit' && store.editingRole?.roleId) {
       editRoleId.value = store.editingRole.roleId
-      refetchRole()
     } else {
       editRoleId.value = undefined
       dialogForm.resetForm()
       authMap.value = new Map()
     }
   } else {
+    programQueryEnabled.value = false
+    permQueryEnabled.value = false
     editRoleId.value = undefined
     selectedPgmId.value = undefined
     authMap.value = new Map()
