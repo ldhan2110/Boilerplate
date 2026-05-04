@@ -154,5 +154,22 @@
       "selectProgram": "Select a program to view permissions",
       "createProgram": "Create Program",
       "editProgram": "Edit Program"
-    }
+    },
+  "role": {
+    "roleCd": "Role Code",
+    "roleNm": "Role Name",
+    "roleDesc": "Description",
+    "useFlg": "Status",
+    "createdBy": "Created By",
+    "updatedBy": "Updated By",
+    "createRole": "Create Role",
+    "editRole": "Edit Role",
+    "add": "Add",
+    "delete": "Delete",
+    "programs": "Programs",
+    "permissions": "Permissions",
+    "selectProgram": "Select a program to view permissions",
+    "createdAt": "Created at",
+    "updatedAt": "Updated at"
+  }
 }

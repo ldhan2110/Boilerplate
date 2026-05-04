@@ -6,7 +6,9 @@
     "icon": "shield",
     "children": [
       { "id": "user-management", "label": "sidebar.user-management", "to": "/administration/user-management" },
+      { "id": "role-management", "label": "sidebar.role-management", "to": "/administration/role-management"},
       { "id": "program-management", "label": "sidebar.program-management", "to": "/administration/program-management"}
+      
     ]
   }
 ]

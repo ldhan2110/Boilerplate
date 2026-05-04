@@ -34,4 +34,11 @@ export class RolesController {
   updateRole(@Body() dto: RoleDto): Promise<SuccessDto> {
     return this.rolesService.updateRole(dto);
   }
+
+  // POST /api/adm/role/deleteRoles
+  @Post('deleteRoles')
+  @HttpCode(HttpStatus.OK)
+  deleteRoles(@Body() list: RoleDto[]): Promise<SuccessDto> {
+    return this.rolesService.deleteRoles(list);
+  }
 }

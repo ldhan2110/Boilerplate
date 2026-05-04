@@ -23,6 +23,7 @@
     "dashboard": "Bảng điều khiển",
     "administration": "Quản trị hệ thống",
     "user-management": "Quản lí người dùng",
+    "role-management": "Quản lí phân quyền",
     "program-management": "Quản lí chương trình"
   },
   "header": {
@@ -155,5 +156,22 @@
     "selectProgram": "Chọn chương trình để xem quyền",
     "createProgram": "Tạo chương trình",
     "editProgram": "Sửa chương trình"
+  },
+  "role": {
+    "roleCd": "Mã vai trò",
+    "roleNm": "Tên vai trò",
+    "roleDesc": "Mô tả",
+    "useFlg": "Trạng thái",
+    "createdBy": "Người tạo",
+    "updatedBy": "Người cập nhật",
+    "createRole": "Tạo vai trò",
+    "editRole": "Sửa vai trò",
+    "add": "Thêm",
+    "delete": "Xóa",
+    "programs": "Chương trình",
+    "permissions": "Quyền",
+    "selectProgram": "Chọn chương trình để xem quyền",
+    "createdAt": "Ngày tạo",
+    "updatedAt": "Ngày cập nhật"
   }
 }

@@ -132,7 +132,7 @@ export class RolesService {
   async insertRole(dto: RoleDto): Promise<SuccessDto> {
     const { roleCd, roleNm, roleDesc, useFlg, roleAuthList } = dto;
 
-    const existing = await this.qf.findOne(Role, { roleCd });
+    const existing = await this.qf.findOne(Role, { roleCd, useFlg: 'Y' });
     if (existing) {
       throw new BizException('ADM000010', 'ERROR');
     }
@@ -182,6 +182,21 @@ export class RolesService {
             activeYn: item.activeYn ?? true,
           }).execute();
         }
+      }
+    });
+
+    return SuccessDto.of(true);
+  }
+
+  async deleteRoles(list: RoleDto[]): Promise<SuccessDto> {
+    if (!list || list.length === 0) {
+      throw new BizException('ADM000010', 'ERROR');
+    }
+
+    await this.qf.transaction(async (tx) => {
+      for (const dto of list) {
+        await tx.update(Role).where({ roleId: dto.roleId }).set({ useFlg: 'N' }).execute();
+        await tx.update(RoleAuth).where({ roleId: dto.roleId }).set({ activeYn: false }).execute();
       }
     });
 

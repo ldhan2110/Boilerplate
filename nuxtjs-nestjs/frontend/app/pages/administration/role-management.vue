@@ -1,16 +1,14 @@
 <script lang="ts" setup>
+import { useRoleManagementStore } from '~/stores/modules/administration'
 
-const { t } = useI18n();
-const toast = useAppToast();
-
+const store = useRoleManagementStore()
+onMounted(() => store.fetchData())
 </script>
 
 <template>
-    <div class="flex flex-col gap-2.5 pt-1">
-    <RoleSearchCard />
-    <div class="grid grid-cols-2 gap-2.5">
-      <RoleTable />
-    </div>
-    <!-- <ProgramDialog /> -->
+  <div class="flex flex-col gap-2.5 pt-1">
+    <RoleSearchCard @search="store.handleSearch" />
+    <RoleTable />
+    <RoleDialog />
   </div>
 </template>
