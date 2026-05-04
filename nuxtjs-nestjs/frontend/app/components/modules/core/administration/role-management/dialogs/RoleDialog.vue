@@ -100,14 +100,16 @@ const selectedTreeKey = computed(() => {
   const keys: Record<string, { checked: boolean; partialChecked: boolean }> = {}
 
   function processNode(node: TreeNode): { allChecked: boolean; someChecked: boolean } {
+    const selfChecked = authMap.value.has(node.key)
+
     if (!node.children?.length) {
-      const checked = authMap.value.has(node.key)
-      if (checked) keys[node.key] = { checked: true, partialChecked: false }
-      return { allChecked: checked, someChecked: checked }
+      if (selfChecked) keys[node.key] = { checked: true, partialChecked: false }
+      return { allChecked: selfChecked, someChecked: selfChecked }
     }
 
-    let allChecked = true
-    let someChecked = false
+    // Parent with children: combine self + all children
+    let allChecked = selfChecked
+    let someChecked = selfChecked
     for (const child of node.children) {
       const result = processNode(child)
       if (!result.allChecked) allChecked = false
@@ -133,21 +135,23 @@ function onTreeSelectionChange(newKeys: Record<string, { checked: boolean; parti
   const map = new Map(authMap.value)
 
   for (const pgm of programList.value) {
-    if (pgm.pgmTpCd === 'MENU') continue
     const pgmId = pgm.pgmId!
-    const wasChecked = map.has(pgmId)
     const isChecked = newKeys[pgmId]?.checked ?? false
 
-    if (!wasChecked && isChecked) {
-      // Program checked → auto-add VIEW permission
-      const perms = allPermsByPgm.value.get(pgmId)
-      const viewPerm = perms?.find(p => p.permCd === 'VIEW')
-      if (viewPerm) {
-        map.set(pgmId, new Set([viewPerm.permId!]))
-      }
-    } else if (wasChecked && !isChecked) {
-      // Program unchecked → remove all permissions
-      map.delete(pgmId)
+    const perms = allPermsByPgm.value.get(pgmId)
+    const viewPerm = perms?.find(p => p.permCd === 'VIEW')
+    if (!viewPerm) continue
+
+    const hasView = map.get(pgmId)?.has(viewPerm.permId!) ?? false
+
+    if (isChecked && !hasView) {
+      // Program checked → add VIEW permission
+      if (!map.has(pgmId)) map.set(pgmId, new Set())
+      map.get(pgmId)!.add(viewPerm.permId!)
+    } else if (!isChecked && hasView) {
+      // Program unchecked → remove VIEW only
+      map.get(pgmId)?.delete(viewPerm.permId!)
+      if (map.get(pgmId)?.size === 0) map.delete(pgmId)
     }
   }
 
