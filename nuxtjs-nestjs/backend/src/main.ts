@@ -3,7 +3,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import { BizExceptionFilter } from '@infra/common/filters';
 import { ErrorDto } from '@infra/common/dto';
 import { AppLogger } from '@infra/logger';
 
@@ -21,8 +20,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-
-  app.useGlobalFilters(new BizExceptionFilter());
 
   // CORS
   app.enableCors();

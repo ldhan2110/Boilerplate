@@ -1,8 +1,13 @@
 import { defineStore } from 'pinia'
 
 export const useLayoutStore = defineStore('layout', () => {
-  const sidebarCollapsed = ref(false)
+  const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
   const sidebarMobileOpen = ref(false)
+
+  // Persist to local Storage automatically
+  watch(sidebarCollapsed, (val) => {
+    localStorage.setItem('sidebarCollapsed', String(val))
+  })
 
   function toggleSidebar() {
     sidebarCollapsed.value = !sidebarCollapsed.value

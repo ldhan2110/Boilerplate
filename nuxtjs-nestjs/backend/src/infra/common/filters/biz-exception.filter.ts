@@ -4,15 +4,17 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
+  Injectable,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { BizException } from '@infra/common/exceptions';
 import { ErrorDto } from '../dto';
+import { AppLogger } from '@infra/logger';
 
+@Injectable()
 @Catch()
 export class BizExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(BizExceptionFilter.name);
+  constructor(private readonly logger: AppLogger) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -28,6 +30,12 @@ export class BizExceptionFilter implements ExceptionFilter {
   } {
     // 1. BizException — first-class business error
     if (exception instanceof BizException) {
+      const logMethod =
+        exception.errorType === 'WARN' ? 'warn' : 'error';
+      this.logger[logMethod](
+        `[${exception.errorCode}] ${exception.errorMessage ?? ''}`,
+        BizExceptionFilter.name,
+      );
       return {
         status:
           exception.errorType === 'WARN'
@@ -51,6 +59,11 @@ export class BizExceptionFilter implements ExceptionFilter {
         ? message.join('; ')
         : (message ?? '');
 
+      const logMethod = status >= 500 ? 'error' : 'warn';
+      this.logger[logMethod](
+        `[HTTP${String(status).padStart(3, '0')}] ${errorMessage}`,
+        BizExceptionFilter.name,
+      );
       return {
         status,
         body: new ErrorDto({
@@ -64,7 +77,8 @@ export class BizExceptionFilter implements ExceptionFilter {
     // 3. Unknown error
     this.logger.error(
       'Unhandled exception',
-      exception instanceof Error ? exception.stack : exception,
+      exception instanceof Error ? exception.stack : String(exception),
+      BizExceptionFilter.name,
     );
     return {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
