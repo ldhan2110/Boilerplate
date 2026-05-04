@@ -696,26 +696,8 @@ defineExpose({
         @node-expand="(node: any) => emit('node-expand', node)"
         @node-collapse="(node: any) => emit('node-collapse', node)"
       >
-        <!-- Skeleton loading -->
-        <template v-if="loading" #empty>
-          <div class="flex flex-col">
-            <div
-              v-for="r in pageSize"
-              :key="r"
-              class="flex gap-2 py-2 px-3"
-            >
-              <PSkeleton
-                v-for="col in bodyColumns"
-                :key="col.field!"
-                height="1rem"
-                class="flex-1"
-              />
-            </div>
-          </div>
-        </template>
-
         <!-- Empty slot -->
-        <template v-else #empty>
+        <template #empty>
           <slot name="empty">
             <div class="text-center py-8 text-surface-400">
               {{ $t('table.noData') }}

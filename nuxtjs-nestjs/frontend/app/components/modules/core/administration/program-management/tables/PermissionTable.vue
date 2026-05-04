@@ -5,6 +5,7 @@ const store = useProgramManagementStore()
 const { t } = useI18n()
 
 const permTableRef = ref()
+const isLoadingPerms = computed(() => store.isLoadingPerms)
 
 onMounted(() => {
   if (permTableRef.value) {
@@ -41,7 +42,7 @@ onMounted(() => {
           :rows="store.permRows"
           data-mode="all"
           :columns="store.permColumns"
-          :loading="store.isLoadingPerms"
+          :loading="isLoadingPerms"
           :editable="true"
           :selectable="true"
           selection-mode="checkbox"

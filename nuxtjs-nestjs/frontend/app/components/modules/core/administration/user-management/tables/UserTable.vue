@@ -5,6 +5,7 @@ const store = useUserManagementStore()
 const { t } = useI18n()
 
 const tableRef = ref()
+const isLoading = computed(() => store.isLoading)
 
 onMounted(() => {
   if (tableRef.value) {
@@ -28,7 +29,7 @@ onMounted(() => {
         :columns="store.columns"
         :table-height="350"
         :total-records="store.totalRecords"
-        :loading="store.isLoading"
+        :loading="isLoading"
         :editable="true"
         :selectable="true"
         selection-mode="checkbox"

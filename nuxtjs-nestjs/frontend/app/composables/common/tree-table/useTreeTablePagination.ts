@@ -43,9 +43,9 @@ export function useTreeTablePagination(options: UseTreeTablePaginationOptions): 
   const route = useRoute()
   const router = useRouter()
 
-  const currentPage = ref(Number(route.query.p) || 0)
+  const currentPage = ref(Number(route.query.p) || 1)
   const currentPageSize = ref(Number(route.query.ps) || pageSize.value)
-  const first = ref(currentPage.value * currentPageSize.value)
+  const first = ref((currentPage.value - 1) * currentPageSize.value)
   const isLoadingMore = ref(false)
   const infiniteScrollPage = ref(0)
   const sentinelRef = ref<HTMLElement | null>(null)
@@ -85,7 +85,7 @@ export function useTreeTablePagination(options: UseTreeTablePaginationOptions): 
 
   function onPageChange(event: any) {
     first.value = event.first
-    currentPage.value = event.page
+    currentPage.value = event.page + 1
     currentPageSize.value = event.rows
     syncUrlParams()
 

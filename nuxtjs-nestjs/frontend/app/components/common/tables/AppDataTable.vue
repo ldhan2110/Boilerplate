@@ -621,7 +621,7 @@ defineExpose({
         v-model:selection="selectedRowsModel"
         :value="loading ? [] : pagination.displayedRows.value"
         :data-key="ROW_ID"
-        :loading="false"
+        :loading="loading"
         :show-gridlines="showGridlines"
         :striped-rows="stripedRows"
         :resizable-columns="resizableColumns"
@@ -647,32 +647,8 @@ defineExpose({
         @row-dblclick="(e: any) => emit('row-dblclick', { data: e.data, originalEvent: e.originalEvent })"
         @row-contextmenu="menus.onRowContextMenu"
       >
-        <!-- Skeleton loading -->
-        <template v-if="loading" #empty>
-          <div class="flex flex-col">
-            <div
-              v-for="r in pageSize"
-              :key="r"
-              class="flex gap-2 py-2 px-3"
-            >
-              <PSkeleton
-                v-if="selectable && selectionMode === 'checkbox'"
-                width="1.25rem"
-                height="1.25rem"
-                class="shrink-0"
-              />
-              <PSkeleton
-                v-for="col in bodyColumns"
-                :key="col.field!"
-                height="1rem"
-                class="flex-1"
-              />
-            </div>
-          </div>
-        </template>
-
         <!-- Empty slot -->
-        <template v-else #empty>
+        <template #empty>
           <slot name="empty">
             <div class="text-center py-8 text-surface-400">
               {{ $t('table.noData') }}

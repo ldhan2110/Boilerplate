@@ -6,6 +6,7 @@ const store = useProgramManagementStore()
 const { t } = useI18n()
 
 const treeTableRef = ref()
+const isLoadingTree = computed(() => store.isLoadingTree)
 
 onMounted(() => {
   if (treeTableRef.value) {
@@ -39,7 +40,7 @@ function handlePgmIdClick(data: ProgramDto) {
         :rows="store.programList"
         :columns="store.treeColumns"
         :total-records="store.totalRecords"
-        :loading="store.isLoadingTree"
+        :loading="isLoadingTree"
         :selectable="true"
         selection-mode="checkbox"
         row-key="pgmId"

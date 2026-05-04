@@ -4,13 +4,13 @@ import { Type } from 'class-transformer';
 export class PaginationDto {
   @IsOptional()
   @IsInt()
-  @Min(0)
+  @Min(1)
   @Type(() => Number)
   pageSize: number = 10;
 
   @IsOptional()
   @IsInt()
-  @Min(-)
+  @Min(1)
   @Type(() => Number)
   current: number = 1;
 }
