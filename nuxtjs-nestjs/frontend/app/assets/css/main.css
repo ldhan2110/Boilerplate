@@ -268,5 +268,5 @@
 .p-floatlabel-on:has(.p-inputwrapper-filled) label,
 .p-floatlabel-on:has(input[placeholder]) label,
 .p-floatlabel-on:has(textarea[placeholder]) label {
-  font-size: 0.625rem;
+  font-size: 0.465rem;
 }
