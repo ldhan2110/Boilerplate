@@ -25,8 +25,4 @@ export class RoleAuthDto extends BaseDto {
   @IsOptional()
   @IsString()
   permCd?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  activeYn?: boolean;
 }

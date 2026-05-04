@@ -310,7 +310,7 @@ export class ProgramsService {
         roleId: auth.roleId,
         pgmId: newPgmId,
         permId: viewPerm.permId,
-        activeYn: true,
+        useFlg: 'Y',
       }).execute();
     }
   }
@@ -366,7 +366,7 @@ export class ProgramsService {
         roleId: auth.roleId,
         pgmId,
         permId: newPermId,
-        activeYn: true,
+        useFlg: 'Y',
       }).execute();
     }
   }

@@ -6,6 +6,7 @@ const store = useRoleManagementStore()
 const { t } = useI18n()
 
 const tableRef = ref()
+const isLoading = computed(()=>store.isLoading)
 
 const columns = computed<ColumnDef[]>(() => [
   { field: 'roleCd', header: t('role.roleCd'), width: 160, sortable: true },
@@ -13,9 +14,9 @@ const columns = computed<ColumnDef[]>(() => [
   { field: 'roleDesc', header: t('role.roleDesc'), width: 300 },
   { field: 'useFlg', header: t('role.useFlg'), width: 100, align: 'center', sortable: true, format: (val: string) => val === 'Y' ? t('common.active') : t('common.inactive') },
   { field: 'createdBy', header: t('role.createdBy'), width: 140 },
-  { field: 'createAt', header: t('role.createdAt'), width: 140 },
+  { field: 'createdAt', header: t('role.createdAt'), width: 140, format: (value) => formatDateTime(new Date(value)) },
   { field: 'updatedBy', header: t('role.updatedBy'), width: 140 },
-  { field: 'updatedAt', header: t('role.updatedAt'), width: 140 },
+  { field: 'updatedAt', header: t('role.updatedAt'), width: 140, format: (value) => formatDateTime(new Date(value)) },
 ])
 
 function handleRoleCdClick(data: RoleDto) {
@@ -27,15 +28,6 @@ function handleDelete() {
   if (selected.length === 0) return
   store.deleteRoles(selected)
 }
-
- // Apply dark mode from stored preferences
-  watch(
-    () => store.isLoading,
-    (isLoading) => {
-        console.log(isLoading);
-    }
-  )
-
 </script>
 
 <template>
@@ -54,8 +46,8 @@ function handleDelete() {
         ref="tableRef"
         :rows="store.rows"
         :columns="columns"
-        :total-records="store.totalRecords"
-        :loading="store.isLoading"
+        :total-records="store.totalRecords""
+        :loading="isLoading"
         :editable="false"
         :selectable="true"
         selection-mode="checkbox"

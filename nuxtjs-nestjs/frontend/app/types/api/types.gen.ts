@@ -288,7 +288,6 @@ export type RoleAuthDto = {
     pgmCd?: string;
     pgmTpCd?: string;
     permCd?: string;
-    activeYn?: boolean;
     coId?: string;
     createdBy?: string;
     updatedBy?: string;
@@ -1001,3 +1000,29 @@ export type RolesControllerUpdateRoleResponses = {
 };
 
 export type RolesControllerUpdateRoleResponse = RolesControllerUpdateRoleResponses[keyof RolesControllerUpdateRoleResponses];
+
+export type RolesControllerDeleteRolesData = {
+    body: Array<string>;
+    path?: never;
+    query?: never;
+    url: '/api/adm/role/deleteRoles';
+};
+
+export type RolesControllerDeleteRolesErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type RolesControllerDeleteRolesError = RolesControllerDeleteRolesErrors[keyof RolesControllerDeleteRolesErrors];
+
+export type RolesControllerDeleteRolesResponses = {
+    200: SuccessDto;
+};
+
+export type RolesControllerDeleteRolesResponse = RolesControllerDeleteRolesResponses[keyof RolesControllerDeleteRolesResponses];

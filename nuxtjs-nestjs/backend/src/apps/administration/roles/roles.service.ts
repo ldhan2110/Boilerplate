@@ -48,7 +48,9 @@ export class RolesService {
       roleNm: r.roleNm,
       roleDesc: r.roleDesc,
       useFlg: r.useFlg,
+      createdAt: r.createdAt,
       createdBy: r.createdBy,
+      updatedAt: r.updatedAt,
       updatedBy: r.updatedBy,
     }));
 
@@ -90,7 +92,7 @@ export class RolesService {
       pgm_id: string;
       pgm_cd: string;
       pgm_tp_cd: string;
-      active_yn: boolean;
+      use_flg: string;
     }>(
       `SELECT auth.role_id,
               role.role_cd,
@@ -99,7 +101,7 @@ export class RolesService {
               pgm.pgm_id,
               pgm.pgm_cd,
               pgm.pgm_tp_cd,
-              auth.active_yn
+              auth.use_flg
        FROM adm_role_auth auth
        LEFT JOIN adm_role role ON auth.role_id = role.role_id
        LEFT JOIN com_pgm  pgm  ON auth.pgm_id  = pgm.pgm_id
@@ -114,7 +116,7 @@ export class RolesService {
       pgmTpCd: row.pgm_tp_cd,
       permId: row.perm_id,
       permCd: row.perm_cd,
-      activeYn: row.active_yn,
+      useFlg: row.use_flg,
     }));
 
     return {
@@ -151,7 +153,7 @@ export class RolesService {
             roleId: saved.roleId,
             pgmId: item.pgmId,
             permId: item.permId,
-            activeYn: item.activeYn ?? true,
+            useFlg: item.useFlg ?? 'N',
           }).execute();
         }
       }
@@ -179,7 +181,7 @@ export class RolesService {
             roleId,
             pgmId: item.pgmId,
             permId: item.permId,
-            activeYn: item.activeYn ?? true,
+            useFlg: item.useFlg ?? 'N',
           }).execute();
         }
       }
@@ -196,7 +198,7 @@ export class RolesService {
     await this.qf.transaction(async (tx) => {
       for (const dto of list) {
         await tx.update(Role).where({ roleId: dto.roleId }).set({ useFlg: 'N' }).execute();
-        await tx.update(RoleAuth).where({ roleId: dto.roleId }).set({ activeYn: false }).execute();
+        await tx.update(RoleAuth).where({ roleId: dto.roleId }).set({ useFlg: 'N' }).execute();
       }
     });
 

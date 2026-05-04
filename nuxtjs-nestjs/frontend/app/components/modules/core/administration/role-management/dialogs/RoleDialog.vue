@@ -136,7 +136,7 @@ const { refetch: refetchRole } = useGetRole(
           roleCd: result.roleCd ?? '',
           roleNm: result.roleNm ?? '',
           roleDesc: result.roleDesc ?? null,
-          useFlg: result.useFlg ?? 'Y',
+          useFlg: result.useFlg ?? 'N',
         })
         // Rebuild authMap from roleAuthList
         const map = new Map<string, Set<string>>()
@@ -197,29 +197,6 @@ watch(() => store.dialogVisible, (visible) => {
   }
 })
 
-// ─── Program tree interaction ───
-function isProgramChecked(pgmId: string): boolean {
-  return authMap.value.has(pgmId)
-}
-
-function toggleProgramCheck(pgmId: string, checked: boolean) {
-  const map = new Map(authMap.value)
-  if (checked) {
-    // Auto-add VIEW permission (first perm with 'VIEW' in permCd, or first perm)
-    const perms = permRows.value
-    const viewPerm = perms.find(p => p.permCd?.toUpperCase().includes('VIEW'))
-    const defaultPerm = viewPerm ?? perms[0]
-    if (defaultPerm?.permId) {
-      map.set(pgmId, new Set([defaultPerm.permId]))
-    } else {
-      map.set(pgmId, new Set())
-    }
-  } else {
-    map.delete(pgmId)
-  }
-  authMap.value = map
-}
-
 // ─── Permission checkbox interaction ───
 function isPermChecked(permId: string): boolean {
   if (!selectedPgmId.value) return false
@@ -248,7 +225,7 @@ function handleSave(values: any) {
   const roleAuthList: RoleAuthDto[] = []
   for (const [pgmId, permIds] of authMap.value) {
     for (const permId of permIds) {
-      roleAuthList.push({ pgmId, permId, activeYn: true })
+      roleAuthList.push({ pgmId, permId, useFlg: 'Y' })
     }
   }
 
@@ -347,7 +324,7 @@ function handleSave(values: any) {
             <div class="flex items-center gap-2 px-2 py-1.5 border-b" style="border-color: var(--p-form-field-border-color);">
               <i class="pi pi-shield text-primary" />
               <span>{{ t('role.permissions') }}</span>
-              <span v-if="selectedProgramName" class="text-sm font-normal text-surface-400 ml-auto truncate max-w-[140px]">{{ selectedProgramName }}</span>
+              <span v-if="selectedProgramName" class="text-sm font-normal text-surface-400 ml-auto truncate max-w-35">{{ selectedProgramName }}</span>
             </div>
           </template>
           <template #content>

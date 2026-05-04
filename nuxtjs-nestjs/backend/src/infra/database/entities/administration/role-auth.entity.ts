@@ -19,10 +19,6 @@ export class RoleAuth extends BaseEntity {
   @Expose()
   permId: string;
 
-  @Column({ name: 'active_yn', default: true })
-  @Expose()
-  activeYn: boolean;
-
   @ManyToOne(() => Role, (role) => role.roleAuthList)
   @JoinColumn({ name: 'role_id' })
   role: Role;
