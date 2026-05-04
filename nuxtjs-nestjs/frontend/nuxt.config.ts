@@ -40,6 +40,10 @@ export default defineNuxtConfig({
       pathPrefix: false,
     },
     {
+      path: '~/components/modules',
+      pathPrefix: false,
+    },
+    {
       path: '~/components',
       pathPrefix: true,
       ignore: ['modules/**'],

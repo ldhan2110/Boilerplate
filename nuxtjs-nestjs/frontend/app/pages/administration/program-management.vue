@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ProgramSearchCard, ProgramTreeTable, PermissionTable, ProgramDialog } from '~/components/modules/administration'
 import { useProgramManagementStore } from '~/stores'
 
 const store = useProgramManagementStore()
