@@ -140,6 +140,7 @@
       "pgmCd": "Program Code",
       "pgmNm": "Program Name",
       "pgmTpCd": "Type",
+      "pgmPath": "URL",
       "useFlg": "Active",
       "prntPgmId": "Parent Program",
       "dspOrder": "Display Order",

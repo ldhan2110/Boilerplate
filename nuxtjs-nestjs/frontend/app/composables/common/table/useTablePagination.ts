@@ -54,6 +54,9 @@ export function useTablePagination(options: UseTablePaginationOptions): UseTable
   let observer: IntersectionObserver | null = null
 
   const totalCount = computed(() => {
+    if (dataMode.value === 'all' || dataMode.value === 'infiniteScroll') {
+      return rows.value.length
+    }
     if (paginationMode.value === 'server') {
       return totalRecords.value ?? 0
     }

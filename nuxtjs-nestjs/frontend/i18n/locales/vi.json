@@ -104,7 +104,7 @@
     "deleteConfirmMessage": "Bạn có chắc chắn muốn xóa?",
     "totals": "Tổng cộng",
     "noData": "Không có dữ liệu",
-    "totalRecords": "Tổng: {total} dòng"
+    "totalRecords": "Tổng cộng: {total} dòng"
   },
   "validation": {
     "required": "Trường này là bắt buộc",
@@ -141,6 +141,7 @@
     "pgmCd": "Mã chương trình",
     "pgmNm": "Tên chương trình",
     "pgmTpCd": "Loại",
+    "pgmPath": "URL",
     "useFlg": "Hoạt động",
     "prntPgmId": "Chương trình cha",
     "dspOrder": "Thứ tự hiển thị",

@@ -9,6 +9,7 @@ import {
 import { QueryFactory, TransactionContext } from '@infra/database/query-factory';
 import { PermissionDto, ProgramDto, ProgramListDto, SearchProgramDto } from './dto';
 import { LogService } from '@infra/logger';
+import { isEmpty } from 'lodash';
 
 // ─── Domain constants ────────────────────────────────────────────────────────
 const VIEW_PERMISSION = 'VIEW';
@@ -36,7 +37,7 @@ export class ProgramsService {
       WITH RECURSIVE ProgramTree AS (
         SELECT
           pgm_id, pgm_cd, pgm_nm, pgm_tp_cd, prnt_pgm_id,
-          dsp_order, pgm_rmk, use_flg, upd_dt, upd_usr_id,
+          dsp_order, pgm_rmk, pgm_path, use_flg, upd_dt, upd_usr_id,
           1 AS level,
           CAST(pgm_id AS text) AS tree_key,
           LPAD(CAST(dsp_order AS TEXT), 3, '0') AS tree_path
@@ -45,7 +46,7 @@ export class ProgramsService {
         UNION ALL
         SELECT
           c.pgm_id, c.pgm_cd, c.pgm_nm, c.pgm_tp_cd, c.prnt_pgm_id,
-          c.dsp_order, c.pgm_rmk, c.use_flg, c.upd_dt, c.upd_usr_id,
+          c.dsp_order, c.pgm_rmk, c.pgm_path, c.use_flg, c.upd_dt, c.upd_usr_id,
           p.level + 1,
           p.tree_key || '-' || CAST(c.pgm_id AS text),
           p.tree_path || '-' || LPAD(CAST(c.dsp_order AS TEXT), 3, '0')
@@ -56,7 +57,7 @@ export class ProgramsService {
     `;
 
     const rows = await this.qf
-      .raw<Record<string, unknown>>(cte)
+      .raw<ProgramDto>(cte)
       .andWhere('pgm_id = :pgmId', { pgmId: dto.pgmId || undefined })
       .andWhere('pgm_cd ILIKE :pgmCd', { pgmCd: dto.pgmCd ? `%${dto.pgmCd}%` : undefined })
       .andWhere('pgm_nm ILIKE :pgmNm', { pgmNm: dto.pgmNm ? `%${dto.pgmNm}%` : undefined })
@@ -73,6 +74,7 @@ export class ProgramsService {
       prntPgmId: r['prnt_pgm_id'] as string,
       dspOrder: r['dsp_order'] as number,
       pgmRmk: r['pgm_rmk'] as string,
+      pgmPath: r['pgm_path'] as string,
       useFlg: r['use_flg'] as string,
       level: r['level'] as number,
       treeKey: r['tree_key'] as string,
@@ -111,8 +113,8 @@ export class ProgramsService {
       throw new BizException(ERR_PROGRAM_CD_DUPLICATE, 'ERROR');
     }
 
-    // 2. Parent validation for UI type (read outside transaction)
-    if (dto.pgmTpCd === 'UI') {
+    // 2. Validate Parent Program
+    if (!isEmpty(dto.prntPgmId)) {
       await this.validateParentIsMenu(dto.prntPgmId);
     }
 
@@ -145,8 +147,10 @@ export class ProgramsService {
     // Parent validation when changing to / staying as UI type
     const targetType = dto.pgmTpCd ?? program.pgmTpCd;
     const targetParent = dto.prntPgmId !== undefined ? dto.prntPgmId : program.prntPgmId;
-    if (targetType === 'UI') {
-      await this.validateParentIsMenu(targetParent);
+   
+    // Validate Parent Program
+    if (!isEmpty(dto.prntPgmId)) {
+      await this.validateParentIsMenu(dto.prntPgmId);
     }
 
     const updates: Partial<Program> = {};
@@ -388,6 +392,7 @@ export class ProgramsService {
       prntPgmId: program.prntPgmId,
       dspOrder: program.dspOrder,
       pgmRmk: program.pgmRmk,
+      pgmPath: program.pgmPath,
       useFlg: program.useFlg,
     };
 

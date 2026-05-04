@@ -47,6 +47,47 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
     if (!col.width) col.width = defaultColumnWidth.value
   }
 
+  // Sync reactive header/format changes (e.g. locale switch) into columnState
+  function syncColumnHeaders(newCols: ColumnDef[]) {
+    // Build lookup from source columns by field
+    const srcMap = new Map<string, ColumnDef>()
+    for (const col of newCols) {
+      if (col.field) srcMap.set(col.field, col)
+      if (col.children) {
+        for (const child of col.children) {
+          if (child.field) srcMap.set(child.field, child)
+        }
+      }
+    }
+
+    for (let i = 0; i < columnState.length; i++) {
+      const dst = columnState[i]!
+      if (dst.field) {
+        const src = srcMap.get(dst.field)
+        if (src && (dst.header !== src.header || dst.format !== src.format)) {
+          columnState[i] = { ...dst, header: src.header, format: src.format }
+        }
+      }
+      if (dst.children) {
+        let childChanged = false
+        for (let ci = 0; ci < dst.children.length; ci++) {
+          const dstChild = dst.children[ci]!
+          if (!dstChild.field) continue
+          const srcChild = srcMap.get(dstChild.field)
+          if (srcChild && (dstChild.header !== srcChild.header || dstChild.format !== srcChild.format)) {
+            dst.children[ci] = { ...dstChild, header: srcChild.header, format: srcChild.format }
+            childChanged = true
+          }
+        }
+        if (childChanged) {
+          columnState[i] = { ...dst, children: [...dst.children] }
+        }
+      }
+    }
+  }
+
+  watch(columns, syncColumnHeaders, { deep: true })
+
   const frozenFields = ref(new Set<string>(frozenColumns?.value ?? []))
 
   function syncFrozenToState() {

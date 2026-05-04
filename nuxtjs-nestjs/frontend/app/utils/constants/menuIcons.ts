@@ -38,6 +38,10 @@ export const MENU_ICONS: Record<string, string> = {
   video: 'pi pi-video'
 }
 
+export const MENU_ROUTES = {
+  'ADM': MENU_ICONS['shield']
+}
+
 export function resolveMenuIcon(iconKey?: string): string | undefined {
   if (!iconKey) return undefined
   return MENU_ICONS[iconKey] || iconKey

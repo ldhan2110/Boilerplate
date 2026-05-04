@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { ProgramSearchCard, ProgramTreeTable, PermissionTable } from '~/components/modules/administration/program-management'
-import { ProgramDialog } from '~/components/modules/administration/program-management'
-import { useProgramManagementStore } from '~/stores/modules/administration'
+import { ProgramSearchCard, ProgramTreeTable, PermissionTable, ProgramDialog } from '~/components/modules/administration'
+import { useProgramManagementStore } from '~/stores'
 
 const store = useProgramManagementStore()
 onMounted(() => store.fetchData())

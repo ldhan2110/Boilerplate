@@ -20,6 +20,7 @@ const { t } = useI18n()
           :label="t('program.pgmCd')"
           float-label
           required
+          :disabled="store.dialogMode === 'edit'"
         />
 
         <Input
@@ -47,6 +48,13 @@ const { t } = useI18n()
           option-value="value"
           float-label
           show-clear
+        />
+
+        <Input
+          v-bind="store.dialogForm.field('pgmPath')"
+          :label="t('program.pgmPath')"
+          float-label
+          required
         />
 
         <InputNumber

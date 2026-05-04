@@ -80,6 +80,7 @@ export const useProgramManagementStore = defineStore('program-management', () =>
     pgmNm: z.string().min(1, 'Program name is required'),
     pgmTpCd: z.enum(['MENU', 'UI']),
     prntPgmId: z.string().nullable().optional(),
+    pgmPath: z.string().nullable().optional(),
     dspOrder: z.number().optional(),
     pgmRmk: z.string().nullable().optional(),
     useFlg: z.string().optional(),
@@ -92,8 +93,9 @@ export const useProgramManagementStore = defineStore('program-management', () =>
       pgmNm: '',
       pgmTpCd: 'MENU' as const,
       prntPgmId: null,
+      pgmPath: null,
       dspOrder: 9999,
-      pgmRmk: '',
+      pgmRmk: null,
       useFlg: 'Y',
     },
     onSubmit: (values) => {

@@ -59,7 +59,6 @@ export function useAppMutation<
 }
 
 function extractErrorMessage(error: unknown): string {
-  debugger;
   if (error && typeof error === 'object') {
     const err = error as any
     const errorDto: ErrorDto | undefined = err.data ?? err.response?._data

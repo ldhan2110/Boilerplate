@@ -7,23 +7,23 @@ import { AutoId } from '../../decorators';
 @Entity('com_pgm')
 export class Program extends BaseEntity {
   @AutoId('PGM')
-  @PrimaryColumn({ name: 'pgm_id' })
+  @PrimaryColumn({ name: 'pgm_id', length: 20})
   @Expose()
   pgmId: string;
 
-  @Column({ name: 'pgm_cd' })
+  @Column({ name: 'pgm_cd', length: 20 })
   @Expose()
   pgmCd: string;
 
-  @Column({ name: 'pgm_nm', nullable: true })
+  @Column({ name: 'pgm_nm', nullable: true, length: 100 })
   @Expose()
   pgmNm: string;
 
-  @Column({ name: 'pgm_tp_cd', nullable: true })
+  @Column({ name: 'pgm_tp_cd', nullable: true, length: 20 })
   @Expose()
   pgmTpCd: string;
 
-  @Column({ name: 'prnt_pgm_id', nullable: true })
+  @Column({ name: 'prnt_pgm_id', nullable: true, length: 20})
   @Expose()
   prntPgmId: string;
 
@@ -34,6 +34,10 @@ export class Program extends BaseEntity {
   @Column({ name: 'pgm_rmk', type: 'text', nullable: true })
   @Expose()
   pgmRmk: string;
+
+  @Column({ name: 'pgm_path', nullable: true, length: 200 })
+  @Expose()
+  pgmPath: string;
 
   // Computed fields (not stored, populated by recursive CTE)
   level?: number;

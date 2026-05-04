@@ -42,6 +42,10 @@ export class ProgramDto extends BaseDto {
   @IsString()
   pgmRmk?: string;
 
+  @IsOptional()
+  @IsString()
+  pgmPath?: string;
+
   // Computed tree fields (read-only, populated from CTE)
   @IsOptional()
   @ApiPropertyOptional()

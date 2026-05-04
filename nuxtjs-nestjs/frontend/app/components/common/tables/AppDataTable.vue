@@ -943,7 +943,7 @@ defineExpose({
       </div>
       <!-- Total rows display (fixed on right) -->
       <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-1.25">
-        Total: {{ pagination.totalCount.value }} row(s)
+        {{ $t('table.totalRecords', { total: pagination.totalCount.value }) }}
       </span>
     </div>
 
@@ -953,7 +953,7 @@ defineExpose({
       class="flex justify-end mt-2 min-h-8"
     >
       <span class="text-xs text-surface-600 dark:text-surface-400 whitespace-nowrap mr-1.25">
-        Total: {{ pagination.totalCount.value }} row(s)
+        {{ $t('table.totalRecords', { total: pagination.totalCount.value }) }}
       </span>
     </div>
 

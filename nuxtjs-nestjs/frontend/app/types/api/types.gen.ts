@@ -38,7 +38,7 @@ export type UpdatePreferencesDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -78,7 +78,7 @@ export type SearchUserDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -102,7 +102,7 @@ export type UserInfoDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -131,7 +131,7 @@ export type ChangeUserInfoDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
     oldPassword?: string;
     newPassword?: string;
@@ -153,7 +153,7 @@ export type SearchCompanyDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -192,7 +192,7 @@ export type CompanyInfoDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -216,7 +216,7 @@ export type SearchProgramDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -230,7 +230,7 @@ export type PermissionDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -245,13 +245,14 @@ export type ProgramDto = {
     prntPgmId?: string;
     dspOrder?: number;
     pgmRmk?: string;
+    pgmPath?: string;
     permList?: Array<PermissionDto>;
     coId?: string;
     createdBy?: string;
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -276,7 +277,7 @@ export type SearchRoleDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -293,7 +294,7 @@ export type RoleAuthDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -308,7 +309,7 @@ export type RoleDto = {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    useFlg?: boolean;
+    useFlg?: string;
     procFlag?: string;
 };
 
@@ -323,12 +324,51 @@ export type ErrorDto = {
     errorMessage?: string;
 };
 
+export type FileControllerDownloadData = {
+    body?: never;
+    path: {
+        fileId: string;
+    };
+    query?: never;
+    url: '/api/file/download/{fileId}';
+};
+
+export type FileControllerDownloadErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type FileControllerDownloadError = FileControllerDownloadErrors[keyof FileControllerDownloadErrors];
+
+export type FileControllerDownloadResponses = {
+    200: unknown;
+};
+
 export type AuthControllerLoginData = {
     body: LoginRequestDto;
     path?: never;
     query?: never;
     url: '/api/auth/login';
 };
+
+export type AuthControllerLoginErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type AuthControllerLoginError = AuthControllerLoginErrors[keyof AuthControllerLoginErrors];
 
 export type AuthControllerLoginResponses = {
     200: LoginResponseDto;
@@ -343,6 +383,19 @@ export type AuthControllerRefreshTokenData = {
     url: '/api/auth/refresh-token';
 };
 
+export type AuthControllerRefreshTokenErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type AuthControllerRefreshTokenError = AuthControllerRefreshTokenErrors[keyof AuthControllerRefreshTokenErrors];
+
 export type AuthControllerRefreshTokenResponses = {
     200: RefreshTokenResponseDto;
 };
@@ -356,6 +409,19 @@ export type AuthControllerLogoutData = {
     url: '/api/auth/logout';
 };
 
+export type AuthControllerLogoutErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type AuthControllerLogoutError = AuthControllerLogoutErrors[keyof AuthControllerLogoutErrors];
+
 export type AuthControllerLogoutResponses = {
     200: unknown;
 };
@@ -366,6 +432,19 @@ export type AuthControllerMeData = {
     query?: never;
     url: '/api/auth/me';
 };
+
+export type AuthControllerMeErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type AuthControllerMeError = AuthControllerMeErrors[keyof AuthControllerMeErrors];
 
 export type AuthControllerMeResponses = {
     200: unknown;
@@ -378,6 +457,19 @@ export type AuthControllerUpdatePreferencesData = {
     url: '/api/auth/preferences';
 };
 
+export type AuthControllerUpdatePreferencesErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type AuthControllerUpdatePreferencesError = AuthControllerUpdatePreferencesErrors[keyof AuthControllerUpdatePreferencesErrors];
+
 export type AuthControllerUpdatePreferencesResponses = {
     200: SuccessDto;
 };
@@ -388,8 +480,21 @@ export type UsersControllerGetListUserInfoData = {
     body: SearchUserDto;
     path?: never;
     query?: never;
-    url: '/api/api/adm/user/getListUserInfo';
+    url: '/api/adm/user/getListUserInfo';
 };
+
+export type UsersControllerGetListUserInfoErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type UsersControllerGetListUserInfoError = UsersControllerGetListUserInfoErrors[keyof UsersControllerGetListUserInfoErrors];
 
 export type UsersControllerGetListUserInfoResponses = {
     200: UserInfoListDto;
@@ -401,8 +506,21 @@ export type UsersControllerGetUserInfoData = {
     body: SearchUserDto;
     path?: never;
     query?: never;
-    url: '/api/api/adm/user/getUserInfo';
+    url: '/api/adm/user/getUserInfo';
 };
+
+export type UsersControllerGetUserInfoErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type UsersControllerGetUserInfoError = UsersControllerGetUserInfoErrors[keyof UsersControllerGetUserInfoErrors];
 
 export type UsersControllerGetUserInfoResponses = {
     200: {
@@ -412,38 +530,51 @@ export type UsersControllerGetUserInfoResponses = {
 
 export type UsersControllerGetUserInfoResponse = UsersControllerGetUserInfoResponses[keyof UsersControllerGetUserInfoResponses];
 
-export type UsersControllerCreateUserData = {
-    body: UserInfoDto;
+export type UsersControllerSaveUsersData = {
+    body: Array<string>;
     path?: never;
     query?: never;
-    url: '/api/api/adm/user/createUser';
+    url: '/api/adm/user/saveUsers';
 };
 
-export type UsersControllerCreateUserResponses = {
+export type UsersControllerSaveUsersErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type UsersControllerSaveUsersError = UsersControllerSaveUsersErrors[keyof UsersControllerSaveUsersErrors];
+
+export type UsersControllerSaveUsersResponses = {
     200: SuccessDto;
 };
 
-export type UsersControllerCreateUserResponse = UsersControllerCreateUserResponses[keyof UsersControllerCreateUserResponses];
-
-export type UsersControllerUpdateUserData = {
-    body: UserInfoDto;
-    path?: never;
-    query?: never;
-    url: '/api/api/adm/user/updateUser';
-};
-
-export type UsersControllerUpdateUserResponses = {
-    200: SuccessDto;
-};
-
-export type UsersControllerUpdateUserResponse = UsersControllerUpdateUserResponses[keyof UsersControllerUpdateUserResponses];
+export type UsersControllerSaveUsersResponse = UsersControllerSaveUsersResponses[keyof UsersControllerSaveUsersResponses];
 
 export type UsersControllerChangeUserInfoData = {
     body: ChangeUserInfoDto;
     path?: never;
     query?: never;
-    url: '/api/api/adm/user/changeUserInfo';
+    url: '/api/adm/user/changeUserInfo';
 };
+
+export type UsersControllerChangeUserInfoErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type UsersControllerChangeUserInfoError = UsersControllerChangeUserInfoErrors[keyof UsersControllerChangeUserInfoErrors];
 
 export type UsersControllerChangeUserInfoResponses = {
     200: SuccessDto;
@@ -455,8 +586,21 @@ export type UsersControllerResetUserPasswordData = {
     body: Array<string>;
     path?: never;
     query?: never;
-    url: '/api/api/adm/user/resetUserPassword';
+    url: '/api/adm/user/resetUserPassword';
 };
+
+export type UsersControllerResetUserPasswordErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type UsersControllerResetUserPasswordError = UsersControllerResetUserPasswordErrors[keyof UsersControllerResetUserPasswordErrors];
 
 export type UsersControllerResetUserPasswordResponses = {
     200: SuccessDto;
@@ -464,25 +608,25 @@ export type UsersControllerResetUserPasswordResponses = {
 
 export type UsersControllerResetUserPasswordResponse = UsersControllerResetUserPasswordResponses[keyof UsersControllerResetUserPasswordResponses];
 
-export type UsersControllerSaveUserSettingData = {
-    body: UserInfoDto;
-    path?: never;
-    query?: never;
-    url: '/api/api/adm/user/saveUserSetting';
-};
-
-export type UsersControllerSaveUserSettingResponses = {
-    200: SuccessDto;
-};
-
-export type UsersControllerSaveUserSettingResponse = UsersControllerSaveUserSettingResponses[keyof UsersControllerSaveUserSettingResponses];
-
 export type CompaniesControllerGetListCompanyInfoData = {
     body: SearchCompanyDto;
     path?: never;
     query?: never;
     url: '/api/adm/company/getListCompanyInfo';
 };
+
+export type CompaniesControllerGetListCompanyInfoErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type CompaniesControllerGetListCompanyInfoError = CompaniesControllerGetListCompanyInfoErrors[keyof CompaniesControllerGetListCompanyInfoErrors];
 
 export type CompaniesControllerGetListCompanyInfoResponses = {
     200: CompanyInfoListDto;
@@ -496,6 +640,19 @@ export type CompaniesControllerGetCompanyInfoData = {
     query?: never;
     url: '/api/adm/company/getCompanyInfo';
 };
+
+export type CompaniesControllerGetCompanyInfoErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type CompaniesControllerGetCompanyInfoError = CompaniesControllerGetCompanyInfoErrors[keyof CompaniesControllerGetCompanyInfoErrors];
 
 export type CompaniesControllerGetCompanyInfoResponses = {
     200: {
@@ -512,6 +669,19 @@ export type CompaniesControllerCreateCompanyData = {
     url: '/api/adm/company/createCompany';
 };
 
+export type CompaniesControllerCreateCompanyErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type CompaniesControllerCreateCompanyError = CompaniesControllerCreateCompanyErrors[keyof CompaniesControllerCreateCompanyErrors];
+
 export type CompaniesControllerCreateCompanyResponses = {
     200: SuccessDto;
 };
@@ -524,6 +694,19 @@ export type CompaniesControllerUpdateCompanyData = {
     query?: never;
     url: '/api/adm/company/updateCompany';
 };
+
+export type CompaniesControllerUpdateCompanyErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type CompaniesControllerUpdateCompanyError = CompaniesControllerUpdateCompanyErrors[keyof CompaniesControllerUpdateCompanyErrors];
 
 export type CompaniesControllerUpdateCompanyResponses = {
     200: SuccessDto;
@@ -538,6 +721,19 @@ export type ProgramsControllerGetProgramListData = {
     url: '/api/adm/program/getProgramList';
 };
 
+export type ProgramsControllerGetProgramListErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type ProgramsControllerGetProgramListError = ProgramsControllerGetProgramListErrors[keyof ProgramsControllerGetProgramListErrors];
+
 export type ProgramsControllerGetProgramListResponses = {
     200: ProgramListDto;
 };
@@ -550,6 +746,19 @@ export type ProgramsControllerGetProgramData = {
     query?: never;
     url: '/api/adm/program/getProgram';
 };
+
+export type ProgramsControllerGetProgramErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type ProgramsControllerGetProgramError = ProgramsControllerGetProgramErrors[keyof ProgramsControllerGetProgramErrors];
 
 export type ProgramsControllerGetProgramResponses = {
     200: {
@@ -566,6 +775,19 @@ export type ProgramsControllerInsertProgramData = {
     url: '/api/adm/program/insertProgram';
 };
 
+export type ProgramsControllerInsertProgramErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type ProgramsControllerInsertProgramError = ProgramsControllerInsertProgramErrors[keyof ProgramsControllerInsertProgramErrors];
+
 export type ProgramsControllerInsertProgramResponses = {
     200: SuccessDto;
 };
@@ -578,6 +800,19 @@ export type ProgramsControllerUpdateProgramData = {
     query?: never;
     url: '/api/adm/program/updateProgram';
 };
+
+export type ProgramsControllerUpdateProgramErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type ProgramsControllerUpdateProgramError = ProgramsControllerUpdateProgramErrors[keyof ProgramsControllerUpdateProgramErrors];
 
 export type ProgramsControllerUpdateProgramResponses = {
     200: SuccessDto;
@@ -592,6 +827,19 @@ export type ProgramsControllerDeleteProgramsData = {
     url: '/api/adm/program/deletePrograms';
 };
 
+export type ProgramsControllerDeleteProgramsErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type ProgramsControllerDeleteProgramsError = ProgramsControllerDeleteProgramsErrors[keyof ProgramsControllerDeleteProgramsErrors];
+
 export type ProgramsControllerDeleteProgramsResponses = {
     200: SuccessDto;
 };
@@ -604,6 +852,19 @@ export type ProgramsControllerGetPermissionByProgramData = {
     query?: never;
     url: '/api/adm/program/getPermissionByProgram';
 };
+
+export type ProgramsControllerGetPermissionByProgramErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type ProgramsControllerGetPermissionByProgramError = ProgramsControllerGetPermissionByProgramErrors[keyof ProgramsControllerGetPermissionByProgramErrors];
 
 export type ProgramsControllerGetPermissionByProgramResponses = {
     200: Array<PermissionDto>;
@@ -618,6 +879,19 @@ export type ProgramsControllerSavePermissionsByProgramData = {
     url: '/api/adm/program/savePermissionsByProgram';
 };
 
+export type ProgramsControllerSavePermissionsByProgramErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type ProgramsControllerSavePermissionsByProgramError = ProgramsControllerSavePermissionsByProgramErrors[keyof ProgramsControllerSavePermissionsByProgramErrors];
+
 export type ProgramsControllerSavePermissionsByProgramResponses = {
     200: SuccessDto;
 };
@@ -630,6 +904,19 @@ export type RolesControllerGetRoleListData = {
     query?: never;
     url: '/api/adm/role/getRoleList';
 };
+
+export type RolesControllerGetRoleListErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type RolesControllerGetRoleListError = RolesControllerGetRoleListErrors[keyof RolesControllerGetRoleListErrors];
 
 export type RolesControllerGetRoleListResponses = {
     200: RoleListDto;
@@ -644,6 +931,19 @@ export type RolesControllerGetRoleData = {
     url: '/api/adm/role/getRole';
 };
 
+export type RolesControllerGetRoleErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type RolesControllerGetRoleError = RolesControllerGetRoleErrors[keyof RolesControllerGetRoleErrors];
+
 export type RolesControllerGetRoleResponses = {
     200: RoleDto;
 };
@@ -657,6 +957,19 @@ export type RolesControllerInsertRoleData = {
     url: '/api/adm/role/insertRole';
 };
 
+export type RolesControllerInsertRoleErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type RolesControllerInsertRoleError = RolesControllerInsertRoleErrors[keyof RolesControllerInsertRoleErrors];
+
 export type RolesControllerInsertRoleResponses = {
     200: SuccessDto;
 };
@@ -669,6 +982,19 @@ export type RolesControllerUpdateRoleData = {
     query?: never;
     url: '/api/adm/role/updateRole';
 };
+
+export type RolesControllerUpdateRoleErrors = {
+    /**
+     * Business/validation error
+     */
+    400: ErrorDto;
+    /**
+     * Internal server error
+     */
+    500: ErrorDto;
+};
+
+export type RolesControllerUpdateRoleError = RolesControllerUpdateRoleErrors[keyof RolesControllerUpdateRoleErrors];
 
 export type RolesControllerUpdateRoleResponses = {
     200: SuccessDto;
