@@ -64,8 +64,8 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
       const dst = columnState[i]!
       if (dst.field) {
         const src = srcMap.get(dst.field)
-        if (src && (dst.header !== src.header || dst.format !== src.format)) {
-          columnState[i] = { ...dst, header: src.header, format: src.format }
+        if (src && (dst.header !== src.header || dst.format !== src.format || dst.editOptions !== src.editOptions)) {
+          columnState[i] = { ...dst, header: src.header, format: src.format, editOptions: src.editOptions }
         }
       }
       if (dst.children) {
@@ -74,8 +74,8 @@ export function useTableColumns(options: UseTableColumnsOptions): UseTableColumn
           const dstChild = dst.children[ci]!
           if (!dstChild.field) continue
           const srcChild = srcMap.get(dstChild.field)
-          if (srcChild && (dstChild.header !== srcChild.header || dstChild.format !== srcChild.format)) {
-            dst.children[ci] = { ...dstChild, header: srcChild.header, format: srcChild.format }
+          if (srcChild && (dstChild.header !== srcChild.header || dstChild.format !== srcChild.format || dstChild.editOptions !== srcChild.editOptions)) {
+            dst.children[ci] = { ...dstChild, header: srcChild.header, format: srcChild.format, editOptions: srcChild.editOptions }
             childChanged = true
           }
         }

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type { UserInfoDto, CellConfig, ColumnDef, AppDataTableExposed, ProcFlag, RoleDto, RoleListDto } from '~/types'
-import { useUserManagementStore } from '~/stores/modules/administration'
+import type { UserInfoDto, ColumnDef, AppDataTableExposed, ProcFlag, RoleDto, RoleListDto } from '~/types'
+import { useUserManagementStore } from '~/stores'
 
 const store = useUserManagementStore()
 const toast = useAppToast()
@@ -31,7 +31,7 @@ const roleMap = computed(() => {
 
 // ─── Columns ───
 const columns = computed<ColumnDef[]>(() => [
-  { field: 'usrId', header: t('user.usrId'), editable: true, editType: 'input', width: 130, sortable: true },
+  { field: 'usrId', header: t('user.usrId'), editable: false, editType: 'input', width: 130, sortable: true },
   { field: 'usrNm', header: t('user.usrNm'), editable: true, editType: 'input', width: 150, sortable: true, validators: { required: true } },
   { field: 'usrEml', header: t('user.usrEml'), editable: true, editType: 'input', width: 190, sortable: true },
   { field: 'usrPhn', header: t('user.usrPhn'), editable: true, editType: 'input', width: 140 },
@@ -49,12 +49,6 @@ const columns = computed<ColumnDef[]>(() => [
   },
   { field: 'useFlg', header: t('user.useFlg'), editable: true, editType: 'toggle', editProps: { trueValue: 'Y', falseValue: 'N' }, width: 90, align: 'center' },
 ])
-
-function cellConfig(row: any, field: string): CellConfig | void {
-  if (field === 'usrId' && row.procFlag !== 'I') {
-    return { editable: false }
-  }
-}
 
 // ─── Save mutation ───
 const { mutate: saveUsersMutate, isPending: isSaving } = useSaveUsers({
@@ -108,7 +102,6 @@ const isLoading = computed(() => store.isLoading)
         selection-mode="checkbox"
         pagination-mode="server"
         sort-backend="server"
-        :cell-config="cellConfig"
         @page="store.handlePage"
         @sort="store.handleSort"
         @refresh="store.fetchData"
